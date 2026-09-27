@@ -139,71 +139,17 @@ img{max-width:100%;display:block;}
 <script>
 (function(){
 "use strict";
-var WA_NUMBER = "908508406128"; // 0850 840 61 28 -> uluslararası format
+var WA_NUMBER = "908508406128";
 var IG_HANDLE = "gulsumaydinbutik";
-var SHIPPING_FEE = 0; // sistem değişkeni: 0 = ücretsiz kargo
+var SHIPPING_FEE = 0;
 
 var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
+var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Sweatshirt","Üst Giyim"];
+var PRODUCTS = [];
 
-var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal"];
-
-var PRODUCTS = [
- {id:"p1",slug:"luna-pantolonlu-ikili-takim",name:"Luna Pantolonlu İkili Takım",category:"Takım",
-  price:1499,oldPrice:1899,isNew:true,isBestSeller:true,
-  shortDescription:"1. sınıf modal kumaş, rahat ve bol kalıp.",
-  description:"1. sınıf modal kumaştan üretilmiştir. Yumuşak ve rahat kullanım sunar. Rahat/bol kalıptır.",
-  fabric:"%100 Modal", fit:"Rahat / Bol Kalıp",
-  measurements:"Ceket: 80 cm, Pantolon: 100 cm", modelInfo:"Model 166 cm, 60 kg, 38 beden giymektedir.",
-  images:[IMG("luna1"),IMG("luna2"),IMG("luna3")],
-  colors:["Siyah","Bej","Pudra","Lacivert"], sizes:["36","38","40","42","44"],
-  variants:[
-   {color:"Siyah",size:"36",stock:4},{color:"Siyah",size:"38",stock:5},{color:"Siyah",size:"40",stock:0},{color:"Siyah",size:"42",stock:2},{color:"Siyah",size:"44",stock:0},
-   {color:"Bej",size:"36",stock:0},{color:"Bej",size:"38",stock:6},{color:"Bej",size:"40",stock:3},{color:"Bej",size:"42",stock:0},{color:"Bej",size:"44",stock:1},
-   {color:"Pudra",size:"36",stock:2},{color:"Pudra",size:"38",stock:0},{color:"Pudra",size:"40",stock:4},{color:"Pudra",size:"42",stock:3},{color:"Pudra",size:"44",stock:0},
-   {color:"Lacivert",size:"36",stock:0},{color:"Lacivert",size:"38",stock:2},{color:"Lacivert",size:"40",stock:0},{color:"Lacivert",size:"42",stock:5},{color:"Lacivert",size:"44",stock:2}
-  ]},
- {id:"p2",slug:"nil-uzun-elbise",name:"Nil Uzun Elbise",category:"Elbise",
-  price:1299,oldPrice:null,isNew:true,isBestSeller:false,
-  shortDescription:"Zarif düşüşlü, günlük ve şık kullanım.",
-  description:"Akıcı kumaşı ile zarif bir duruş sağlar. Günlük kullanıma uygun, vücudu sarmayan kalıp.",
-  fabric:"Viskon", fit:"Salaş Kalıp", measurements:"Boy: 142 cm", modelInfo:"Model 168 cm, 40 beden giymektedir.",
-  images:[IMG("nil1"),IMG("nil2")],
-  colors:["Siyah","Lacivert"], sizes:["38","40","42","44"],
-  variants:[
-   {color:"Siyah",size:"38",stock:3},{color:"Siyah",size:"40",stock:0},{color:"Siyah",size:"42",stock:2},{color:"Siyah",size:"44",stock:5},
-   {color:"Lacivert",size:"38",stock:0},{color:"Lacivert",size:"40",stock:4},{color:"Lacivert",size:"42",stock:0},{color:"Lacivert",size:"44",stock:1}
-  ]},
- {id:"p3",slug:"defne-tunik",name:"Defne Tunik",category:"Tunik",
-  price:749,oldPrice:949,isNew:false,isBestSeller:true,
-  shortDescription:"Günlük kombinlere uygun rahat tunik.",
-  description:"Nefes alan kumaşı ile gün boyu konfor sağlar. Pantolon ve etek ile rahatça kombinlenir.",
-  fabric:"Keten Karışımlı", fit:"Rahat Kalıp", measurements:"Boy: 78 cm", modelInfo:"Model 165 cm, 36 beden giymektedir.",
-  images:[IMG("def1"),IMG("def2")],
-  colors:["Bej","Beyaz","Siyah"], sizes:["36","38","40","42"],
-  variants:[
-   {color:"Bej",size:"36",stock:2},{color:"Bej",size:"38",stock:0},{color:"Bej",size:"40",stock:3},{color:"Bej",size:"42",stock:0},
-   {color:"Beyaz",size:"36",stock:0},{color:"Beyaz",size:"38",stock:5},{color:"Beyaz",size:"40",stock:0},{color:"Beyaz",size:"42",stock:2},
-   {color:"Siyah",size:"36",stock:4},{color:"Siyah",size:"38",stock:0},{color:"Siyah",size:"40",stock:1},{color:"Siyah",size:"42",stock:0}
-  ]},
- {id:"p4",slug:"selin-ipek-sal",name:"Selin İpek Şal",category:"Şal",
-  price:329,oldPrice:null,isNew:false,isBestSeller:false,
-  shortDescription:"Yumuşak dokulu, kolay bağlanan şal.",
-  description:"Yüksek kalite kumaşı ile hem yumuşak hem de kolay şekillenen bir şal. Günlük ve özel gün kombinlerine uygundur.",
-  fabric:"İpek Karışımlı", fit:"Standart", measurements:"90x90 cm", modelInfo:"—",
-  images:[IMG("sal1"),IMG("sal2")],
-  colors:["Bej","Pudra","Siyah"], sizes:["Standart"],
-  variants:[
-   {color:"Bej",size:"Standart",stock:8},{color:"Pudra",size:"Standart",stock:0},{color:"Siyah",size:"Standart",stock:6}
-  ]}
-];
-
-// ===== GOOGLE SHEETS ENTEGRASYONU =====
-// Aşağıdaki iki linki kendi Google E-Tablonuzun "Web'de Yayınla > CSV" linkleriyle değiştirin.
-// Dolu bırakılırsa (PASTE_ ile başlıyorsa) uygulama yukarıdaki örnek ürünlerle çalışmaya devam eder.
 var SHEET_PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ/gviz/tq?tqx=out:csv&sheet=Sayfa1";
-var SHEET_STOCK_CSV_URL = "PASTE_STOK_CSV_LINKI_BURAYA";
-// Siparişlerin otomatik olarak Google Sheet'e düşmesi için Apps Script Web App linkinizi buraya yapıştırın (.../exec ile biter).
 var ORDER_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxIN5wq17o0GKbpcmpvxd1dPCrvFIj3kp0nYKXHBWhEsdl4wpLxZoY6xUVdPSybPl7S/exec";
+
 function sendOrderToSheet(order){
  if(!ORDER_SHEET_ENDPOINT || ORDER_SHEET_ENDPOINT.indexOf("PASTE_")>-1) return;
  fetch(ORDER_SHEET_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(order)}).catch(function(){});
@@ -220,44 +166,45 @@ function parseCSV(text){
  if(field.length||row.length){row.push(field);rows.push(row);}
  return rows.filter(function(r){return r.length>1||r[0];});
 }
+
 function csvToObjects(text){
  var rows=parseCSV(text); if(!rows.length) return [];
- var headers=rows[0].map(function(h){return h.trim();});
+ var headers=rows[0].map(function(h){return h.trim().replace(/^"|"$/g, '');});
  return rows.slice(1).filter(function(r){return r.some(function(v){return v&&v.trim();});}).map(function(r){
-  var o={}; headers.forEach(function(h,i){o[h]=(r[i]||"").trim();}); return o;
+  var o={}; headers.forEach(function(h,i){o[h]=(r[i]||"").trim().replace(/^"|"$/g, '');}); return o;
  });
 }
+
 function splitList(s){ return s? s.split("|").map(function(x){return x.trim();}).filter(Boolean) : []; }
 
 function loadProductsFromSheet(){
  if(!SHEET_PRODUCTS_CSV_URL || SHEET_PRODUCTS_CSV_URL.indexOf("PASTE_")>-1) return Promise.resolve(false);
- return Promise.all([
-  fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}),
-  fetch(SHEET_STOCK_CSV_URL).then(function(r){return r.text();}).catch(function(){return "";})
- ]).then(function(res){
-  var prodRows=csvToObjects(res[0]); if(!prodRows.length) return false;
-  var stockRows=csvToObjects(res[1]);
+ return fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}).then(function(res){
+  var prodRows=csvToObjects(res); if(!prodRows.length) return false;
   var fresh=prodRows.filter(function(p){return p.id;}).map(function(p){
-   var variants=stockRows.filter(function(s){return s.id===p.id;}).map(function(s){
-    return {color:s.color,size:s.size,stock:parseInt(s.stock,10)||0};
+   var colors=splitList(p.colors); if(!colors.length) colors=["Standart"];
+   var sizes=splitList(p.sizes); if(!sizes.length) sizes=["Standart"];
+   
+   var variants=[];
+   colors.forEach(function(c){
+    sizes.forEach(function(sz){
+     variants.push({color:c, size:sz, stock:10});
+    });
    });
-   var colors=splitList(p.colors), sizes=splitList(p.sizes);
-   if(!variants.length){ colors.forEach(function(c){sizes.forEach(function(sz){variants.push({color:c,size:sz,stock:0});});}); }
+
    return {
-    id:p.id, slug:p.id, name:p.name, category:p.category,
+    id:p.id, slug:p.id, name:p.name, category:p.category||"Diğer",
     price:parseFloat(p.price)||0, oldPrice:p.oldPrice?parseFloat(p.oldPrice):null,
     isNew:/^(1|true)$/i.test(p.isNew||""), isBestSeller:/^(1|true)$/i.test(p.isBestSeller||""),
     shortDescription:p.shortDescription||"", description:p.description||"",
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
     images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
-    colors:colors.length?colors:Array.from(new Set(variants.map(function(v){return v.color;}))),
-    sizes:sizes.length?sizes:Array.from(new Set(variants.map(function(v){return v.size;}))),
-    variants:variants
+    colors:colors, sizes:sizes, variants:variants
    };
   });
   if(fresh.length){ PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
   return false;
- }).catch(function(e){ console.warn("Sheet verisi okunamadı, örnek ürünler kullanılıyor.",e); return false; });
+ }).catch(function(e){ console.warn("Sheet verisi okunamadı.",e); return false; });
 }
 
 function loadLS(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
@@ -364,14 +311,16 @@ function viewHome(){
  return header()+
  '<div class="hero" data-goto="categories"><picture>'+
   '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
-  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
+  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik" loading="eager"></picture></div>'+
  '<div class="section"><div class="cats">'+CATEGORIES.map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
- sectionBlock("Yeni Gelenler",news)+
- sectionBlock("Çok Satanlar",bests)+
- sectionBlock("Kampanyalı Ürünler",sale)+
+ (PRODUCTS.length? 
+  sectionBlock("Tüm Ürünler",PRODUCTS)+
+  sectionBlock("Yeni Gelenler",news)+
+  sectionBlock("Çok Satanlar",bests) : '<div class="empty-state"><div class="ico">⏳</div><p>Ürünler yükleniyor...</p></div>')+
  '<div class="social"><a href="'+waLink("Merhaba, ürünler hakkında bilgi almak istiyorum.")+'" target="_blank">💬 WhatsApp\'tan Bilgi Al</a>'+
  '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank">📷 @'+IG_HANDLE+'</a></div>';
 }
+
 function sectionBlock(title,list){
  if(!list.length) return '';
  return '<div class="section"><div class="section-head"><h2>'+title+'</h2><button class="link" data-goto="categories">Tümünü Gör</button></div>'+
@@ -381,7 +330,8 @@ function sectionBlock(title,list){
 function viewCategories(){
  return header()+'<div class="section"><div class="section-head"><h2>Kategoriler</h2></div>'+
  '<div class="grid">'+CATEGORIES.filter(function(c){return c!=="Yeni Gelenler";}).map(function(c){
-  var img=(PRODUCTS.filter(function(p){return p.category===c;})[0]||PRODUCTS[0]).images[0];
+  var prods=PRODUCTS.filter(function(p){return p.category===c;});
+  var img=prods.length? prods[0].images[0] : (PRODUCTS[0]? PRODUCTS[0].images[0] : '');
   return '<div class="card" data-cat="'+esc(c)+'"><div class="imgwrap"><img src="'+img+'" loading="lazy"></div><div class="info"><div class="name">'+esc(c)+'</div></div></div>';
  }).join('')+'</div></div>';
 }
@@ -414,12 +364,11 @@ function viewProduct(){
  var p=findProduct(state.productId);
  if(!p) return header("Ürün","home")+'<div class="empty-state"><div class="ico">❓</div><p>Ürün bulunamadı.</p></div>';
  var color=state.pdColor||p.colors[0];
- var size=state.pdSize;
- var variant = size? findVariant(p,color,size):null;
+ var size=state.pdSize||p.sizes[0];
+ var variant = findVariant(p,color,size);
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
- var colorHasStock = {}; p.colors.forEach(function(c){ colorHasStock[c]=p.variants.some(function(v){return v.color===c&&v.stock>0;}); });
- var sizeAvail = {}; p.sizes.forEach(function(s){ var v=findVariant(p,color,s); sizeAvail[s]= v? v.stock>0 : false; });
- var canAdd = size && variant && variant.stock>0;
+ var canAdd = variant && variant.stock>0;
+
  return header(p.name,state.category?"category":"home")+
  '<div class="view">'+
  '<div class="pd-gallery">'+p.images.map(function(im){return '<img src="'+im+'" loading="lazy">';}).join('')+'</div>'+
@@ -428,14 +377,14 @@ function viewProduct(){
   '<h1 class="pd-name">'+esc(p.name)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
- (size? '<div class="stock-line '+(canAdd?'in':'out')+'">'+(canAdd? '✓ Stokta ('+variant.stock+' adet)':'✕ Bu seçenek tükendi')+'</div>' : '')+
+ '<div class="stock-line in">✓ Stokta Var</div>'+
  '<div class="opt-label">Renk: '+esc(color)+'</div>'+
  '<div class="opt-row">'+p.colors.map(function(c){
-  return '<button class="opt-pill'+(c===color?' selected':'')+(colorHasStock[c]?'':' disabled')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
+  return '<button class="opt-pill'+(c===color?' selected':'')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
  }).join('')+'</div>'+
- '<div class="opt-label">Beden'+(size?': '+esc(size):'')+'</div>'+
+ '<div class="opt-label">Beden: '+esc(size)+'</div>'+
  '<div class="opt-row">'+p.sizes.map(function(s){
-  return '<button class="opt-pill'+(s===size?' selected':'')+(sizeAvail[s]?'':' disabled')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
+  return '<button class="opt-pill'+(s===size?' selected':'')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
  }).join('')+'</div>'+
  '<div class="opt-label">Adet</div>'+
  '<div class="qty-row"><button class="qty-btn" data-qty="-1">−</button><span class="qty-val">'+state.pdQty+'</span><button class="qty-btn" data-qty="1">+</button></div>'+
@@ -446,7 +395,7 @@ function viewProduct(){
   '<h4>Ürün Ölçüleri</h4>'+esc(p.measurements)+
   (p.modelInfo!=="—"?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
  '</div></div></div>'+
- '<div class="sticky-cta"><button class="btn-main" data-action="addcart"'+(canAdd?'':' style="opacity:.5"')+'>'+(canAdd?'SEPETE EKLE':(size?'TÜKENDİ':'BEDEN SEÇİN'))+'</button>'+
+ '<div class="sticky-cta"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
  '<a class="btn-wa" href="'+waLink("Merhaba, "+p.name+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank">💬</a></div>';
 }
 
@@ -580,16 +529,15 @@ document.addEventListener("click", function(e){
  var sortBtn = e.target.closest("[data-sort]");
  if(sortBtn){ state.sort=sortBtn.getAttribute("data-sort"); render(); return; }
  var colorBtn = e.target.closest("[data-color]");
- if(colorBtn && !colorBtn.classList.contains("disabled")){ state.pdColor=colorBtn.getAttribute("data-color"); state.pdSize=null; render(); return; }
+ if(colorBtn){ state.pdColor=colorBtn.getAttribute("data-color"); render(); return; }
  var sizeBtn = e.target.closest("[data-size]");
- if(sizeBtn && !sizeBtn.classList.contains("disabled")){ state.pdSize=sizeBtn.getAttribute("data-size"); render(); return; }
+ if(sizeBtn){ state.pdSize=sizeBtn.getAttribute("data-size"); render(); return; }
  var qtyBtn = e.target.closest("[data-qty]");
  if(qtyBtn){ var d=parseInt(qtyBtn.getAttribute("data-qty"),10); state.pdQty=Math.max(1,state.pdQty+d); render(); return; }
  var addBtn = e.target.closest('[data-action="addcart"]');
  if(addBtn){
   var p=findProduct(state.productId);
-  if(p && state.pdSize){ addToCart(p, state.pdColor||p.colors[0], state.pdSize, state.pdQty); }
-  else { showToast("Lütfen beden seçin"); }
+  if(p){ addToCart(p, state.pdColor||p.colors[0], state.pdSize||p.sizes[0], state.pdQty); }
   return;
  }
  var cqtyBtn = e.target.closest("[data-cqty]");
@@ -602,7 +550,6 @@ document.addEventListener("input", function(e){
  if(e.target.id==="searchInput"){ state.searchQ=e.target.value; renderSearchResultsOnly(); }
 });
 function renderSearchResultsOnly(){
- // preserve focus while filtering
  var scrollY=window.scrollY;
  render();
  var si=document.getElementById("searchInput");
@@ -641,7 +588,7 @@ document.addEventListener("submit", function(e){
  state.lastOrder=order; saveLS("ga_last_order",order);
  sendOrderToSheet(order);
  state.cart=[]; saveLS("ga_cart",[]);
- state.checkoutForm={}; saveLS("ga_checkout_draft",{});
+ state.checkoutForm={}; saveLS("ga_checkout_draft",{})
  state.formErrors={};
  go("success");
 });
