@@ -203,7 +203,7 @@ var PRODUCTS = [
 var SHEET_PRODUCTS_CSV_URL = "PASTE_URUNLER_CSV_LINKI_BURAYA";
 var SHEET_STOCK_CSV_URL = "PASTE_STOK_CSV_LINKI_BURAYA";
 // Siparişlerin otomatik olarak Google Sheet'e düşmesi için Apps Script Web App linkinizi buraya yapıştırın (.../exec ile biter).
-var ORDER_SHEET_ENDPOINT = "PASTE_APPS_SCRIPT_URL_BURAYA";
+var ORDER_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxIN5wq17o0GKbpcmpvxd1dPCrvFIj3kp0nYKXHBWhEsdl4wpLxZoY6xUVdPSybPl7S/exec";
 function sendOrderToSheet(order){
  if(!ORDER_SHEET_ENDPOINT || ORDER_SHEET_ENDPOINT.indexOf("PASTE_")>-1) return;
  fetch(ORDER_SHEET_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(order)}).catch(function(){});
