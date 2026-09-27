@@ -202,6 +202,12 @@ var PRODUCTS = [
 // Dolu bırakılırsa (PASTE_ ile başlıyorsa) uygulama yukarıdaki örnek ürünlerle çalışmaya devam eder.
 var SHEET_PRODUCTS_CSV_URL = "PASTE_URUNLER_CSV_LINKI_BURAYA";
 var SHEET_STOCK_CSV_URL = "PASTE_STOK_CSV_LINKI_BURAYA";
+// Siparişlerin otomatik olarak Google Sheet'e düşmesi için Apps Script Web App linkinizi buraya yapıştırın (.../exec ile biter).
+var ORDER_SHEET_ENDPOINT = "PASTE_APPS_SCRIPT_URL_BURAYA";
+function sendOrderToSheet(order){
+ if(!ORDER_SHEET_ENDPOINT || ORDER_SHEET_ENDPOINT.indexOf("PASTE_")>-1) return;
+ fetch(ORDER_SHEET_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(order)}).catch(function(){});
+}
 
 function parseCSV(text){
  var rows=[],row=[],field="",inQ=false;
@@ -633,6 +639,7 @@ document.addEventListener("submit", function(e){
   paymentMethod:"Kapıda Ödeme", status:"Yeni Sipariş"
  };
  state.lastOrder=order; saveLS("ga_last_order",order);
+ sendOrderToSheet(order);
  state.cart=[]; saveLS("ga_cart",[]);
  state.checkoutForm={}; saveLS("ga_checkout_draft",{});
  state.formErrors={};
