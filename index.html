@@ -357,8 +357,8 @@ function viewHome(){
  var sale=PRODUCTS.filter(function(p){return p.oldPrice;});
  return header()+
  '<div class="hero" data-goto="categories"><picture>'+
-  '<source media="(min-width:700px)" srcset="assets/hero-desktop.jpg">'+
-  '<img src="assets/hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
+  '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
+  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
  '<div class="section"><div class="cats">'+CATEGORIES.map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
  sectionBlock("Yeni Gelenler",news)+
  sectionBlock("Çok Satanlar",bests)+
