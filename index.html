@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gülsüm Aydın Butik</title>
+<style>
+:root{
+  --bg:#FAF7F2; --bg2:#F3ECE2; --ink:#1E1B18; --ink2:#6B6259;
+  --gold:#8B7355; --gold-d:#6E5A41; --line:#E7DFD3; --card:#FFFFFF;
+  --danger:#B23A3A; --ok:#3A7A4E;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17140F; --bg2:#211D17; --ink:#F3ECE2; --ink2:#B8AE9F;
+    --gold:#C7B08D; --gold-d:#A98F68; --line:#332C22; --card:#211D17;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17140F; --bg2:#211D17; --ink:#F3ECE2; --ink2:#B8AE9F;
+  --gold:#C7B08D; --gold-d:#A98F68; --line:#332C22; --card:#211D17;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+img{max-width:100%;display:block;}
+#app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:78px;}
+.header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-size:19px;font-weight:600;letter-spacing:.3px;}
+.brand small{display:block;font-size:10px;color:var(--ink2);font-weight:400;letter-spacing:1px;text-transform:uppercase;}
+.icon-btn{position:relative;padding:6px;font-size:20px;}
+.badge{position:absolute;top:0;right:0;background:var(--gold);color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;}
+.hero{margin:14px 16px;border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.08);}
+.hero img{width:100%;display:block;object-fit:cover;}
+.btn{display:inline-block;background:var(--ink);color:var(--bg);padding:12px 22px;border-radius:30px;font-size:13px;font-weight:600;letter-spacing:.3px;}
+.section{padding:6px 16px 4px;}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.section-head h2{font-size:16px;margin:0;}
+.section-head .link{font-size:12px;color:var(--gold-d);font-weight:600;}
+.cats{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cat-chip{flex:0 0 auto;padding:9px 16px;border-radius:20px;background:var(--bg2);font-size:13px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
+.cat-chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;}
+.card .imgwrap{aspect-ratio:3/4;background:var(--bg2);position:relative;overflow:hidden;}
+.card .imgwrap img{width:100%;height:100%;object-fit:cover;}
+.tag{position:absolute;top:8px;left:8px;background:var(--ink);color:var(--bg);font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:.3px;}
+.tag.sale{background:var(--danger);color:#fff;}
+.fav{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;}
+:root[data-theme="dark"] .fav,@media (prefers-color-scheme:dark){.fav{background:rgba(0,0,0,.5);}}
+.card .info{padding:10px 10px 12px;}
+.card .name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:4px;min-height:34px;}
+.price-row{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.price{font-size:14px;font-weight:700;color:var(--gold-d);}
+.old-price{font-size:11px;color:var(--ink2);text-decoration:line-through;}
+.disc{font-size:10px;color:var(--danger);font-weight:700;}
+.oos{position:absolute;inset:0;background:rgba(250,247,242,.7);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink2);}
+:root[data-theme="dark"] .oos{background:rgba(23,20,15,.7);}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom,0px));z-index:30;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--ink2);position:relative;padding:4px 0;}
+.nav-item.active{color:var(--gold-d);}
+.nav-item .ico{font-size:19px;}
+.view{padding:0 0 8px;}
+.pd-gallery{aspect-ratio:4/5;background:var(--bg2);overflow:hidden;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-ms-overflow-style:none;scrollbar-width:none;}
+.pd-gallery::-webkit-scrollbar{display:none;}
+.pd-gallery img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start;}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;border-bottom:1px solid var(--line);}
+.topbar h3{margin:0;font-size:15px;flex:1;}
+.back{font-size:20px;}
+.pd-body{padding:16px;}
+.pd-name{font-size:19px;font-weight:600;margin:0 0 6px;}
+.pd-price{font-size:20px;font-weight:700;color:var(--gold-d);}
+.stock-line{font-size:12px;margin:8px 0;font-weight:600;}
+.stock-line.in{color:var(--ok);}
+.stock-line.out{color:var(--danger);}
+.opt-label{font-size:13px;font-weight:700;margin:16px 0 8px;}
+.opt-row{display:flex;gap:8px;flex-wrap:wrap;}
+.opt-pill{padding:9px 15px;border-radius:10px;border:1.5px solid var(--line);font-size:13px;font-weight:600;background:var(--card);}
+.opt-pill.selected{border-color:var(--gold);background:var(--bg2);color:var(--gold-d);}
+.opt-pill.disabled{opacity:.35;text-decoration:line-through;}
+.qty-row{display:flex;align-items:center;gap:14px;margin-top:6px;}
+.qty-btn{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;font-size:17px;display:flex;align-items:center;justify-content:center;}
+.qty-val{font-size:15px;font-weight:700;min-width:20px;text-align:center;}
+.desc-block{margin-top:20px;font-size:13px;line-height:1.7;color:var(--ink2);}
+.desc-block h4{color:var(--ink);font-size:13px;margin:14px 0 4px;}
+.sticky-cta{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;}
+.btn-main{flex:1;background:var(--ink);color:var(--bg);padding:14px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;}
+.btn-wa{background:#25D366;color:#fff;padding:14px;border-radius:12px;font-weight:700;font-size:18px;width:52px;text-align:center;}
+.cart-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);}
+.cart-item img{width:70px;height:88px;object-fit:cover;border-radius:8px;background:var(--bg2);}
+.ci-info{flex:1;}
+.ci-name{font-size:13px;font-weight:600;margin-bottom:2px;}
+.ci-var{font-size:11px;color:var(--ink2);margin-bottom:6px;}
+.ci-controls{display:flex;align-items:center;justify-content:space-between;}
+.ci-qty{display:flex;align-items:center;gap:8px;}
+.mini-btn{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
+.remove{font-size:11px;color:var(--danger);font-weight:600;}
+.summary-box{padding:16px;background:var(--bg2);margin:10px 16px;border-radius:14px;}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--ink2);}
+.sum-row.total{font-size:16px;font-weight:700;color:var(--ink);border-top:1px solid var(--line);padding-top:10px;margin-top:2px;}
+.free{color:var(--ok);font-weight:700;}
+.empty-state{text-align:center;padding:60px 24px;color:var(--ink2);}
+.empty-state .ico{font-size:44px;margin-bottom:12px;}
+.form-group{padding:0 16px;margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--ink2);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:14px;font-family:inherit;}
+.form-group .err{color:var(--danger);font-size:11px;margin-top:4px;}
+.row2{display:flex;gap:10px;padding:0 16px;}
+.row2 .form-group{flex:1;padding:0;}
+.check-row{display:flex;gap:10px;align-items:flex-start;padding:0 16px;margin:14px 0;font-size:12px;color:var(--ink2);}
+.check-row input{margin-top:2px;}
+.pay-opt{margin:0 16px;padding:14px;border:1.5px solid var(--gold);background:var(--bg2);border-radius:12px;font-size:13px;}
+.pay-opt b{display:block;margin-bottom:4px;}
+.success-wrap{text-align:center;padding:50px 24px 20px;}
+.success-wrap .tick{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;font-size:32px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.order-no{font-size:13px;color:var(--ink2);margin-top:4px;}
+.order-no b{color:var(--ink);font-family:monospace;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:50;display:flex;gap:10px;align-items:center;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast a{color:var(--gold);text-decoration:underline;}
+.search-box{padding:10px 16px;position:sticky;top:0;background:var(--bg);z-index:20;}
+.search-box input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);font-size:14px;color:var(--ink);}
+.filter-bar{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;}
+.sort-chip{padding:7px 12px;border-radius:16px;background:var(--bg2);font-size:12px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
+.sort-chip.active{background:var(--ink);color:var(--bg);}
+.acc-item{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600;}
+.social{display:flex;gap:10px;padding:20px 16px 30px;justify-content:center;}
+.social a{font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;background:var(--bg2);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+var WA_NUMBER = "908508406128"; // 0850 840 61 28 -> uluslararası format
+var IG_HANDLE = "gulsumaydinbutik";
+var SHIPPING_FEE = 0; // sistem değişkeni: 0 = ücretsiz kargo
+
+var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
+
+var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal"];
+
+var PRODUCTS = [
+ {id:"p1",slug:"luna-pantolonlu-ikili-takim",name:"Luna Pantolonlu İkili Takım",category:"Takım",
+  price:1499,oldPrice:1899,isNew:true,isBestSeller:true,
+  shortDescription:"1. sınıf modal kumaş, rahat ve bol kalıp.",
+  description:"1. sınıf modal kumaştan üretilmiştir. Yumuşak ve rahat kullanım sunar. Rahat/bol kalıptır.",
+  fabric:"%100 Modal", fit:"Rahat / Bol Kalıp",
+  measurements:"Ceket: 80 cm, Pantolon: 100 cm", modelInfo:"Model 166 cm, 60 kg, 38 beden giymektedir.",
+  images:[IMG("luna1"),IMG("luna2"),IMG("luna3")],
+  colors:["Siyah","Bej","Pudra","Lacivert"], sizes:["36","38","40","42","44"],
+  variants:[
+   {color:"Siyah",size:"36",stock:4},{color:"Siyah",size:"38",stock:5},{color:"Siyah",size:"40",stock:0},{color:"Siyah",size:"42",stock:2},{color:"Siyah",size:"44",stock:0},
+   {color:"Bej",size:"36",stock:0},{color:"Bej",size:"38",stock:6},{color:"Bej",size:"40",stock:3},{color:"Bej",size:"42",stock:0},{color:"Bej",size:"44",stock:1},
+   {color:"Pudra",size:"36",stock:2},{color:"Pudra",size:"38",stock:0},{color:"Pudra",size:"40",stock:4},{color:"Pudra",size:"42",stock:3},{color:"Pudra",size:"44",stock:0},
+   {color:"Lacivert",size:"36",stock:0},{color:"Lacivert",size:"38",stock:2},{color:"Lacivert",size:"40",stock:0},{color:"Lacivert",size:"42",stock:5},{color:"Lacivert",size:"44",stock:2}
+  ]},
+ {id:"p2",slug:"nil-uzun-elbise",name:"Nil Uzun Elbise",category:"Elbise",
+  price:1299,oldPrice:null,isNew:true,isBestSeller:false,
+  shortDescription:"Zarif düşüşlü, günlük ve şık kullanım.",
+  description:"Akıcı kumaşı ile zarif bir duruş sağlar. Günlük kullanıma uygun, vücudu sarmayan kalıp.",
+  fabric:"Viskon", fit:"Salaş Kalıp", measurements:"Boy: 142 cm", modelInfo:"Model 168 cm, 40 beden giymektedir.",
+  images:[IMG("nil1"),IMG("nil2")],
+  colors:["Siyah","Lacivert"], sizes:["38","40","42","44"],
+  variants:[
+   {color:"Siyah",size:"38",stock:3},{color:"Siyah",size:"40",stock:0},{color:"Siyah",size:"42",stock:2},{color:"Siyah",size:"44",stock:5},
+   {color:"Lacivert",size:"38",stock:0},{color:"Lacivert",size:"40",stock:4},{color:"Lacivert",size:"42",stock:0},{color:"Lacivert",size:"44",stock:1}
+  ]},
+ {id:"p3",slug:"defne-tunik",name:"Defne Tunik",category:"Tunik",
+  price:749,oldPrice:949,isNew:false,isBestSeller:true,
+  shortDescription:"Günlük kombinlere uygun rahat tunik.",
+  description:"Nefes alan kumaşı ile gün boyu konfor sağlar. Pantolon ve etek ile rahatça kombinlenir.",
+  fabric:"Keten Karışımlı", fit:"Rahat Kalıp", measurements:"Boy: 78 cm", modelInfo:"Model 165 cm, 36 beden giymektedir.",
+  images:[IMG("def1"),IMG("def2")],
+  colors:["Bej","Beyaz","Siyah"], sizes:["36","38","40","42"],
+  variants:[
+   {color:"Bej",size:"36",stock:2},{color:"Bej",size:"38",stock:0},{color:"Bej",size:"40",stock:3},{color:"Bej",size:"42",stock:0},
+   {color:"Beyaz",size:"36",stock:0},{color:"Beyaz",size:"38",stock:5},{color:"Beyaz",size:"40",stock:0},{color:"Beyaz",size:"42",stock:2},
+   {color:"Siyah",size:"36",stock:4},{color:"Siyah",size:"38",stock:0},{color:"Siyah",size:"40",stock:1},{color:"Siyah",size:"42",stock:0}
+  ]},
+ {id:"p4",slug:"selin-ipek-sal",name:"Selin İpek Şal",category:"Şal",
+  price:329,oldPrice:null,isNew:false,isBestSeller:false,
+  shortDescription:"Yumuşak dokulu, kolay bağlanan şal.",
+  description:"Yüksek kalite kumaşı ile hem yumuşak hem de kolay şekillenen bir şal. Günlük ve özel gün kombinlerine uygundur.",
+  fabric:"İpek Karışımlı", fit:"Standart", measurements:"90x90 cm", modelInfo:"—",
+  images:[IMG("sal1"),IMG("sal2")],
+  colors:["Bej","Pudra","Siyah"], sizes:["Standart"],
+  variants:[
+   {color:"Bej",size:"Standart",stock:8},{color:"Pudra",size:"Standart",stock:0},{color:"Siyah",size:"Standart",stock:6}
+  ]}
+];
+
+// ===== GOOGLE SHEETS ENTEGRASYONU =====
+// Aşağıdaki iki linki kendi Google E-Tablonuzun "Web'de Yayınla > CSV" linkleriyle değiştirin.
+// Dolu bırakılırsa (PASTE_ ile başlıyorsa) uygulama yukarıdaki örnek ürünlerle çalışmaya devam eder.
+var SHEET_PRODUCTS_CSV_URL = "PASTE_URUNLER_CSV_LINKI_BURAYA";
+var SHEET_STOCK_CSV_URL = "PASTE_STOK_CSV_LINKI_BURAYA";
+
+function parseCSV(text){
+ var rows=[],row=[],field="",inQ=false;
+ for(var i=0;i<text.length;i++){var c=text[i];
+  if(inQ){ if(c=='"'){ if(text[i+1]=='"'){field+='"';i++;} else inQ=false; } else field+=c; }
+  else { if(c=='"') inQ=true; else if(c==','){row.push(field);field="";}
+   else if(c=='\n'||c=='\r'){ if(c=='\r'&&text[i+1]=='\n') i++; row.push(field);field="";rows.push(row);row=[]; }
+   else field+=c; }
+ }
+ if(field.length||row.length){row.push(field);rows.push(row);}
+ return rows.filter(function(r){return r.length>1||r[0];});
+}
+function csvToObjects(text){
+ var rows=parseCSV(text); if(!rows.length) return [];
+ var headers=rows[0].map(function(h){return h.trim();});
+ return rows.slice(1).filter(function(r){return r.some(function(v){return v&&v.trim();});}).map(function(r){
+  var o={}; headers.forEach(function(h,i){o[h]=(r[i]||"").trim();}); return o;
+ });
+}
+function splitList(s){ return s? s.split("|").map(function(x){return x.trim();}).filter(Boolean) : []; }
+
+function loadProductsFromSheet(){
+ if(!SHEET_PRODUCTS_CSV_URL || SHEET_PRODUCTS_CSV_URL.indexOf("PASTE_")>-1) return Promise.resolve(false);
+ return Promise.all([
+  fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}),
+  fetch(SHEET_STOCK_CSV_URL).then(function(r){return r.text();}).catch(function(){return "";})
+ ]).then(function(res){
+  var prodRows=csvToObjects(res[0]); if(!prodRows.length) return false;
+  var stockRows=csvToObjects(res[1]);
+  var fresh=prodRows.filter(function(p){return p.id;}).map(function(p){
+   var variants=stockRows.filter(function(s){return s.id===p.id;}).map(function(s){
+    return {color:s.color,size:s.size,stock:parseInt(s.stock,10)||0};
+   });
+   var colors=splitList(p.colors), sizes=splitList(p.sizes);
+   if(!variants.length){ colors.forEach(function(c){sizes.forEach(function(sz){variants.push({color:c,size:sz,stock:0});});}); }
+   return {
+    id:p.id, slug:p.id, name:p.name, category:p.category,
+    price:parseFloat(p.price)||0, oldPrice:p.oldPrice?parseFloat(p.oldPrice):null,
+    isNew:/^(1|true)$/i.test(p.isNew||""), isBestSeller:/^(1|true)$/i.test(p.isBestSeller||""),
+    shortDescription:p.shortDescription||"", description:p.description||"",
+    fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
+    images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
+    colors:colors.length?colors:Array.from(new Set(variants.map(function(v){return v.color;}))),
+    sizes:sizes.length?sizes:Array.from(new Set(variants.map(function(v){return v.size;}))),
+    variants:variants
+   };
+  });
+  if(fresh.length){ PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
+  return false;
+ }).catch(function(e){ console.warn("Sheet verisi okunamadı, örnek ürünler kullanılıyor.",e); return false; });
+}
+
+function loadLS(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function saveLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+var state = {
+ view:"home", productId:null, category:null,
+ cart: loadLS("ga_cart",[]),
+ favorites: loadLS("ga_favs",[]),
+ lastOrder: loadLS("ga_last_order",null),
+ sort:"onerilen", searchQ:"",
+ pdColor:null, pdSize:null, pdQty:1,
+ checkoutForm: loadLS("ga_checkout_draft",{}),
+ formErrors:{}
+};
+
+function findProduct(id){ for(var i=0;i<PRODUCTS.length;i++){ if(PRODUCTS[i].id===id) return PRODUCTS[i]; } return null; }
+function findVariant(p,color,size){ for(var i=0;i<p.variants.length;i++){ var v=p.variants[i]; if(v.color===color&&v.size===size) return v; } return null; }
+function money(n){ return n.toLocaleString("tr-TR")+" TL"; }
+function cartCount(){ var c=0; state.cart.forEach(function(i){c+=i.qty;}); return c; }
+function cartSubtotal(){ var s=0; state.cart.forEach(function(i){s+=i.price*i.qty;}); return s; }
+function isFav(id){ return state.favorites.indexOf(id)>-1; }
+function toggleFav(id){ var i=state.favorites.indexOf(id); if(i>-1) state.favorites.splice(i,1); else state.favorites.push(id); saveLS("ga_favs",state.favorites); render(); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null;
+ if(view==="product"){ state.pdColor=null; state.pdSize=null; state.pdQty=1; }
+ window.scrollTo(0,0); render();
+}
+
+function showToast(msg,link){
+ var t=document.getElementById("toast");
+ t.innerHTML = esc(msg) + (link? ' <a href="#" data-goto="cart">Sepete Git</a>':"");
+ t.classList.add("show");
+ clearTimeout(window._toastTimer);
+ window._toastTimer=setTimeout(function(){ t.classList.remove("show"); }, 2600);
+}
+
+function addToCart(p,color,size,qty){
+ var variant=findVariant(p,color,size);
+ if(!variant||variant.stock<1){ showToast("Bu varyant stokta yok"); return; }
+ var key=p.id+"-"+color+"-"+size;
+ var existing=null;
+ state.cart.forEach(function(i){ if(i.key===key) existing=i; });
+ var currentQty = existing? existing.qty:0;
+ if(currentQty+qty>variant.stock){ showToast("Stokta sadece "+variant.stock+" adet var"); return; }
+ if(existing){ existing.qty+=qty; } else {
+  state.cart.push({key:key,productId:p.id,name:p.name,image:p.images[0],color:color,size:size,price:p.price,qty:qty});
+ }
+ saveLS("ga_cart",state.cart);
+ showToast("Ürün sepete eklendi",true);
+ render();
+}
+function changeQty(key,delta){
+ var item=null; state.cart.forEach(function(i){ if(i.key===key) item=i; });
+ if(!item) return;
+ var p=findProduct(item.productId); var v=p?findVariant(p,item.color,item.size):null;
+ var maxStock = v? v.stock : 99;
+ item.qty+=delta;
+ if(item.qty<1){ state.cart=state.cart.filter(function(i){return i.key!==key;}); }
+ else if(item.qty>maxStock){ item.qty=maxStock; showToast("Stok sınırına ulaşıldı"); }
+ saveLS("ga_cart",state.cart); render();
+}
+function removeItem(key){ state.cart=state.cart.filter(function(i){return i.key!==key;}); saveLS("ga_cart",state.cart); render(); }
+
+function waLink(text){ return "https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(text); }
+
+function header(title,back){
+ if(back){
+  return '<div class="topbar"><button class="back" data-goto="'+back+'">‹</button><h3>'+esc(title)+'</h3><div style="width:20px"></div></div>';
+ }
+ return '<div class="header"><div class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></div>'+
+  '<div style="display:flex;gap:4px"><button class="icon-btn" data-goto="search">🔍</button>'+
+  '<button class="icon-btn" data-goto="cart">🛒'+(cartCount()>0?'<span class="badge">'+cartCount()+'</span>':'')+'</button></div></div>';
+}
+
+function bottomNav(){
+ var items=[["home","⌂","Ana Sayfa"],["categories","▦","Kategoriler"],["favorites","♡","Favoriler"],["cart","🛒","Sepet"],["account","☰","Hesabım"]];
+ return '<div class="bottom-nav">'+items.map(function(it){
+  var active = state.view===it[0] || (it[0]==="categories"&&state.view==="category");
+  var badge = it[0]==="cart"&&cartCount()>0 ? '<span class="badge" style="position:static;margin-left:2px">'+cartCount()+'</span>' : '';
+  return '<button class="nav-item'+(active?' active':'')+'" data-goto="'+it[0]+'"><span class="ico">'+it[1]+'</span><span>'+it[2]+badge+'</span></button>';
+ }).join('')+'</div>';
+}
+
+function productCard(p){
+ var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
+ var totalStock = p.variants.reduce(function(a,v){return a+v.stock;},0);
+ return '<div class="card" data-goto="product" data-id="'+p.id+'">'+
+  '<div class="imgwrap"><img src="'+p.images[0]+'" loading="lazy" alt="'+esc(p.name)+'">'+
+  (p.isNew?'<span class="tag">Yeni</span>':(p.isBestSeller?'<span class="tag">Çok Satan</span>':''))+
+  (disc>0?'<span class="tag sale" style="top:auto;bottom:8px;left:8px;">%'+disc+'</span>':'')+
+  '<button class="fav" data-fav="'+p.id+'">'+(isFav(p.id)?'❤️':'🤍')+'</button>'+
+  (totalStock===0?'<div class="oos">Tükendi</div>':'')+
+  '</div><div class="info"><div class="name">'+esc(p.name)+'</div>'+
+  '<div class="price-row"><span class="price">'+money(p.price)+'</span>'+
+  (p.oldPrice?'<span class="old-price">'+money(p.oldPrice)+'</span>':'')+'</div></div></div>';
+}
+
+function viewHome(){
+ var news=PRODUCTS.filter(function(p){return p.isNew;});
+ var bests=PRODUCTS.filter(function(p){return p.isBestSeller;});
+ var sale=PRODUCTS.filter(function(p){return p.oldPrice;});
+ return header()+
+ '<div class="hero" data-goto="categories"><picture>'+
+  '<source media="(min-width:700px)" srcset="assets/hero-desktop.jpg">'+
+  '<img src="assets/hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
+ '<div class="section"><div class="cats">'+CATEGORIES.map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
+ sectionBlock("Yeni Gelenler",news)+
+ sectionBlock("Çok Satanlar",bests)+
+ sectionBlock("Kampanyalı Ürünler",sale)+
+ '<div class="social"><a href="'+waLink("Merhaba, ürünler hakkında bilgi almak istiyorum.")+'" target="_blank">💬 WhatsApp\'tan Bilgi Al</a>'+
+ '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank">📷 @'+IG_HANDLE+'</a></div>';
+}
+function sectionBlock(title,list){
+ if(!list.length) return '';
+ return '<div class="section"><div class="section-head"><h2>'+title+'</h2><button class="link" data-goto="categories">Tümünü Gör</button></div>'+
+ '<div class="grid">'+list.map(productCard).join('')+'</div></div>';
+}
+
+function viewCategories(){
+ return header()+'<div class="section"><div class="section-head"><h2>Kategoriler</h2></div>'+
+ '<div class="grid">'+CATEGORIES.filter(function(c){return c!=="Yeni Gelenler";}).map(function(c){
+  var img=(PRODUCTS.filter(function(p){return p.category===c;})[0]||PRODUCTS[0]).images[0];
+  return '<div class="card" data-cat="'+esc(c)+'"><div class="imgwrap"><img src="'+img+'" loading="lazy"></div><div class="info"><div class="name">'+esc(c)+'</div></div></div>';
+ }).join('')+'</div></div>';
+}
+
+function viewCategory(){
+ var cat=state.category;
+ var list = cat==="Yeni Gelenler"? PRODUCTS.filter(function(p){return p.isNew;}) : PRODUCTS.filter(function(p){return p.category===cat;});
+ if(state.sort==="yeni") list=list.slice().reverse();
+ if(state.sort==="artan") list=list.slice().sort(function(a,b){return a.price-b.price;});
+ if(state.sort==="azalan") list=list.slice().sort(function(a,b){return b.price-a.price;});
+ var sorts=[["onerilen","Önerilen"],["yeni","En Yeni"],["artan","Fiyat ↑"],["azalan","Fiyat ↓"]];
+ return header(cat,"home")+
+ '<div class="filter-bar">'+sorts.map(function(s){return '<button class="sort-chip'+(state.sort===s[0]?' active':'')+'" data-sort="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
+ '<div class="section">'+(list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' :
+  '<div class="empty-state"><div class="ico">🔎</div><p>Bu kategoride ürün bulunamadı.</p></div>')+'</div>';
+}
+
+function viewSearch(){
+ var q=state.searchQ.trim().toLowerCase();
+ var list = q? PRODUCTS.filter(function(p){
+  return p.name.toLowerCase().indexOf(q)>-1 || p.category.toLowerCase().indexOf(q)>-1 || p.colors.join(" ").toLowerCase().indexOf(q)>-1 || p.description.toLowerCase().indexOf(q)>-1;
+ }) : [];
+ return header("Ara","home")+
+ '<div class="search-box"><input id="searchInput" type="text" placeholder="Ürün ara..." value="'+esc(state.searchQ)+'"></div>'+
+ '<div class="section">'+(!q? '<div class="empty-state"><div class="ico">🔍</div><p>Ürün, kategori veya renk yazarak arayın.</p></div>' :
+  (list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' : '<div class="empty-state"><div class="ico">🙁</div><p>Aradığınız ürünü bulamadık.</p></div>'))+'</div>';
+}
+
+function viewProduct(){
+ var p=findProduct(state.productId);
+ if(!p) return header("Ürün","home")+'<div class="empty-state"><div class="ico">❓</div><p>Ürün bulunamadı.</p></div>';
+ var color=state.pdColor||p.colors[0];
+ var size=state.pdSize;
+ var variant = size? findVariant(p,color,size):null;
+ var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
+ var colorHasStock = {}; p.colors.forEach(function(c){ colorHasStock[c]=p.variants.some(function(v){return v.color===c&&v.stock>0;}); });
+ var sizeAvail = {}; p.sizes.forEach(function(s){ var v=findVariant(p,color,s); sizeAvail[s]= v? v.stock>0 : false; });
+ var canAdd = size && variant && variant.stock>0;
+ return header(p.name,state.category?"category":"home")+
+ '<div class="view">'+
+ '<div class="pd-gallery">'+p.images.map(function(im){return '<img src="'+im+'" loading="lazy">';}).join('')+'</div>'+
+ '<div class="pd-body">'+
+ '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
+  '<h1 class="pd-name">'+esc(p.name)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
+ '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
+ '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
+ (size? '<div class="stock-line '+(canAdd?'in':'out')+'">'+(canAdd? '✓ Stokta ('+variant.stock+' adet)':'✕ Bu seçenek tükendi')+'</div>' : '')+
+ '<div class="opt-label">Renk: '+esc(color)+'</div>'+
+ '<div class="opt-row">'+p.colors.map(function(c){
+  return '<button class="opt-pill'+(c===color?' selected':'')+(colorHasStock[c]?'':' disabled')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
+ }).join('')+'</div>'+
+ '<div class="opt-label">Beden'+(size?': '+esc(size):'')+'</div>'+
+ '<div class="opt-row">'+p.sizes.map(function(s){
+  return '<button class="opt-pill'+(s===size?' selected':'')+(sizeAvail[s]?'':' disabled')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
+ }).join('')+'</div>'+
+ '<div class="opt-label">Adet</div>'+
+ '<div class="qty-row"><button class="qty-btn" data-qty="-1">−</button><span class="qty-val">'+state.pdQty+'</span><button class="qty-btn" data-qty="1">+</button></div>'+
+ '<div class="desc-block">'+
+  '<h4>Ürün Açıklaması</h4>'+esc(p.description)+
+  '<h4>Kumaş</h4>'+esc(p.fabric)+
+  '<h4>Kalıp</h4>'+esc(p.fit)+
+  '<h4>Ürün Ölçüleri</h4>'+esc(p.measurements)+
+  (p.modelInfo!=="—"?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
+ '</div></div></div>'+
+ '<div class="sticky-cta"><button class="btn-main" data-action="addcart"'+(canAdd?'':' style="opacity:.5"')+'>'+(canAdd?'SEPETE EKLE':(size?'TÜKENDİ':'BEDEN SEÇİN'))+'</button>'+
+ '<a class="btn-wa" href="'+waLink("Merhaba, "+p.name+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank">💬</a></div>';
+}
+
+function viewFavorites(){
+ var list=PRODUCTS.filter(function(p){return isFav(p.id);});
+ return header("Favoriler","home")+'<div class="section">'+
+ (list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' :
+  '<div class="empty-state"><div class="ico">🤍</div><p>Favori ürününüz bulunmuyor.</p></div>')+'</div>';
+}
+
+function viewCart(){
+ if(!state.cart.length){
+  return header("Sepetim","home")+'<div class="empty-state"><div class="ico">🛒</div><p>Sepetiniz şu anda boş.</p>'+
+  '<button class="btn" data-goto="home" style="margin-top:14px">Alışverişe Devam Et</button></div>';
+ }
+ var sub=cartSubtotal(); var total=sub+SHIPPING_FEE;
+ return header("Sepetim","home")+
+ '<div>'+state.cart.map(function(i){
+  return '<div class="cart-item"><img src="'+i.image+'" loading="lazy"><div class="ci-info">'+
+   '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+' / '+esc(i.size)+' · '+money(i.price)+'</div>'+
+   '<div class="ci-controls"><div class="ci-qty"><button class="mini-btn" data-cqty="'+i.key+'|-1">−</button><span>'+i.qty+'</span><button class="mini-btn" data-cqty="'+i.key+'|1">+</button></div>'+
+   '<button class="remove" data-remove="'+i.key+'">Sil</button></div></div></div>';
+ }).join('')+'</div>'+
+ '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
+ '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
+ '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
+ '<div style="padding:4px 16px 20px"><button class="btn-main" style="width:100%" data-goto="checkout">SİPARİŞİ TAMAMLA</button></div>';
+}
+
+var CITIES=["İstanbul","Ankara","İzmir","Bursa","Antalya","Konya","Diğer"];
+function fld(name,label,val,type,required){
+ return '<div class="form-group"><label>'+label+(required?' *':'')+'</label>'+
+  '<input name="'+name+'" type="'+(type||'text')+'" value="'+esc(val||'')+'">' +
+  (state.formErrors[name]?'<div class="err">'+state.formErrors[name]+'</div>':'')+'</div>';
+}
+function viewCheckout(){
+ if(!state.cart.length){ go("cart"); return ""; }
+ var f=state.checkoutForm; var sub=cartSubtotal(); var total=sub+SHIPPING_FEE;
+ return header("Teslimat & Ödeme","cart")+
+ '<form id="checkoutForm">'+
+ '<div class="section"><h2 style="font-size:14px">Müşteri Bilgileri</h2></div>'+
+ fld("firstName","Ad",f.firstName,"text",true)+
+ fld("lastName","Soyad",f.lastName,"text",true)+
+ fld("phone","Telefon (05XX XXX XX XX)",f.phone,"tel",true)+
+ fld("email","E-posta (opsiyonel)",f.email,"email",false)+
+ '<div class="section"><h2 style="font-size:14px">Teslimat Adresi</h2></div>'+
+ '<div class="form-group"><label>İl *</label><select name="city">'+['Seçiniz'].concat(CITIES).map(function(c){return '<option'+(f.city===c?' selected':'')+'>'+c+'</option>';}).join('')+'</select>'+(state.formErrors.city?'<div class="err">'+state.formErrors.city+'</div>':'')+'</div>'+
+ fld("district","İlçe",f.district,"text",true)+
+ fld("neighborhood","Mahalle",f.neighborhood,"text",true)+
+ '<div class="form-group"><label>Açık Adres *</label><textarea name="address" rows="3">'+esc(f.address||'')+'</textarea>'+(state.formErrors.address?'<div class="err">'+state.formErrors.address+'</div>':'')+'</div>'+
+ fld("postcode","Posta Kodu (opsiyonel)",f.postcode,"text",false)+
+ '<div class="form-group"><label>Sipariş Notu</label><textarea name="note" rows="2">'+esc(f.note||'')+'</textarea></div>'+
+ '<div class="section"><h2 style="font-size:14px">Ödeme Yöntemi</h2></div>'+
+ '<div class="pay-opt">● <b style="display:inline">Kapıda Ödeme</b><br>Ödemenizi ürün teslim edildiğinde kargo görevlisine yapabilirsiniz.</div>'+
+ '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
+ '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
+ '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
+ '<div class="check-row"><input type="checkbox" id="agree" '+(f.agree?'checked':'')+'><label for="agree">Mesafeli satış sözleşmesini ve ilgili bilgilendirmeleri okudum ve kabul ediyorum.</label></div>'+
+ (state.formErrors.agree?'<div class="form-group" style="margin-top:-8px"><div class="err">'+state.formErrors.agree+'</div></div>':'')+
+ '<div style="padding:6px 16px 24px"><button type="submit" class="btn-main" style="width:100%">SİPARİŞİ TAMAMLA</button></div>'+
+ '</form>';
+}
+
+function genOrderId(){
+ var d=new Date(); var ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+ var seq=String(Math.floor(Math.random()*900)+100);
+ return "GA-"+ds+"-"+seq;
+}
+
+function viewSuccess(){
+ var o=state.lastOrder;
+ if(!o) { go("home"); return ""; }
+ return header("Sipariş Alındı")+
+ '<div class="success-wrap"><div class="tick">✓</div><h2 style="margin:0 0 6px">Siparişiniz Alındı!</h2>'+
+ '<p style="color:var(--ink2);font-size:13px">Siparişiniz başarıyla oluşturuldu.</p>'+
+ '<div class="order-no">Sipariş Numarası<br><b>'+o.orderId+'</b></div></div>'+
+ '<div class="summary-box"><div class="sum-row"><span>Ürün Adedi</span><span>'+o.items.reduce(function(a,i){return a+i.qty;},0)+'</span></div>'+
+ '<div class="sum-row"><span>Ödeme Yöntemi</span><span>Kapıda Ödeme</span></div>'+
+ '<div class="sum-row total"><span>Toplam</span><span>'+money(o.total)+'</span></div></div>'+
+ '<div style="padding:6px 16px"><a class="btn-main" style="display:block;text-align:center;background:#25D366;color:#fff" href="'+waLink("Merhaba, "+o.orderId+" numaralı siparişim hakkında bilgi almak istiyorum.")+'" target="_blank">WhatsApp\'tan Sipariş Bilgisi Al</a></div>'+
+ '<div style="padding:12px 16px 24px"><button class="btn-main" style="width:100%;background:var(--bg2);color:var(--ink)" data-goto="home">Alışverişe Devam Et</button></div>';
+}
+
+function viewAccount(){
+ return header("Hesabım")+
+ '<div class="section"><p style="color:var(--ink2);font-size:13px">Misafir olarak alışveriş yapıyorsunuz.</p></div>'+
+ '<div><div class="acc-item" data-goto="cart"><span>Siparişlerim'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></div>'+
+ '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
+ '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
+ '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span>Instagram</span><span>›</span></a></div>';
+}
+
+function render(){
+ var html="";
+ switch(state.view){
+  case "home": html=viewHome(); break;
+  case "categories": html=viewCategories(); break;
+  case "category": html=viewCategory(); break;
+  case "search": html=viewSearch(); break;
+  case "product": html=viewProduct(); break;
+  case "favorites": html=viewFavorites(); break;
+  case "cart": html=viewCart(); break;
+  case "checkout": html=viewCheckout(); break;
+  case "success": html=viewSuccess(); break;
+  case "account": html=viewAccount(); break;
+  default: html=viewHome();
+ }
+ var app=document.getElementById("app");
+ app.innerHTML = html + bottomNav() + '<div class="toast" id="toast"></div>';
+ if(state.view==="search"){
+  var si=document.getElementById("searchInput");
+  if(si){ si.focus(); var v=si.value; si.value=""; si.value=v; }
+ }
+}
+
+document.addEventListener("click", function(e){
+ var t = e.target.closest("[data-goto]");
+ if(t){
+  var v = t.getAttribute("data-goto");
+  var card = t.closest("[data-id]");
+  if(v==="product"){ go("product",{productId: (card||t).getAttribute("data-id")}); }
+  else { go(v); }
+  return;
+ }
+ var catBtn = e.target.closest("[data-cat]");
+ if(catBtn){ go("category",{category:catBtn.getAttribute("data-cat")}); return; }
+ var cardEl = e.target.closest(".card[data-id]");
+ if(cardEl && !e.target.closest("[data-fav]")){ go("product",{productId:cardEl.getAttribute("data-id")}); return; }
+ var favBtn = e.target.closest("[data-fav]");
+ if(favBtn){ e.stopPropagation(); toggleFav(favBtn.getAttribute("data-fav")); return; }
+ var sortBtn = e.target.closest("[data-sort]");
+ if(sortBtn){ state.sort=sortBtn.getAttribute("data-sort"); render(); return; }
+ var colorBtn = e.target.closest("[data-color]");
+ if(colorBtn && !colorBtn.classList.contains("disabled")){ state.pdColor=colorBtn.getAttribute("data-color"); state.pdSize=null; render(); return; }
+ var sizeBtn = e.target.closest("[data-size]");
+ if(sizeBtn && !sizeBtn.classList.contains("disabled")){ state.pdSize=sizeBtn.getAttribute("data-size"); render(); return; }
+ var qtyBtn = e.target.closest("[data-qty]");
+ if(qtyBtn){ var d=parseInt(qtyBtn.getAttribute("data-qty"),10); state.pdQty=Math.max(1,state.pdQty+d); render(); return; }
+ var addBtn = e.target.closest('[data-action="addcart"]');
+ if(addBtn){
+  var p=findProduct(state.productId);
+  if(p && state.pdSize){ addToCart(p, state.pdColor||p.colors[0], state.pdSize, state.pdQty); }
+  else { showToast("Lütfen beden seçin"); }
+  return;
+ }
+ var cqtyBtn = e.target.closest("[data-cqty]");
+ if(cqtyBtn){ var parts=cqtyBtn.getAttribute("data-cqty").split("|"); changeQty(parts[0],parseInt(parts[1],10)); return; }
+ var rmBtn = e.target.closest("[data-remove]");
+ if(rmBtn){ removeItem(rmBtn.getAttribute("data-remove")); return; }
+});
+
+document.addEventListener("input", function(e){
+ if(e.target.id==="searchInput"){ state.searchQ=e.target.value; renderSearchResultsOnly(); }
+});
+function renderSearchResultsOnly(){
+ // preserve focus while filtering
+ var scrollY=window.scrollY;
+ render();
+ var si=document.getElementById("searchInput");
+ if(si){ si.focus(); si.setSelectionRange(si.value.length,si.value.length); }
+ window.scrollTo(0,scrollY);
+}
+
+document.addEventListener("submit", function(e){
+ if(e.target.id!=="checkoutForm") return;
+ e.preventDefault();
+ var fd=new FormData(e.target);
+ var f={};
+ fd.forEach(function(v,k){ f[k]=v; });
+ f.agree = document.getElementById("agree").checked;
+ var errors={};
+ if(!f.firstName) errors.firstName="Ad zorunludur.";
+ if(!f.lastName) errors.lastName="Soyad zorunludur.";
+ if(!f.phone || !/^0?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(f.phone.replace(/\s/g,'').replace(/^0?5/,'05'))){
+  if(!/^0?5[0-9]{9}$/.test(f.phone.replace(/\s/g,''))) errors.phone="Geçerli bir telefon numarası girin (05XX XXX XX XX).";
+ }
+ if(!f.city || f.city==="Seçiniz") errors.city="İl seçiniz.";
+ if(!f.district) errors.district="İlçe zorunludur.";
+ if(!f.neighborhood) errors.neighborhood="Mahalle zorunludur.";
+ if(!f.address) errors.address="Açık adres zorunludur.";
+ if(!f.agree) errors.agree="Devam etmek için sözleşmeyi onaylayın.";
+ state.checkoutForm=f; saveLS("ga_checkout_draft",f);
+ state.formErrors=errors;
+ if(Object.keys(errors).length){ render(); return; }
+ var order={
+  orderId:genOrderId(), createdAt:new Date().toISOString(),
+  customerName:f.firstName+" "+f.lastName, customerPhone:f.phone, customerEmail:f.email||"",
+  city:f.city, district:f.district, neighborhood:f.neighborhood, address:f.address, note:f.note||"",
+  items:state.cart.slice(), subtotal:cartSubtotal(), shipping:SHIPPING_FEE, total:cartSubtotal()+SHIPPING_FEE,
+  paymentMethod:"Kapıda Ödeme", status:"Yeni Sipariş"
+ };
+ state.lastOrder=order; saveLS("ga_last_order",order);
+ state.cart=[]; saveLS("ga_cart",[]);
+ state.checkoutForm={}; saveLS("ga_checkout_draft",{});
+ state.formErrors={};
+ go("success");
+});
+
+render();
+loadProductsFromSheet().then(function(updated){ if(updated) render(); });
+})();
+</script>
+</body>
+</html>
