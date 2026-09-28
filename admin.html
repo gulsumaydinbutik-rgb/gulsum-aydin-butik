@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gülsüm Aydın Butik — Ürün Yönetimi</title>
+<style>
+:root{--bg:#F7F2EA;--card:#fff;--ink:#1E1B18;--ink2:#6B6259;--gold:#8B7355;--gold-d:#6E5A41;--line:#E7DFD3;}
+*{box-sizing:border-box;}
+body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);padding:20px;}
+h1{font-size:20px;margin:0 0 4px;}
+.sub{color:var(--ink2);font-size:13px;margin-bottom:20px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:480px;margin:60px auto;}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);margin-bottom:10px;}
+label{font-size:12px;font-weight:700;color:var(--ink2);display:block;margin-bottom:4px;}
+button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;}
+.btn-main{background:var(--ink);color:#fff;width:100%;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink);}
+.btn-danger{background:#B23A3A;color:#fff;}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top;}
+th{background:var(--bg);color:var(--ink2);font-size:11px;text-transform:uppercase;}
+.row-actions{display:flex;gap:6px;}
+.row-actions button{padding:6px 10px;font-size:12px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow:auto;z-index:50;}
+.modal{background:#fff;border-radius:14px;padding:24px;max-width:520px;width:100%;}
+.modal h2{margin-top:0;font-size:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.checks{display:flex;gap:16px;font-size:13px;align-items:center;margin-bottom:10px;}
+.checks label{display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);}
+.msg{font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:10px;}
+.msg.err{background:#FBEAEA;color:#B23A3A;}
+.msg.ok{background:#EAF6EC;color:#2E7D42;}
+.hidden{display:none;}
+small.hint{color:var(--ink2);display:block;margin:-6px 0 10px;font-size:11px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="card">
+ <h1>Yönetim Paneli</h1>
+ <p class="sub">Gülsüm Aydın Butik — Ürün Yönetimi</p>
+ <label>Şifre</label>
+ <input type="password" id="passInput" placeholder="Şifrenizi girin">
+ <button class="btn-main" onclick="doLogin()">Giriş Yap</button>
+ <div id="loginMsg"></div>
+</div>
+
+<div id="panel" class="hidden">
+ <div class="topbar">
+  <div><h1>Ürün Yönetimi</h1><p class="sub">Gülsüm Aydın Butik</p></div>
+  <button class="btn-gold" onclick="openForm(null)">+ Yeni Ürün</button>
+ </div>
+ <div id="listMsg"></div>
+ <table id="prodTable">
+  <thead><tr><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Renk/Beden</th><th>Etiket</th><th></th></tr></thead>
+  <tbody id="prodBody"></tbody>
+ </table>
+</div>
+
+<div id="modalBg" class="modal-bg hidden">
+ <div class="modal">
+  <h2 id="modalTitle">Yeni Ürün</h2>
+  <div id="formMsg"></div>
+  <label>Ürün ID (benzersiz, boşluksuz — ör. p5)</label>
+  <input id="f_id">
+  <label>Ürün Adı</label>
+  <input id="f_name">
+  <div class="grid2">
+   <div><label>Kategori</label><input id="f_category" placeholder="Elbise"></div>
+   <div><label>Fiyat (TL)</label><input id="f_price" type="number"></div>
+  </div>
+  <div class="grid2">
+   <div><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
+   <div><label></label></div>
+  </div>
+  <label>Renkler (| ile ayırın)</label>
+  <input id="f_colors" placeholder="Siyah|Bej|Pudra">
+  <label>Bedenler (| ile ayırın)</label>
+  <input id="f_sizes" placeholder="36|38|40|42|44">
+  <label>Görsel Linkleri (| ile ayırın)</label>
+  <input id="f_images" placeholder="https://.../foto1.jpg|https://.../foto2.jpg">
+  <label>Kısa Açıklama</label>
+  <input id="f_shortDescription">
+  <label>Ürün Açıklaması</label>
+  <textarea id="f_description" rows="3"></textarea>
+  <div class="grid2">
+   <div><label>Kumaş</label><input id="f_fabric"></div>
+   <div><label>Kalıp</label><input id="f_fit"></div>
+  </div>
+  <div class="grid2">
+   <div><label>Ölçüler</label><input id="f_measurements"></div>
+   <div><label>Model Bilgisi</label><input id="f_modelInfo"></div>
+  </div>
+  <div class="checks">
+   <label><input type="checkbox" id="f_isNew"> Yeni</label>
+   <label><input type="checkbox" id="f_isBestSeller"> Çok Satan</label>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:6px">
+   <button class="btn-main" style="flex:1" onclick="saveProduct()">Kaydet</button>
+   <button class="btn-ghost" onclick="closeForm()">Vazgeç</button>
+  </div>
+ </div>
+</div>
+
+<script>
+// Apps Script Web App URL'nizi buraya yapıştırın (.../exec ile biter)
+var ADMIN_API_URL = "PASTE_ADMIN_APPS_SCRIPT_URL_BURAYA";
+var PASSWORD_KEY = "ga_admin_pass";
+var products = [];
+
+function doLogin(){
+ var p = document.getElementById("passInput").value;
+ if(!p){ return; }
+ sessionStorage.setItem(PASSWORD_KEY, p);
+ loadProducts();
+}
+
+function apiGet(){
+ return fetch(ADMIN_API_URL).then(function(r){return r.json();});
+}
+function apiPost(body){
+ body.password = sessionStorage.getItem(PASSWORD_KEY);
+ return fetch(ADMIN_API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
+
+function loadProducts(){
+ if(ADMIN_API_URL.indexOf("PASTE_")>-1){ document.getElementById("loginMsg").innerHTML='<div class="msg err">ADMIN_API_URL henüz ayarlanmamış.</div>'; return; }
+ apiGet().then(function(rows){
+  products = rows;
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+  renderTable();
+ }).catch(function(e){
+  document.getElementById("loginMsg").innerHTML='<div class="msg err">Bağlantı hatası: '+e+'</div>';
+ });
+}
+
+function renderTable(){
+ var body=document.getElementById("prodBody");
+ body.innerHTML = products.map(function(p,i){
+  var tags=[]; if(String(p.isNew).toLowerCase()==="true"||p.isNew==="1") tags.push("Yeni");
+  if(String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") tags.push("Çok Satan");
+  return '<tr><td><b>'+esc(p.name)+'</b><br><span style="color:var(--ink2);font-size:11px">'+esc(p.id)+'</span></td>'+
+   '<td>'+esc(p.category)+'</td>'+
+   '<td>'+esc(p.price)+' TL'+(p.oldPrice?' <s style="color:var(--ink2)">'+esc(p.oldPrice)+'</s>':'')+'</td>'+
+   '<td style="font-size:11px;color:var(--ink2)">'+esc(p.colors)+'<br>'+esc(p.sizes)+'</td>'+
+   '<td>'+tags.join(", ")+'</td>'+
+   '<td class="row-actions"><button class="btn-ghost" onclick="openForm('+i+')">Düzenle</button>'+
+   '<button class="btn-danger" onclick="deleteProduct(\''+String(p.id).replace(/'/g,"")+'\')">Sil</button></td></tr>';
+ }).join("") || '<tr><td colspan="6" style="text-align:center;color:var(--ink2)">Henüz ürün yok.</td></tr>';
+}
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
+function openForm(index){
+ var p = index!==null ? products[index] : null;
+ document.getElementById("modalTitle").textContent = p? "Ürünü Düzenle" : "Yeni Ürün";
+ ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit","measurements","modelInfo"].forEach(function(k){
+  document.getElementById("f_"+k).value = p? (p[k]||"") : "";
+ });
+ document.getElementById("f_id").disabled = !!p;
+ document.getElementById("f_isNew").checked = p? (String(p.isNew).toLowerCase()==="true"||p.isNew==="1") : false;
+ document.getElementById("f_isBestSeller").checked = p? (String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") : false;
+ document.getElementById("formMsg").innerHTML="";
+ document.getElementById("modalBg").classList.remove("hidden");
+}
+function closeForm(){ document.getElementById("modalBg").classList.add("hidden"); }
+
+function saveProduct(){
+ var product={};
+ ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit","measurements","modelInfo"].forEach(function(k){
+  product[k]=document.getElementById("f_"+k).value.trim();
+ });
+ product.isNew = document.getElementById("f_isNew").checked ? "1":"0";
+ product.isBestSeller = document.getElementById("f_isBestSeller").checked ? "1":"0";
+ if(!product.id || !product.name){ document.getElementById("formMsg").innerHTML='<div class="msg err">Ürün ID ve adı zorunludur.</div>'; return; }
+ apiPost({action:"upsert", product:product}).then(function(res){
+  if(res.result==="ok"){ closeForm(); loadProducts(); }
+  else { document.getElementById("formMsg").innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
+ }).catch(function(e){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
+}
+
+function deleteProduct(id){
+ if(!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
+ apiPost({action:"delete", id:id}).then(function(res){
+  if(res.result==="ok"){ loadProducts(); }
+  else { alert(res.message||"Hata oluştu"); }
+ });
+}
+
+// Sayfa yenilendiğinde şifre hafızada varsa otomatik giriş dene
+if(sessionStorage.getItem(PASSWORD_KEY)){ loadProducts(); }
+</script>
+</body>
+</html>
