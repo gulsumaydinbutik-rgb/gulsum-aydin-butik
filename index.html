@@ -30,6 +30,30 @@ a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 img{max-width:100%;display:block;}
 #app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:78px;}
+
+/* Burcum Giyim Tarzı Kayan Yazı Duyuru Bandı */
+.announcement-bar {
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 7px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  z-index: 25;
+}
+.announcement-track {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 15s linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
+}
+
 .header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;}
 .brand{font-size:19px;font-weight:600;letter-spacing:.3px;}
 .brand small{display:block;font-size:10px;color:var(--ink2);font-weight:400;letter-spacing:1px;text-transform:uppercase;}
@@ -147,6 +171,7 @@ var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||
 var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Sweatshirt","Üst Giyim"];
 var PRODUCTS = [];
 
+// Google E-Tablo Linkiniz
 var SHEET_PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ/gviz/tq?tqx=out:csv&sheet=Sayfa1";
 var ORDER_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxIN5wq17o0GKbpcmpvxd1dPCrvFIj3kp0nYKXHBWhEsdl4wpLxZoY6xUVdPSybPl7S/exec";
 
@@ -258,6 +283,7 @@ function addToCart(p,color,size,qty){
  showToast("Ürün sepete eklendi",true);
  render();
 }
+
 function changeQty(key,delta){
  var item=null; state.cart.forEach(function(i){ if(i.key===key) item=i; });
  if(!item) return;
@@ -268,15 +294,18 @@ function changeQty(key,delta){
  else if(item.qty>maxStock){ item.qty=maxStock; showToast("Stok sınırına ulaşıldı"); }
  saveLS("ga_cart",state.cart); render();
 }
+
 function removeItem(key){ state.cart=state.cart.filter(function(i){return i.key!==key;}); saveLS("ga_cart",state.cart); render(); }
 
 function waLink(text){ return "https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(text); }
 
 function header(title,back){
+ var announcement = '<div class="announcement-bar"><div class="announcement-track">✨ TÜM SİPARİŞLERDE ÜCRETSİZ KARGO &nbsp;&nbsp;•&nbsp;&nbsp; 🛍️ KAPIDA ÖDEME İMKANI &nbsp;&nbsp;•&nbsp;&nbsp; 💬 WHATSAPP İLE HIZLI SİPARİŞ</div></div>';
+
  if(back){
-  return '<div class="topbar"><button class="back" data-goto="'+back+'">‹</button><h3>'+esc(title)+'</h3><div style="width:20px"></div></div>';
+  return announcement + '<div class="topbar"><button class="back" data-goto="'+back+'">‹</button><h3>'+esc(title)+'</h3><div style="width:20px"></div></div>';
  }
- return '<div class="header"><div class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></div>'+
+ return announcement + '<div class="header"><div class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></div>'+
   '<div style="display:flex;gap:4px"><button class="icon-btn" data-goto="search">🔍</button>'+
   '<button class="icon-btn" data-goto="cart">🛒'+(cartCount()>0?'<span class="badge">'+cartCount()+'</span>':'')+'</button></div></div>';
 }
@@ -311,7 +340,7 @@ function viewHome(){
  return header()+
  '<div class="hero" data-goto="categories"><picture>'+
   '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
-  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik" loading="eager"></picture></div>'+
+  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
  '<div class="section"><div class="cats">'+CATEGORIES.map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
  (PRODUCTS.length? 
   sectionBlock("Tüm Ürünler",PRODUCTS)+
@@ -367,7 +396,6 @@ function viewProduct(){
  var size=state.pdSize||p.sizes[0];
  var variant = findVariant(p,color,size);
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
- var canAdd = variant && variant.stock>0;
 
  return header(p.name,state.category?"category":"home")+
  '<div class="view">'+
@@ -431,6 +459,7 @@ function fld(name,label,val,type,required){
   '<input name="'+name+'" type="'+(type||'text')+'" value="'+esc(val||'')+'">' +
   (state.formErrors[name]?'<div class="err">'+state.formErrors[name]+'</div>':'')+'</div>';
 }
+
 function viewCheckout(){
  if(!state.cart.length){ go("cart"); return ""; }
  var f=state.checkoutForm; var sub=cartSubtotal(); var total=sub+SHIPPING_FEE;
@@ -568,7 +597,7 @@ document.addEventListener("submit", function(e){
  if(!f.firstName) errors.firstName="Ad zorunludur.";
  if(!f.lastName) errors.lastName="Soyad zorunludur.";
  if(!f.phone || !/^0?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(f.phone.replace(/\s/g,'').replace(/^0?5/,'05'))){
-  if(!/^0?5[0-9]{9}$/.test(f.phone.replace(/\s/g,''))) errors.phone="Geçerli bir telefon numarası girin (05XX XXX XX XX).";
+  if(!/^0?5[0-9]{9}$/.test(f.phone.replace(/\s/g))) errors.phone="Geçerli bir telefon numarası girin (05XX XXX XX XX).";
  }
  if(!f.city || f.city==="Seçiniz") errors.city="İl seçiniz.";
  if(!f.district) errors.district="İlçe zorunludur.";
@@ -588,7 +617,7 @@ document.addEventListener("submit", function(e){
  state.lastOrder=order; saveLS("ga_last_order",order);
  sendOrderToSheet(order);
  state.cart=[]; saveLS("ga_cart",[]);
- state.checkoutForm={}; saveLS("ga_checkout_draft",{})
+ state.checkoutForm={}; saveLS("ga_checkout_draft",{});
  state.formErrors={};
  go("success");
 });
