@@ -254,6 +254,19 @@ var state = {
 
 function findProduct(id){ for(var i=0;i<PRODUCTS.length;i++){ if(PRODUCTS[i].id===id) return PRODUCTS[i]; } return null; }
 function findVariant(p,color,size){ for(var i=0;i<p.variants.length;i++){ var v=p.variants[i]; if(v.color===color&&v.size===size) return v; } return null; }
+function productBaseName(p){
+ var name=p.name, colors=p.colors.slice().sort(function(a,b){return b.length-a.length;});
+ for(var i=0;i<colors.length;i++){
+  var c=colors[i];
+  if(name.toLowerCase().slice(-c.length)===c.toLowerCase()){ return name.slice(0,name.length-c.length).trim(); }
+ }
+ return name;
+}
+function productDisplayName(p,color){ var base=productBaseName(p); return color? (base+" "+color) : base; }
+function colorImages(p,color){
+ if(p.images.length===p.colors.length){ var idx=p.colors.indexOf(color); if(idx>-1) return [p.images[idx]]; }
+ return p.images;
+}
 function money(n){ return n.toLocaleString("tr-TR")+" TL"; }
 function cartCount(){ var c=0; state.cart.forEach(function(i){c+=i.qty;}); return c; }
 function cartSubtotal(){ var s=0; state.cart.forEach(function(i){s+=i.price*i.qty;}); return s; }
@@ -272,7 +285,7 @@ function syncUrl(){
  else if(state.view==="category" && state.category){ url.searchParams.set("kategori", state.category); }
  history.replaceState(null, "", url.pathname + url.search);
  var p = state.view==="product" ? findProduct(state.productId) : null;
- document.title = p ? (p.name + " — Gülsüm Aydın Butik") : "Gülsüm Aydın Butik — Tesettür Giyim";
+ document.title = p ? (productDisplayName(p, state.pdColor||p.colors[0]) + " — Gülsüm Aydın Butik") : "Gülsüm Aydın Butik — Tesettür Giyim";
 }
 function openFromUrl(){
  var params = new URLSearchParams(window.location.search);
@@ -299,7 +312,7 @@ function addToCart(p,color,size,qty){
  var currentQty = existing? existing.qty:0;
  if(currentQty+qty>variant.stock){ showToast("Stokta sadece "+variant.stock+" adet var"); return; }
  if(existing){ existing.qty+=qty; } else {
-  state.cart.push({key:key,productId:p.id,name:p.name,image:p.images[0],color:color,size:size,price:p.price,qty:qty});
+  state.cart.push({key:key,productId:p.id,name:productDisplayName(p,color),image:colorImages(p,color)[0],color:color,size:size,price:p.price,qty:qty});
  }
  saveLS("ga_cart",state.cart);
  showToast("Ürün sepete eklendi",true);
@@ -418,13 +431,15 @@ function viewProduct(){
  var size=state.pdSize||p.sizes[0];
  var variant = findVariant(p,color,size);
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
+ var dispName = productDisplayName(p,color);
+ var gallery = colorImages(p,color);
 
- return header(p.name,state.category?"category":"home")+
+ return header(dispName,state.category?"category":"home")+
  '<div class="view">'+
- '<div class="pd-gallery">'+p.images.map(function(im){return '<img src="'+im+'" loading="lazy">';}).join('')+'</div>'+
+ '<div class="pd-gallery">'+gallery.map(function(im){return '<img src="'+im+'" loading="lazy">';}).join('')+'</div>'+
  '<div class="pd-body">'+
  '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
-  '<h1 class="pd-name">'+esc(p.name)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
+  '<h1 class="pd-name">'+esc(dispName)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
  '<div class="stock-line in">✓ Stokta Var</div>'+
@@ -446,7 +461,7 @@ function viewProduct(){
   (p.modelInfo!=="—"?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
  '</div></div></div>'+
  '<div class="sticky-cta"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
- '<a class="btn-wa" href="'+waLink("Merhaba, "+p.name+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank">💬</a></div>';
+ '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank">💬</a></div>';
 }
 
 function viewFavorites(){
