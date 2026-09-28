@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gülsüm Aydın Butik</title>
+<title>Gülsüm Aydın Butik — Tesettür Giyim</title>
+<meta name="description" content="Gülsüm Aydın Butik — modern ve şık tesettür kadın giyim. Elbise, takım, tunik ve daha fazlası. Kapıda ödeme ile güvenli alışveriş.">
+<meta property="og:title" content="Gülsüm Aydın Butik">
+<meta property="og:description" content="Zarafetin en doğal hali — modern ve şık tesettür giyim.">
+<meta property="og:image" content="https://gulsumaydinbutik-rgb.github.io/gulsum-aydin-butik/assets/hero-desktop.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root{
   --bg:#FAF7F2; --bg2:#F3ECE2; --ink:#1E1B18; --ink2:#6B6259;
@@ -257,7 +263,23 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){retu
 
 function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null;
  if(view==="product"){ state.pdColor=null; state.pdSize=null; state.pdQty=1; }
- window.scrollTo(0,0); render();
+ window.scrollTo(0,0); render(); syncUrl();
+}
+function syncUrl(){
+ var url = new URL(window.location.href);
+ url.search = "";
+ if(state.view==="product" && state.productId){ url.searchParams.set("urun", state.productId); }
+ else if(state.view==="category" && state.category){ url.searchParams.set("kategori", state.category); }
+ history.replaceState(null, "", url.pathname + url.search);
+ var p = state.view==="product" ? findProduct(state.productId) : null;
+ document.title = p ? (p.name + " — Gülsüm Aydın Butik") : "Gülsüm Aydın Butik — Tesettür Giyim";
+}
+function openFromUrl(){
+ var params = new URLSearchParams(window.location.search);
+ var urunId = params.get("urun");
+ var kategori = params.get("kategori");
+ if(urunId && findProduct(urunId)){ go("product",{productId:urunId}); }
+ else if(kategori){ go("category",{category:kategori}); }
 }
 
 function showToast(msg,link){
@@ -623,7 +645,7 @@ document.addEventListener("submit", function(e){
 });
 
 render();
-loadProductsFromSheet().then(function(updated){ if(updated) render(); });
+loadProductsFromSheet().then(function(updated){ if(updated) render(); openFromUrl(); });
 })();
 </script>
 </body>
