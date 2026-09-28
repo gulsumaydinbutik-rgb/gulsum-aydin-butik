@@ -181,6 +181,12 @@ var WA_PATH = "M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 2
 var WA_ICON = '<svg viewBox="0 0 24 24"><path d="'+WA_PATH+'"/></svg>';
 var WA_ICON_SM = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#25D366"><path d="'+WA_PATH+'"/></svg>';
 var IG_HANDLE = "gulsumaydinbutik";
+function igIcon(id,size){
+ size=size||16;
+ return '<svg viewBox="0 0 24 24" style="width:'+size+'px;height:'+size+'px;vertical-align:-3px"><defs><linearGradient id="'+id+'" x1="0" y1="1" x2="1" y2="0">'+
+  '<stop offset="0%" stop-color="#FEE411"/><stop offset="25%" stop-color="#FD5949"/><stop offset="50%" stop-color="#D6249F"/><stop offset="100%" stop-color="#285AEB"/></linearGradient></defs>'+
+  '<path fill="url(#'+id+')" d="M12 2.2c3.2 0 3.6 0 4.85.07 1.17.05 2.02.24 2.45.42.53.2.94.46 1.37.89.43.43.68.83.89 1.37.18.43.36 1.28.42 2.45.06 1.25.07 1.65.07 4.85s0 3.6-.07 4.85c-.06 1.17-.24 2.02-.42 2.45-.21.54-.46.94-.89 1.37-.43.43-.83.68-1.37.89-.43.18-1.28.36-2.45.42-1.25.06-1.65.07-4.85.07s-3.6 0-4.85-.07c-1.17-.06-2.02-.24-2.45-.42-.54-.21-.94-.46-1.37-.89-.43-.43-.68-.83-.89-1.37-.18-.43-.36-1.28-.42-2.45C2.21 15.6 2.2 15.2 2.2 12s0-3.6.07-4.85c.06-1.17.24-2.02.42-2.45.21-.54.46-.94.89-1.37.43-.43.83-.68 1.37-.89.43-.18 1.28-.36 2.45-.42C8.4 2.21 8.8 2.2 12 2.2zm0 1.8c-3.15 0-3.52 0-4.76.07-.96.04-1.48.2-1.83.34-.46.18-.79.39-1.14.74-.35.35-.56.68-.74 1.14-.14.35-.3.87-.34 1.83C3.12 8.48 3.12 8.85 3.12 12s0 3.52.07 4.76c.04.96.2 1.48.34 1.83.18.46.39.79.74 1.14.35.35.68.56 1.14.74.35.14.87.3 1.83.34 1.24.07 1.61.07 4.76.07s3.52 0 4.76-.07c.96-.04 1.48-.2 1.83-.34.46-.18.79-.39 1.14-.74.35-.35.56-.68.74-1.14.14-.35.3-.87.34-1.83.07-1.24.07-1.61.07-4.76s0-3.52-.07-4.76c-.04-.96-.2-1.48-.34-1.83-.18-.46-.39-.79-.74-1.14-.35-.35-.68-.56-1.14-.74-.35-.14-.87-.3-1.83-.34C15.52 4 15.15 4 12 4zm0 3.04a4.96 4.96 0 1 1 0 9.92 4.96 4.96 0 0 1 0-9.92zm0 1.8a3.16 3.16 0 1 0 0 6.32 3.16 3.16 0 0 0 0-6.32zm5.16-2.02a1.16 1.16 0 1 1-2.32 0 1.16 1.16 0 0 1 2.32 0z"/></svg>';
+}
 var SHIPPING_FEE = 0;
 
 var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
@@ -410,7 +416,7 @@ function viewHome(){
   sectionBlock("Yeni Gelenler",news)+
   sectionBlock("Çok Satanlar",bests) : '<div class="empty-state"><div class="ico">⏳</div><p>Ürünler yükleniyor...</p></div>')+
  '<div class="social"><a href="'+waLink("Merhaba, ürünler hakkında bilgi almak istiyorum.")+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+WA_ICON_SM+' WhatsApp\'tan Bilgi Al</a>'+
- '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank">📷 @'+IG_HANDLE+'</a></div>';
+ '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+igIcon('igHome')+' @'+IG_HANDLE+'</a></div>';
 }
 
 function sectionBlock(title,list){
@@ -580,7 +586,7 @@ function viewAccount(){
  '<div><div class="acc-item" data-goto="cart"><span>Siparişlerim'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></div>'+
  '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
  '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
- '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span>Instagram</span><span>›</span></a></div>';
+ '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a></div>';
 }
 
 function render(){
