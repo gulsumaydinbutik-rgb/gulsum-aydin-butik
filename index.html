@@ -121,6 +121,7 @@ img{max-width:100%;display:block;}
 .pd-body{padding:16px;}
 .pd-name{font-family:var(--font-serif);font-size:21px;font-weight:600;margin:0 0 6px;}
 .pd-price{font-size:20px;font-weight:700;color:var(--gold-d);}
+.bulk-badge{display:inline-block;background:var(--bg2);color:var(--gold-d);border:1px solid var(--gold);font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;margin-top:8px;}
 .stock-line{font-size:12px;margin:8px 0;font-weight:600;}
 .stock-line.in{color:var(--ok);}
 .stock-line.out{color:var(--danger);}
@@ -257,6 +258,7 @@ function loadProductsFromSheet(){
    return {
     id:p.id, slug:p.id, name:p.name, category:p.category||"Diğer",
     price:parsePrice(p.price), oldPrice:p.oldPrice?parsePrice(p.oldPrice):null,
+    bulkPrice2:p.bulkPrice2?parsePrice(p.bulkPrice2):null,
     isNew:/^(1|true)$/i.test(p.isNew||""), isBestSeller:/^(1|true)$/i.test(p.isBestSeller||""),
     shortDescription:p.shortDescription||"", description:p.description||"",
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
@@ -328,7 +330,15 @@ function colorImages(p,color){
 }
 function money(n){ return n.toLocaleString("tr-TR")+" TL"; }
 function cartCount(){ var c=0; state.cart.forEach(function(i){c+=i.qty;}); return c; }
-function cartSubtotal(){ var s=0; state.cart.forEach(function(i){s+=i.price*i.qty;}); return s; }
+function lineTotal(item){
+ var p=findProduct(item.productId);
+ if(p && p.bulkPrice2){
+  var pairs=Math.floor(item.qty/2), rem=item.qty%2;
+  return pairs*p.bulkPrice2 + rem*item.price;
+ }
+ return item.price*item.qty;
+}
+function cartSubtotal(){ var s=0; state.cart.forEach(function(i){s+=lineTotal(i);}); return s; }
 function isFav(id){ return state.favorites.indexOf(id)>-1; }
 function toggleFav(id){ var i=state.favorites.indexOf(id); if(i>-1) state.favorites.splice(i,1); else state.favorites.push(id); saveLS("ga_favs",state.favorites); render(); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
@@ -541,6 +551,7 @@ function viewProduct(){
  '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
   '<h1 class="pd-name">'+esc(dispName)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
+ (p.bulkPrice2? '<div class="bulk-badge">🎁 2 Adet Al, Toplam '+money(p.bulkPrice2)+' Öde</div>' : '')+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
  '<div class="stock-line in">✓ Stokta Var</div>'+
  '<div class="opt-label">'+(hasColor2?'Sweat Rengi':'Renk')+': '+esc(color)+'</div>'+
@@ -586,7 +597,7 @@ function viewCart(){
  return header("Sepetim","home")+
  '<div>'+state.cart.map(function(i){
   return '<div class="cart-item"><img src="'+i.image+'" loading="lazy"><div class="ci-info">'+
-   '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+(i.color2?' + '+esc(i.color2):'')+' / '+esc(i.size)+' · '+money(i.price)+'</div>'+
+   '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+(i.color2?' + '+esc(i.color2):'')+' / '+esc(i.size)+' · '+money(i.price)+(i.qty>1?' · Toplam: '+money(lineTotal(i)):'')+'</div>'+
    '<div class="ci-controls"><div class="ci-qty"><button class="mini-btn" data-cqty="'+i.key+'|-1">−</button><span>'+i.qty+'</span><button class="mini-btn" data-cqty="'+i.key+'|1">+</button></div>'+
    '<button class="remove" data-remove="'+i.key+'">Sil</button></div></div></div>';
  }).join('')+'</div>'+
