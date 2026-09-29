@@ -275,7 +275,7 @@ function isVideo(url){ return /\.(mp4|webm|mov)(\?|$)/i.test(url||""); }
 function mediaTag(url,opts){
  opts=opts||{};
  if(isVideo(url)){
-  return '<video src="'+url+'" playsinline muted loop'+(opts.controls?' controls':'')+(opts.autoplay?' autoplay':'')+(opts.attrs||'')+'></video>';
+  return '<video src="'+url+'" preload="'+(opts.autoplay?'auto':'metadata')+'" playsinline muted loop'+(opts.controls?' controls':'')+(opts.autoplay?' autoplay':'')+(opts.attrs||'')+'></video>';
  }
  return '<img src="'+url+'" loading="lazy" alt=""'+(opts.attrs||'')+'>';
 }
