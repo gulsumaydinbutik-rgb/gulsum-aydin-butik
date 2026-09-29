@@ -219,7 +219,20 @@ var PRODUCTS = [];
 
 // Google E-Tablo Linkiniz
 var SHEET_PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ/gviz/tq?tqx=out:csv&sheet=Sayfa1";
+var SHEET_SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ/gviz/tq?tqx=out:csv&sheet=Ayarlar";
 var ORDER_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxIN5wq17o0GKbpcmpvxd1dPCrvFIj3kp0nYKXHBWhEsdl4wpLxZoY6xUVdPSybPl7S/exec";
+
+var SETTINGS = { heroMobileUrl:"hero-mobile.jpg", heroDesktopUrl:"hero-desktop.jpg", gaId:"", metaTitle:"", metaDescription:"" };
+
+function loadSettingsFromSheet(){
+ if(!SHEET_SETTINGS_CSV_URL) return Promise.resolve(false);
+ return fetch(SHEET_SETTINGS_CSV_URL).then(function(r){return r.text();}).then(function(text){
+  var rows=csvToObjects(text);
+  if(!rows.length) return false;
+  rows.forEach(function(r){ if(r.key){ SETTINGS[r.key]=r.value; } });
+  return true;
+ }).catch(function(){ return false; });
+}
 
 function sendOrderToSheet(order){
  if(!ORDER_SHEET_ENDPOINT || ORDER_SHEET_ENDPOINT.indexOf("PASTE_")>-1) return;
@@ -486,8 +499,8 @@ function viewHome(){
  var sale=PRODUCTS.filter(function(p){return p.oldPrice;});
  return header()+
  '<div class="hero" data-cat="Tüm Ürünler"><picture>'+
-  '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
-  '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
+  '<source media="(min-width:700px)" srcset="'+esc(SETTINGS.heroDesktopUrl)+'">'+
+  '<img src="'+esc(SETTINGS.heroMobileUrl)+'" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
  trustBadges()+
  '<div class="section"><div class="cats">'+activeCategories().map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
  (PRODUCTS.length? 
@@ -814,7 +827,27 @@ document.addEventListener("submit", function(e){
  go("success");
 });
 
+function applySettings(){
+ if(SETTINGS.metaTitle){ document.title = SETTINGS.metaTitle; }
+ if(SETTINGS.metaDescription){
+  var m = document.querySelector('meta[name="description"]');
+  if(m) m.setAttribute("content", SETTINGS.metaDescription);
+ }
+ if(SETTINGS.gaId && !window._gaLoaded){
+  window._gaLoaded = true;
+  var s1 = document.createElement("script");
+  s1.async = true;
+  s1.src = "https://www.googletagmanager.com/gtag/js?id=" + SETTINGS.gaId;
+  document.head.appendChild(s1);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ window.dataLayer.push(arguments); }
+  gtag("js", new Date());
+  gtag("config", SETTINGS.gaId);
+ }
+}
+
 render();
+loadSettingsFromSheet().then(function(updated){ if(updated){ applySettings(); render(); } });
 loadProductsFromSheet().then(function(updated){ if(updated) render(); _fromPopstate=true; openFromUrl(); _fromPopstate=false; });
 })();
 </script>
