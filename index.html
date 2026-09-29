@@ -209,6 +209,12 @@ var SHIPPING_FEE = 0;
 
 var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
 var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Sweatshirt","Üst Giyim","Pantolon","Gömlek"];
+function activeCategories(){
+ return CATEGORIES.filter(function(c){
+  if(c==="Yeni Gelenler") return PRODUCTS.some(function(p){return p.isNew;});
+  return PRODUCTS.some(function(p){return p.category===c;});
+ });
+}
 var PRODUCTS = [];
 
 // Google E-Tablo Linkiniz
@@ -483,7 +489,7 @@ function viewHome(){
   '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
   '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
  trustBadges()+
- '<div class="section"><div class="cats">'+CATEGORIES.map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
+ '<div class="section"><div class="cats">'+activeCategories().map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
  (PRODUCTS.length? 
   sectionBlock("Tüm Ürünler",PRODUCTS)+
   sectionBlock("Yeni Gelenler",news)+
@@ -501,7 +507,7 @@ function sectionBlock(title,list){
 function viewCategories(){
  var palette=["#8B7355","#6E5A41","#A6875D","#5C4A38","#B99A6E","#4A3B2C","#8A6D45"];
  return header()+'<div class="section"><div class="section-head"><h2>Kategoriler</h2></div>'+
- '<div class="grid">'+CATEGORIES.filter(function(c){return c!=="Yeni Gelenler";}).map(function(c,idx){
+ '<div class="grid">'+activeCategories().filter(function(c){return c!=="Yeni Gelenler";}).map(function(c,idx){
   var prods=PRODUCTS.filter(function(p){return p.category===c;});
   var img=null;
   if(prods.length){ img = prods[0].images.filter(function(u){return !isVideo(u);})[0] || null; }
