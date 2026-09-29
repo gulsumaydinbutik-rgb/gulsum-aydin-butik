@@ -1,0 +1,107 @@
+// ============================================================
+// Gülsüm Aydın Butik — Admin Panel Backend
+// Ürünler Sheet'inize kurulur (Uzantılar > Apps Script)
+// ============================================================
+
+var SHEET_NAME = "Sayfa1";
+var ADMIN_PASSWORD_PROPERTY = "ADMIN_PASSWORD"; // Proje Ayarları > Script Properties'te tanımlanır
+
+function doGet(e) {
+  var action = (e.parameter && e.parameter.action) || "listProducts";
+  if (action === "listProducts") {
+    return jsonResponse({ result: "ok", data: getAllProducts() });
+  }
+  return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + action });
+}
+
+function doPost(e) {
+  var body;
+  try { body = JSON.parse(e.postData.contents); }
+  catch (err) { return jsonResponse({ result: "error", message: "Geçersiz istek." }); }
+
+  var storedPassword = PropertiesService.getScriptProperties().getProperty(ADMIN_PASSWORD_PROPERTY);
+  if (!storedPassword || body.password !== storedPassword) {
+    return jsonResponse({ result: "error", message: "Şifre yanlış." });
+  }
+
+  switch (body.action) {
+    case "upsertProduct": return jsonResponse(upsertProduct(body.product));
+    case "deleteProduct": return jsonResponse(deleteProduct(body.id));
+    // Yeni özellikler buraya eklenir, ör:
+    // case "syncMarketplace": return jsonResponse(syncMarketplace(body.marketplace));
+    default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
+  }
+}
+
+// ---------- Ürün işlemleri ----------
+
+function getSheet() {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+}
+
+function getAllProducts() {
+  var sheet = getSheet();
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  return data.slice(1)
+    .filter(function (r) { return r[0]; })
+    .map(function (r) {
+      var o = {};
+      headers.forEach(function (h, i) { o[h] = r[i]; });
+      return o;
+    });
+}
+
+function upsertProduct(product) {
+  if (!product || !product.id) return { result: "error", message: "Ürün ID zorunlu." };
+  var sheet = getSheet();
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var idCol = headers.indexOf("id");
+  var rowValues = headers.map(function (h) {
+    return product[h] !== undefined ? product[h] : "";
+  });
+  var foundRow = -1;
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(product.id)) { foundRow = i + 1; break; }
+  }
+  if (foundRow > -1) sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
+  else sheet.appendRow(rowValues);
+  return { result: "ok" };
+}
+
+function deleteProduct(id) {
+  if (!id) return { result: "error", message: "Ürün ID zorunlu." };
+  var sheet = getSheet();
+  var data = sheet.getDataRange().getValues();
+  var idCol = 0; // "id" birinci sütun
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(id)) { sheet.deleteRow(i + 1); break; }
+  }
+  return { result: "ok" };
+}
+
+// ---------- Yardımcı ----------
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// İLERİDE: Pazaryeri entegrasyonu buraya eklenir.
+// Her pazaryerinin API anahtarını Script Properties'te saklayın
+// (ör. TRENDYOL_API_KEY), UrlFetchApp.fetch() ile çağırın,
+// dönen siparişleri/ürünleri bu Sheet'e veya ayrı bir sekmeye yazın.
+// Örnek iskelet:
+//
+// function syncMarketplace(marketplace) {
+//   var apiKey = PropertiesService.getScriptProperties().getProperty(marketplace.toUpperCase() + "_API_KEY");
+//   if (!apiKey) return { result: "error", message: marketplace + " için API anahtarı tanımlı değil." };
+//   var response = UrlFetchApp.fetch("https://api." + marketplace + ".com/orders", {
+//     headers: { "Authorization": "Bearer " + apiKey }
+//   });
+//   var orders = JSON.parse(response.getContentText());
+//   // ... siparişleri işleyip Sheet'e yaz ...
+//   return { result: "ok", count: orders.length };
+// }
+// ============================================================

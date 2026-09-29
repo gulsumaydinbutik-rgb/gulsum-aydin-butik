@@ -3,135 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gülsüm Aydın Butik — Ürün Yönetimi</title>
+<title>Gülsüm Aydın Butik — Yönetim Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7F2EA;--card:#fff;--ink:#1E1B18;--ink2:#6B6259;--gold:#8B7355;--gold-d:#6E5A41;--line:#E7DFD3;}
+:root{
+ --font-serif:'Playfair Display',Georgia,serif; --font-sans:'Inter','Segoe UI',sans-serif;
+ --bg:#FFFCF7; --bg2:#F8F2E9; --ink:#1E1B18; --ink2:#7A7166;
+ --gold:#A6875D; --gold-d:#8A6D45; --line:#EFE7DA; --card:#FFFFFF; --danger:#B23A3A; --ok:#3A7A4E;
+}
 *{box-sizing:border-box;}
-body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);padding:20px;}
-h1{font-size:20px;margin:0 0 4px;}
-.sub{color:var(--ink2);font-size:13px;margin-bottom:20px;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:480px;margin:60px auto;}
-input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--ink);margin-bottom:10px;}
-label{font-size:12px;font-weight:700;color:var(--ink2);display:block;margin-bottom:4px;}
-button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;}
-.btn-main{background:var(--ink);color:#fff;width:100%;}
+body{margin:0;font-family:var(--font-sans);background:var(--bg);color:var(--ink);}
+a{color:inherit;}
+button{cursor:pointer;border:none;font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px 32px;max-width:380px;width:100%;box-shadow:0 10px 40px rgba(30,27,24,.08);}
+.login-card h1{font-family:var(--font-serif);font-size:24px;margin:0 0 4px;}
+.login-card p{color:var(--ink2);font-size:13px;margin:0 0 24px;}
+.login-card input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:14px;font-size:14px;}
+.login-card button{width:100%;background:var(--ink);color:#fff;padding:13px;border-radius:10px;font-weight:600;font-size:14px;}
+
+/* App shell */
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:220px;flex-shrink:0;background:var(--card);border-right:1px solid var(--line);padding:24px 16px;}
+.sidebar .brand{font-family:var(--font-serif);font-size:19px;font-weight:700;margin-bottom:2px;}
+.sidebar .brand small{display:block;font-family:var(--font-sans);font-size:10.5px;color:var(--ink2);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-bottom:28px;}
+.navlink{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:9px;color:var(--ink2);font-size:14px;font-weight:600;margin-bottom:2px;background:none;width:100%;text-align:left;}
+.navlink.active{background:var(--bg2);color:var(--gold-d);}
+.navlink .dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+.navlink.active .dot{background:var(--gold);}
+.main{flex:1;padding:32px 40px;max-width:1100px;}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.pagehead h1{font-family:var(--font-serif);font-size:26px;margin:0 0 4px;}
+.pagehead p{color:var(--ink2);font-size:13px;margin:0;}
+.btn{padding:11px 18px;border-radius:9px;font-weight:600;font-size:13px;}
 .btn-gold{background:var(--gold);color:#fff;}
-.btn-ghost{background:var(--bg);border:1px solid var(--line);color:var(--ink);}
-.btn-danger{background:#B23A3A;color:#fff;}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;}
-th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top;}
-th{background:var(--bg);color:var(--ink2);font-size:11px;text-transform:uppercase;}
+.btn-ghost{background:var(--bg2);color:var(--ink);border:1px solid var(--line);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-main{background:var(--ink);color:#fff;}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:top;}
+th{background:var(--bg2);color:var(--ink2);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+tr:last-child td{border-bottom:none;}
+.pname{font-weight:600;} .pid{color:var(--ink2);font-size:11px;}
 .row-actions{display:flex;gap:6px;}
-.row-actions button{padding:6px 10px;font-size:12px;}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding:30px 16px;overflow:auto;z-index:50;}
-.modal{background:#fff;border-radius:14px;padding:24px;max-width:520px;width:100%;}
-.modal h2{margin-top:0;font-size:16px;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.checks{display:flex;gap:16px;font-size:13px;align-items:center;margin-bottom:10px;}
-.checks label{display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink);}
-.msg{font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:10px;}
-.msg.err{background:#FBEAEA;color:#B23A3A;}
-.msg.ok{background:#EAF6EC;color:#2E7D42;}
+.row-actions button{padding:7px 12px;font-size:12px;border-radius:7px;}
+.tagpill{display:inline-block;background:var(--bg2);color:var(--gold-d);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:4px;}
+
+.msg{font-size:12.5px;padding:10px 14px;border-radius:9px;margin-bottom:14px;}
+.msg.err{background:#FBEAEA;color:var(--danger);} .msg.ok{background:#EAF6EC;color:var(--ok);}
+
+.modal-bg{position:fixed;inset:0;background:rgba(20,16,12,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:50;}
+.modal{background:#fff;border-radius:16px;padding:28px;max-width:560px;width:100%;}
+.modal h2{font-family:var(--font-serif);margin:0 0 18px;font-size:20px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;}
+.field input,.field textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.checks{display:flex;gap:18px;font-size:13px;margin:6px 0 16px;}
+.checks label{display:flex;align-items:center;gap:6px;font-weight:500;}
+.modal-actions{display:flex;gap:10px;margin-top:4px;}
+.modal-actions button{flex:1;padding:12px;border-radius:9px;}
 .hidden{display:none;}
-small.hint{color:var(--ink2);display:block;margin:-6px 0 10px;font-size:11px;}
+
+.empty{text-align:center;padding:60px 20px;color:var(--ink2);}
+.empty svg{width:36px;height:36px;color:var(--gold-d);margin-bottom:12px;}
+.soon-card{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:48px 24px;text-align:center;color:var(--ink2);}
+.soon-card svg{width:34px;height:34px;color:var(--gold-d);margin-bottom:12px;}
+.soon-card h3{font-family:var(--font-serif);color:var(--ink);margin:0 0 6px;font-size:18px;}
+
+@media (max-width:760px){
+ .shell{flex-direction:column;}
+ .sidebar{width:100%;display:flex;align-items:center;gap:6px;padding:14px 16px;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}
+ .sidebar .brand,.sidebar .brand small{display:none;}
+ .navlink{white-space:nowrap;width:auto;}
+ .main{padding:20px 16px;}
+ .grid2{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
 
-<div id="loginScreen" class="card">
- <h1>Yönetim Paneli</h1>
- <p class="sub">Gülsüm Aydın Butik — Ürün Yönetimi</p>
- <label>Şifre</label>
- <input type="password" id="passInput" placeholder="Şifrenizi girin">
- <button class="btn-main" onclick="doLogin()">Giriş Yap</button>
- <div id="loginMsg"></div>
+<div id="loginScreen" class="login-wrap">
+ <div class="login-card">
+  <h1>Yönetim Paneli</h1>
+  <p>Gülsüm Aydın Butik</p>
+  <input type="password" id="passInput" placeholder="Şifre">
+  <button class="btn-main" onclick="doLogin()">Giriş Yap</button>
+  <div id="loginMsg" style="margin-top:12px"></div>
+ </div>
 </div>
 
-<div id="panel" class="hidden">
- <div class="topbar">
-  <div><h1>Ürün Yönetimi</h1><p class="sub">Gülsüm Aydın Butik</p></div>
-  <button class="btn-gold" onclick="openForm(null)">+ Yeni Ürün</button>
+<div id="app" class="shell hidden">
+ <div class="sidebar">
+  <div class="brand">Gülsüm Aydın</div>
+  <small>Yönetim Paneli</small>
+  <button class="navlink" data-tab="products"><span class="dot"></span> Ürünler</button>
+  <button class="navlink" data-tab="orders"><span class="dot"></span> Siparişler</button>
+  <button class="navlink" data-tab="settings"><span class="dot"></span> Ayarlar</button>
+  <button class="navlink" data-tab="integrations"><span class="dot"></span> Entegrasyonlar</button>
  </div>
- <div id="listMsg"></div>
- <table id="prodTable">
-  <thead><tr><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Renk/Beden</th><th>Etiket</th><th></th></tr></thead>
-  <tbody id="prodBody"></tbody>
- </table>
+ <div class="main">
+
+  <div id="tab-products">
+   <div class="pagehead">
+    <div><h1>Ürünler</h1><p id="prodCount"></p></div>
+    <button class="btn btn-gold" onclick="openForm(null)">+ Yeni Ürün</button>
+   </div>
+   <div id="listMsg"></div>
+   <div class="card">
+    <table>
+     <thead><tr><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Renk / Beden</th><th>Etiket</th><th></th></tr></thead>
+     <tbody id="prodBody"></tbody>
+    </table>
+   </div>
+  </div>
+
+  <div id="tab-orders" class="hidden">
+   <div class="pagehead"><div><h1>Siparişler</h1><p>Yakında bu panelden doğrudan yönetilebilecek</p></div></div>
+   <div class="soon-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 8h11l1 12.5a1 1 0 0 1-1 1.1H6.5a1 1 0 0 1-1-1.1L6.5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+    <h3>Çok Yakında</h3>
+    <p>Siparişleriniz şu an Google Sheet'e otomatik düşüyor. Bu sekmeden doğrudan görüntüleme ve durum güncelleme (Hazırlanıyor / Kargoda / Teslim Edildi) yakında eklenecek.</p>
+   </div>
+  </div>
+
+  <div id="tab-settings" class="hidden">
+   <div class="pagehead"><div><h1>Ayarlar</h1><p>Banner, kategori ve genel site ayarları</p></div></div>
+   <div class="soon-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <h3>Çok Yakında</h3>
+    <p>Banner görseli, kategori listesi ve Google Analytics bağlantısını bu ekrandan yönetebileceksiniz.</p>
+   </div>
+  </div>
+
+  <div id="tab-integrations" class="hidden">
+   <div class="pagehead"><div><h1>Entegrasyonlar</h1><p>Pazaryerleri ve dış bağlantılar</p></div></div>
+   <div class="soon-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+    <h3>Çok Yakında</h3>
+    <p>Trendyol, Hepsiburada gibi pazaryerlerinden ürün/sipariş çekme bağlantıları bu ekrandan kurulabilecek. Altyapı zaten buna hazır şekilde kuruldu.</p>
+   </div>
+  </div>
+
+ </div>
 </div>
 
 <div id="modalBg" class="modal-bg hidden">
  <div class="modal">
   <h2 id="modalTitle">Yeni Ürün</h2>
   <div id="formMsg"></div>
-  <label>Ürün ID (benzersiz, boşluksuz — ör. p5)</label>
-  <input id="f_id">
-  <label>Ürün Adı</label>
-  <input id="f_name">
+  <div class="field"><label>Ürün ID (benzersiz)</label><input id="f_id"></div>
+  <div class="field"><label>Ürün Adı</label><input id="f_name"></div>
   <div class="grid2">
-   <div><label>Kategori</label><input id="f_category" placeholder="Elbise"></div>
-   <div><label>Fiyat (TL)</label><input id="f_price" type="number"></div>
+   <div class="field"><label>Kategori</label><input id="f_category"></div>
+   <div class="field"><label>Fiyat (TL)</label><input id="f_price" type="number"></div>
   </div>
+  <div class="field"><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
+  <div class="field"><label>Renkler (| ile ayırın)</label><input id="f_colors"></div>
+  <div class="field"><label>Bedenler (| ile ayırın)</label><input id="f_sizes"></div>
+  <div class="field"><label>Görsel Linkleri (| ile ayırın)</label><input id="f_images"></div>
+  <div class="field"><label>Kısa Açıklama</label><input id="f_shortDescription"></div>
+  <div class="field"><label>Ürün Açıklaması</label><textarea id="f_description" rows="3"></textarea></div>
   <div class="grid2">
-   <div><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
-   <div><label></label></div>
-  </div>
-  <label>Renkler (| ile ayırın)</label>
-  <input id="f_colors" placeholder="Siyah|Bej|Pudra">
-  <label>Bedenler (| ile ayırın)</label>
-  <input id="f_sizes" placeholder="36|38|40|42|44">
-  <label>Görsel Linkleri (| ile ayırın)</label>
-  <input id="f_images" placeholder="https://.../foto1.jpg|https://.../foto2.jpg">
-  <label>Kısa Açıklama</label>
-  <input id="f_shortDescription">
-  <label>Ürün Açıklaması</label>
-  <textarea id="f_description" rows="3"></textarea>
-  <div class="grid2">
-   <div><label>Kumaş</label><input id="f_fabric"></div>
-   <div><label>Kalıp</label><input id="f_fit"></div>
-  </div>
-  <div class="grid2">
-   <div><label>Ölçüler</label><input id="f_measurements"></div>
-   <div><label>Model Bilgisi</label><input id="f_modelInfo"></div>
+   <div class="field"><label>Kumaş</label><input id="f_fabric"></div>
+   <div class="field"><label>Kalıp</label><input id="f_fit"></div>
   </div>
   <div class="checks">
    <label><input type="checkbox" id="f_isNew"> Yeni</label>
    <label><input type="checkbox" id="f_isBestSeller"> Çok Satan</label>
   </div>
-  <div style="display:flex;gap:8px;margin-top:6px">
-   <button class="btn-main" style="flex:1" onclick="saveProduct()">Kaydet</button>
+  <div class="modal-actions">
+   <button class="btn-main" onclick="saveProduct()">Kaydet</button>
    <button class="btn-ghost" onclick="closeForm()">Vazgeç</button>
   </div>
  </div>
 </div>
 
 <script>
-// Apps Script Web App URL'nizi buraya yapıştırın (.../exec ile biter)
 var ADMIN_API_URL = "PASTE_ADMIN_APPS_SCRIPT_URL_BURAYA";
 var PASSWORD_KEY = "ga_admin_pass";
 var products = [];
 
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+
 function doLogin(){
  var p = document.getElementById("passInput").value;
- if(!p){ return; }
+ if(!p) return;
  sessionStorage.setItem(PASSWORD_KEY, p);
  loadProducts();
 }
-
-function apiGet(){
- return fetch(ADMIN_API_URL).then(function(r){return r.json();});
+function apiGet(action){
+ return fetch(ADMIN_API_URL + "?action=" + (action||"listProducts")).then(function(r){return r.json();});
 }
 function apiPost(body){
  body.password = sessionStorage.getItem(PASSWORD_KEY);
  return fetch(ADMIN_API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(body)}).then(function(r){return r.json();});
 }
 
+function switchTab(tab){
+ ["products","orders","settings","integrations"].forEach(function(t){
+  document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
+ });
+ document.querySelectorAll(".navlink").forEach(function(el){
+  el.classList.toggle("active", el.getAttribute("data-tab")===tab);
+ });
+}
+document.querySelectorAll(".navlink").forEach(function(el){
+ el.addEventListener("click", function(){ switchTab(el.getAttribute("data-tab")); });
+});
+switchTab("products");
+
 function loadProducts(){
- if(ADMIN_API_URL.indexOf("PASTE_")>-1){ document.getElementById("loginMsg").innerHTML='<div class="msg err">ADMIN_API_URL henüz ayarlanmamış.</div>'; return; }
- apiGet().then(function(rows){
-  products = rows;
+ if(ADMIN_API_URL.indexOf("PASTE_")>-1){ document.getElementById("loginMsg").innerHTML='<div class="msg err">Backend henüz bağlanmadı (ADMIN_API_URL).</div>'; return; }
+ apiGet("listProducts").then(function(res){
+  products = res.data || res;
   document.getElementById("loginScreen").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
+  document.getElementById("app").classList.remove("hidden");
   renderTable();
  }).catch(function(e){
   document.getElementById("loginMsg").innerHTML='<div class="msg err">Bağlantı hatası: '+e+'</div>';
@@ -139,31 +233,29 @@ function loadProducts(){
 }
 
 function renderTable(){
- var body=document.getElementById("prodBody");
+ document.getElementById("prodCount").textContent = products.length + " ürün";
+ var body = document.getElementById("prodBody");
  body.innerHTML = products.map(function(p,i){
-  var tags=[]; if(String(p.isNew).toLowerCase()==="true"||p.isNew==="1") tags.push("Yeni");
-  if(String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") tags.push("Çok Satan");
-  return '<tr><td><b>'+esc(p.name)+'</b><br><span style="color:var(--ink2);font-size:11px">'+esc(p.id)+'</span></td>'+
+  var tags=[]; if(String(p.isNew).toLowerCase()==="true"||p.isNew==="1") tags.push('<span class="tagpill">Yeni</span>');
+  if(String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") tags.push('<span class="tagpill">Çok Satan</span>');
+  return '<tr><td><div class="pname">'+esc(p.name)+'</div><div class="pid">'+esc(p.id)+'</div></td>'+
    '<td>'+esc(p.category)+'</td>'+
    '<td>'+esc(p.price)+' TL'+(p.oldPrice?' <s style="color:var(--ink2)">'+esc(p.oldPrice)+'</s>':'')+'</td>'+
-   '<td style="font-size:11px;color:var(--ink2)">'+esc(p.colors)+'<br>'+esc(p.sizes)+'</td>'+
-   '<td>'+tags.join(", ")+'</td>'+
+   '<td style="font-size:11.5px;color:var(--ink2)">'+esc(p.colors)+'<br>'+esc(p.sizes)+'</td>'+
+   '<td>'+tags.join("")+'</td>'+
    '<td class="row-actions"><button class="btn-ghost" onclick="openForm('+i+')">Düzenle</button>'+
    '<button class="btn-danger" onclick="deleteProduct(\''+String(p.id).replace(/'/g,"")+'\')">Sil</button></td></tr>';
- }).join("") || '<tr><td colspan="6" style="text-align:center;color:var(--ink2)">Henüz ürün yok.</td></tr>';
+ }).join("") || '<tr><td colspan="6" class="empty">Henüz ürün yok.</td></tr>';
 }
 
-function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
-
+var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit"];
 function openForm(index){
  var p = index!==null ? products[index] : null;
- document.getElementById("modalTitle").textContent = p? "Ürünü Düzenle" : "Yeni Ürün";
- ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit","measurements","modelInfo"].forEach(function(k){
-  document.getElementById("f_"+k).value = p? (p[k]||"") : "";
- });
+ document.getElementById("modalTitle").textContent = p ? "Ürünü Düzenle" : "Yeni Ürün";
+ FIELDS.forEach(function(k){ document.getElementById("f_"+k).value = p ? (p[k]||"") : ""; });
  document.getElementById("f_id").disabled = !!p;
- document.getElementById("f_isNew").checked = p? (String(p.isNew).toLowerCase()==="true"||p.isNew==="1") : false;
- document.getElementById("f_isBestSeller").checked = p? (String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") : false;
+ document.getElementById("f_isNew").checked = p ? (String(p.isNew).toLowerCase()==="true"||p.isNew==="1") : false;
+ document.getElementById("f_isBestSeller").checked = p ? (String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") : false;
  document.getElementById("formMsg").innerHTML="";
  document.getElementById("modalBg").classList.remove("hidden");
 }
@@ -171,27 +263,22 @@ function closeForm(){ document.getElementById("modalBg").classList.add("hidden")
 
 function saveProduct(){
  var product={};
- ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit","measurements","modelInfo"].forEach(function(k){
-  product[k]=document.getElementById("f_"+k).value.trim();
- });
+ FIELDS.forEach(function(k){ product[k]=document.getElementById("f_"+k).value.trim(); });
  product.isNew = document.getElementById("f_isNew").checked ? "1":"0";
  product.isBestSeller = document.getElementById("f_isBestSeller").checked ? "1":"0";
  if(!product.id || !product.name){ document.getElementById("formMsg").innerHTML='<div class="msg err">Ürün ID ve adı zorunludur.</div>'; return; }
- apiPost({action:"upsert", product:product}).then(function(res){
+ apiPost({action:"upsertProduct", product:product}).then(function(res){
   if(res.result==="ok"){ closeForm(); loadProducts(); }
   else { document.getElementById("formMsg").innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
- }).catch(function(e){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
+ }).catch(function(){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
 }
-
 function deleteProduct(id){
  if(!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
- apiPost({action:"delete", id:id}).then(function(res){
-  if(res.result==="ok"){ loadProducts(); }
-  else { alert(res.message||"Hata oluştu"); }
+ apiPost({action:"deleteProduct", id:id}).then(function(res){
+  if(res.result==="ok"){ loadProducts(); } else { alert(res.message||"Hata oluştu"); }
  });
 }
 
-// Sayfa yenilendiğinde şifre hafızada varsa otomatik giriş dene
 if(sessionStorage.getItem(PASSWORD_KEY)){ loadProducts(); }
 </script>
 </body>
