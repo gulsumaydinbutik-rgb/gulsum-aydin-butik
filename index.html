@@ -208,7 +208,7 @@ function igIcon(id,size){
 var SHIPPING_FEE = 0;
 
 var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
-var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Sweatshirt","Üst Giyim","Pantolon","Gömlek"];
+var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Üst Giyim","Alt Giyim"];
 function activeCategories(){
  return CATEGORIES.filter(function(c){
   if(c==="Yeni Gelenler") return PRODUCTS.some(function(p){return p.isNew;});
