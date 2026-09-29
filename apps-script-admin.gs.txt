@@ -1,16 +1,18 @@
 // ============================================================
-// Gülsüm Aydın Butik — Admin Panel Backend
+// Gülsüm Aydın Butik — Admin Panel Backend (v2 — Ayarlar dahil)
 // Ürünler Sheet'inize kurulur (Uzantılar > Apps Script)
+// Bu Sheet'te "Sayfa1" ve "Ayarlar" adında iki sekme olmalı.
+// "Ayarlar" sekmesinin başlıkları: key | value
 // ============================================================
 
-var SHEET_NAME = "Sayfa1";
+var PRODUCTS_SHEET_NAME = "Sayfa1";
+var SETTINGS_SHEET_NAME = "Ayarlar";
 var ADMIN_PASSWORD_PROPERTY = "ADMIN_PASSWORD"; // Proje Ayarları > Script Properties'te tanımlanır
 
 function doGet(e) {
   var action = (e.parameter && e.parameter.action) || "listProducts";
-  if (action === "listProducts") {
-    return jsonResponse({ result: "ok", data: getAllProducts() });
-  }
+  if (action === "listProducts") return jsonResponse({ result: "ok", data: getAllProducts() });
+  if (action === "listSettings") return jsonResponse({ result: "ok", data: getAllSettings() });
   return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + action });
 }
 
@@ -27,20 +29,19 @@ function doPost(e) {
   switch (body.action) {
     case "upsertProduct": return jsonResponse(upsertProduct(body.product));
     case "deleteProduct": return jsonResponse(deleteProduct(body.id));
-    // Yeni özellikler buraya eklenir, ör:
-    // case "syncMarketplace": return jsonResponse(syncMarketplace(body.marketplace));
+    case "updateSettings": return jsonResponse(updateSettings(body.settings));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
 }
 
 // ---------- Ürün işlemleri ----------
 
-function getSheet() {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+function getProductsSheet() {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PRODUCTS_SHEET_NAME);
 }
 
 function getAllProducts() {
-  var sheet = getSheet();
+  var sheet = getProductsSheet();
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   return data.slice(1)
@@ -54,7 +55,7 @@ function getAllProducts() {
 
 function upsertProduct(product) {
   if (!product || !product.id) return { result: "error", message: "Ürün ID zorunlu." };
-  var sheet = getSheet();
+  var sheet = getProductsSheet();
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var idCol = headers.indexOf("id");
@@ -72,12 +73,50 @@ function upsertProduct(product) {
 
 function deleteProduct(id) {
   if (!id) return { result: "error", message: "Ürün ID zorunlu." };
-  var sheet = getSheet();
+  var sheet = getProductsSheet();
   var data = sheet.getDataRange().getValues();
-  var idCol = 0; // "id" birinci sütun
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][idCol]) === String(id)) { sheet.deleteRow(i + 1); break; }
+    if (String(data[i][0]) === String(id)) { sheet.deleteRow(i + 1); break; }
   }
+  return { result: "ok" };
+}
+
+// ---------- Ayarlar işlemleri ----------
+
+function getSettingsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SETTINGS_SHEET_NAME);
+  if (!sheet) return null;
+  return sheet;
+}
+
+function getAllSettings() {
+  var sheet = getSettingsSheet();
+  if (!sheet) return {};
+  var data = sheet.getDataRange().getValues();
+  var out = {};
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) out[data[i][0]] = data[i][1];
+  }
+  return out;
+}
+
+function updateSettings(settings) {
+  if (!settings) return { result: "error", message: "Ayar verisi eksik." };
+  var sheet = getSettingsSheet();
+  if (!sheet) return { result: "error", message: "'Ayarlar' sekmesi bulunamadı." };
+  var data = sheet.getDataRange().getValues();
+  var keyToRow = {};
+  for (var i = 1; i < data.length; i++) { if (data[i][0]) keyToRow[data[i][0]] = i + 1; }
+
+  Object.keys(settings).forEach(function (key) {
+    var value = settings[key];
+    if (keyToRow[key]) {
+      sheet.getRange(keyToRow[key], 2).setValue(value);
+    } else {
+      sheet.appendRow([key, value]);
+    }
+  });
   return { result: "ok" };
 }
 
@@ -92,16 +131,4 @@ function jsonResponse(obj) {
 // Her pazaryerinin API anahtarını Script Properties'te saklayın
 // (ör. TRENDYOL_API_KEY), UrlFetchApp.fetch() ile çağırın,
 // dönen siparişleri/ürünleri bu Sheet'e veya ayrı bir sekmeye yazın.
-// Örnek iskelet:
-//
-// function syncMarketplace(marketplace) {
-//   var apiKey = PropertiesService.getScriptProperties().getProperty(marketplace.toUpperCase() + "_API_KEY");
-//   if (!apiKey) return { result: "error", message: marketplace + " için API anahtarı tanımlı değil." };
-//   var response = UrlFetchApp.fetch("https://api." + marketplace + ".com/orders", {
-//     headers: { "Authorization": "Bearer " + apiKey }
-//   });
-//   var orders = JSON.parse(response.getContentText());
-//   // ... siparişleri işleyip Sheet'e yaz ...
-//   return { result: "ok", count: orders.length };
-// }
 // ============================================================
