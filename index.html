@@ -467,7 +467,7 @@ function viewHome(){
  var bests=PRODUCTS.filter(function(p){return p.isBestSeller;});
  var sale=PRODUCTS.filter(function(p){return p.oldPrice;});
  return header()+
- '<div class="hero" data-goto="categories"><picture>'+
+ '<div class="hero" data-cat="Tüm Ürünler"><picture>'+
   '<source media="(min-width:700px)" srcset="hero-desktop.jpg">'+
   '<img src="hero-mobile.jpg" alt="Gülsüm Aydın Butik - Zarafetin En Doğal Hali" loading="eager"></picture></div>'+
  trustBadges()+
@@ -497,7 +497,9 @@ function viewCategories(){
 
 function viewCategory(){
  var cat=state.category;
- var list = cat==="Yeni Gelenler"? PRODUCTS.filter(function(p){return p.isNew;}) : PRODUCTS.filter(function(p){return p.category===cat;});
+ var list = cat==="Yeni Gelenler"? PRODUCTS.filter(function(p){return p.isNew;})
+  : cat==="Tüm Ürünler"? PRODUCTS
+  : PRODUCTS.filter(function(p){return p.category===cat;});
  if(state.sort==="yeni") list=list.slice().reverse();
  if(state.sort==="artan") list=list.slice().sort(function(a,b){return a.price-b.price;});
  if(state.sort==="azalan") list=list.slice().sort(function(a,b){return b.price-a.price;});
