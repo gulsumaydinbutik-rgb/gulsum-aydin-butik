@@ -248,7 +248,7 @@ function loadProductsFromSheet(){
     shortDescription:p.shortDescription||"", description:p.description||"",
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
     images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
-    colors:colors, sizes:sizes, variants:variants
+    colors:colors, colors2:splitList(p.colors2), sizes:sizes, variants:variants
    };
   });
   if(fresh.length){ PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
@@ -265,7 +265,7 @@ var state = {
  favorites: loadLS("ga_favs",[]),
  lastOrder: loadLS("ga_last_order",null),
  sort:"onerilen", searchQ:"",
- pdColor:null, pdSize:null, pdQty:1,
+ pdColor:null, pdColor2:null, pdSize:null, pdQty:1,
  checkoutForm: loadLS("ga_checkout_draft",{}),
  formErrors:{},
  currentGallery:[], lightboxOpen:false, lightboxIndex:0
@@ -289,7 +289,11 @@ function productBaseName(p){
  }
  return name;
 }
-function productDisplayName(p,color){ var base=productBaseName(p); return color? (base+" "+color) : base; }
+function productDisplayName(p,color,color2){
+ var base=productBaseName(p);
+ if(color2){ return base+" ("+color+" Sweat / "+color2+" Pantolon)"; }
+ return color? (base+" "+color) : base;
+}
 function colorImages(p,color){
  if(p.images.length===p.colors.length){ var idx=p.colors.indexOf(color); if(idx>-1) return [p.images[idx]]; }
  return p.images;
@@ -303,7 +307,7 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){retu
 
 var _fromPopstate=false;
 function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null;
- if(view==="product"){ state.pdColor=null; state.pdSize=null; state.pdQty=1; }
+ if(view==="product"){ state.pdColor=null; state.pdColor2=null; state.pdSize=null; state.pdQty=1; }
  window.scrollTo(0,0); render(); syncUrl(!_fromPopstate);
 }
 function syncUrl(pushHistory){
@@ -347,16 +351,16 @@ function showToast(msg,link){
  window._toastTimer=setTimeout(function(){ t.classList.remove("show"); }, 2600);
 }
 
-function addToCart(p,color,size,qty){
+function addToCart(p,color,size,qty,color2){
  var variant=findVariant(p,color,size);
  if(!variant||variant.stock<1){ showToast("Bu varyant stokta yok"); return; }
- var key=p.id+"-"+color+"-"+size;
+ var key=p.id+"-"+color+"-"+(color2||"")+"-"+size;
  var existing=null;
  state.cart.forEach(function(i){ if(i.key===key) existing=i; });
  var currentQty = existing? existing.qty:0;
  if(currentQty+qty>variant.stock){ showToast("Stokta sadece "+variant.stock+" adet var"); return; }
  if(existing){ existing.qty+=qty; } else {
-  state.cart.push({key:key,productId:p.id,name:productDisplayName(p,color),image:colorImages(p,color)[0],color:color,size:size,price:p.price,qty:qty});
+  state.cart.push({key:key,productId:p.id,name:productDisplayName(p,color,color2),image:colorImages(p,color)[0],color:color,color2:color2||null,size:size,price:p.price,qty:qty});
  }
  saveLS("ga_cart",state.cart);
  showToast("Ürün sepete eklendi",true);
@@ -471,11 +475,13 @@ function viewSearch(){
 function viewProduct(){
  var p=findProduct(state.productId);
  if(!p) return header("Ürün","home")+'<div class="empty-state"><div class="ico">❓</div><p>Ürün bulunamadı.</p></div>';
+ var hasColor2 = p.colors2 && p.colors2.length>0;
  var color=state.pdColor||p.colors[0];
+ var color2=hasColor2? (state.pdColor2||p.colors2[0]) : null;
  var size=state.pdSize||p.sizes[0];
  var variant = findVariant(p,color,size);
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
- var dispName = productDisplayName(p,color);
+ var dispName = productDisplayName(p,color,color2);
  var gallery = colorImages(p,color);
  state.currentGallery = gallery;
 
@@ -488,10 +494,16 @@ function viewProduct(){
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
  '<div class="stock-line in">✓ Stokta Var</div>'+
- '<div class="opt-label">Renk: '+esc(color)+'</div>'+
+ '<div class="opt-label">'+(hasColor2?'Sweat Rengi':'Renk')+': '+esc(color)+'</div>'+
  '<div class="opt-row">'+p.colors.map(function(c){
   return '<button class="opt-pill'+(c===color?' selected':'')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
  }).join('')+'</div>'+
+ (hasColor2? (
+  '<div class="opt-label">Pantolon Rengi: '+esc(color2)+'</div>'+
+  '<div class="opt-row">'+p.colors2.map(function(c){
+   return '<button class="opt-pill'+(c===color2?' selected':'')+'" data-color2="'+esc(c)+'">'+esc(c)+'</button>';
+  }).join('')+'</div>'
+ ) : '')+
  '<div class="opt-label">Beden: '+esc(size)+'</div>'+
  '<div class="opt-row">'+p.sizes.map(function(s){
   return '<button class="opt-pill'+(s===size?' selected':'')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
@@ -525,7 +537,7 @@ function viewCart(){
  return header("Sepetim","home")+
  '<div>'+state.cart.map(function(i){
   return '<div class="cart-item"><img src="'+i.image+'" loading="lazy"><div class="ci-info">'+
-   '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+' / '+esc(i.size)+' · '+money(i.price)+'</div>'+
+   '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+(i.color2?' + '+esc(i.color2):'')+' / '+esc(i.size)+' · '+money(i.price)+'</div>'+
    '<div class="ci-controls"><div class="ci-qty"><button class="mini-btn" data-cqty="'+i.key+'|-1">−</button><span>'+i.qty+'</span><button class="mini-btn" data-cqty="'+i.key+'|1">+</button></div>'+
    '<button class="remove" data-remove="'+i.key+'">Sil</button></div></div></div>';
  }).join('')+'</div>'+
@@ -663,6 +675,8 @@ document.addEventListener("click", function(e){
  if(sortBtn){ state.sort=sortBtn.getAttribute("data-sort"); render(); return; }
  var colorBtn = e.target.closest("[data-color]");
  if(colorBtn){ state.pdColor=colorBtn.getAttribute("data-color"); render(); return; }
+ var color2Btn = e.target.closest("[data-color2]");
+ if(color2Btn){ state.pdColor2=color2Btn.getAttribute("data-color2"); render(); return; }
  var sizeBtn = e.target.closest("[data-size]");
  if(sizeBtn){ state.pdSize=sizeBtn.getAttribute("data-size"); render(); return; }
  var qtyBtn = e.target.closest("[data-qty]");
@@ -670,7 +684,7 @@ document.addEventListener("click", function(e){
  var addBtn = e.target.closest('[data-action="addcart"]');
  if(addBtn){
   var p=findProduct(state.productId);
-  if(p){ addToCart(p, state.pdColor||p.colors[0], state.pdSize||p.sizes[0], state.pdQty); }
+  if(p){ addToCart(p, state.pdColor||p.colors[0], state.pdSize||p.sizes[0], state.pdQty, (p.colors2&&p.colors2.length)?(state.pdColor2||p.colors2[0]):null); }
   return;
  }
  var cqtyBtn = e.target.closest("[data-cqty]");
