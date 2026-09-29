@@ -7,12 +7,23 @@
 
 var PRODUCTS_SHEET_NAME = "Sayfa1";
 var SETTINGS_SHEET_NAME = "Ayarlar";
+var ORDERS_SPREADSHEET_ID = "11DQF5rjHUNcRi9_uAIySmmjXmzrB1Kd_w42irh2h3Gc";
+var ORDERS_SHEET_NAME = "Siparişler";
 var ADMIN_PASSWORD_PROPERTY = "ADMIN_PASSWORD"; // Proje Ayarları > Script Properties'te tanımlanır
+
+function checkPassword(pw) {
+  var stored = PropertiesService.getScriptProperties().getProperty(ADMIN_PASSWORD_PROPERTY);
+  return stored && pw === stored;
+}
 
 function doGet(e) {
   var action = (e.parameter && e.parameter.action) || "listProducts";
   if (action === "listProducts") return jsonResponse({ result: "ok", data: getAllProducts() });
   if (action === "listSettings") return jsonResponse({ result: "ok", data: getAllSettings() });
+  if (action === "listOrders") {
+    if (!checkPassword(e.parameter.password)) return jsonResponse({ result: "error", message: "Şifre yanlış." });
+    return jsonResponse({ result: "ok", data: getAllOrders() });
+  }
   return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + action });
 }
 
@@ -21,8 +32,7 @@ function doPost(e) {
   try { body = JSON.parse(e.postData.contents); }
   catch (err) { return jsonResponse({ result: "error", message: "Geçersiz istek." }); }
 
-  var storedPassword = PropertiesService.getScriptProperties().getProperty(ADMIN_PASSWORD_PROPERTY);
-  if (!storedPassword || body.password !== storedPassword) {
+  if (!checkPassword(body.password)) {
     return jsonResponse({ result: "error", message: "Şifre yanlış." });
   }
 
@@ -30,8 +40,49 @@ function doPost(e) {
     case "upsertProduct": return jsonResponse(upsertProduct(body.product));
     case "deleteProduct": return jsonResponse(deleteProduct(body.id));
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
+    case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
+}
+
+// ---------- Sipariş işlemleri ----------
+
+function getOrdersSheet() {
+  var ss = SpreadsheetApp.openById(ORDERS_SPREADSHEET_ID);
+  return ss.getSheetByName(ORDERS_SHEET_NAME);
+}
+
+function getAllOrders() {
+  var sheet = getOrdersSheet();
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var orders = data.slice(1)
+    .filter(function (r) { return r[1]; }) // Sipariş No dolu olanlar
+    .map(function (r) {
+      var o = {};
+      headers.forEach(function (h, i) { o[h] = r[i]; });
+      return o;
+    });
+  orders.reverse(); // en yeni sipariş en üstte
+  return orders;
+}
+
+function updateOrderStatus(orderId, status) {
+  if (!orderId || !status) return { result: "error", message: "Sipariş no ve durum zorunlu." };
+  var sheet = getOrdersSheet();
+  if (!sheet) return { result: "error", message: "Siparişler sekmesi bulunamadı." };
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var idCol = headers.indexOf("Sipariş No");
+  var statusCol = headers.indexOf("Durum");
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(orderId)) {
+      sheet.getRange(i + 1, statusCol + 1).setValue(status);
+      return { result: "ok" };
+    }
+  }
+  return { result: "error", message: "Sipariş bulunamadı." };
 }
 
 // ---------- Ürün işlemleri ----------

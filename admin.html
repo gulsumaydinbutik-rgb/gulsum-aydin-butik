@@ -126,11 +126,13 @@ tr:last-child td{border-bottom:none;}
   </div>
 
   <div id="tab-orders" class="hidden">
-   <div class="pagehead"><div><h1>Siparişler</h1><p>Yakında bu panelden doğrudan yönetilebilecek</p></div></div>
-   <div class="soon-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 8h11l1 12.5a1 1 0 0 1-1 1.1H6.5a1 1 0 0 1-1-1.1L6.5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
-    <h3>Çok Yakında</h3>
-    <p>Siparişleriniz şu an Google Sheet'e otomatik düşüyor. Bu sekmeden doğrudan görüntüleme ve durum güncelleme (Hazırlanıyor / Kargoda / Teslim Edildi) yakında eklenecek.</p>
+   <div class="pagehead"><div><h1>Siparişler</h1><p id="orderCount"></p></div></div>
+   <div id="ordersMsg"></div>
+   <div class="card">
+    <table>
+     <thead><tr><th>Tarih</th><th>Sipariş No</th><th>Müşteri</th><th>Ürünler</th><th>Toplam</th><th>Durum</th></tr></thead>
+     <tbody id="ordersBody"></tbody>
+    </table>
    </div>
   </div>
 
@@ -203,8 +205,10 @@ function doLogin(){
  sessionStorage.setItem(PASSWORD_KEY, p);
  loadProducts();
 }
-function apiGet(action){
- return fetch(ADMIN_API_URL + "?action=" + (action||"listProducts")).then(function(r){return r.json();});
+function apiGet(action, needsAuth){
+ var url = ADMIN_API_URL + "?action=" + (action||"listProducts");
+ if(needsAuth){ url += "&password=" + encodeURIComponent(sessionStorage.getItem(PASSWORD_KEY)); }
+ return fetch(url).then(function(r){return r.json();});
 }
 function apiPost(body){
  body.password = sessionStorage.getItem(PASSWORD_KEY);
@@ -224,6 +228,7 @@ document.querySelectorAll(".navlink").forEach(function(el){
   var tab = el.getAttribute("data-tab");
   switchTab(tab);
   if(tab==="settings") loadSettings();
+  if(tab==="orders") loadOrders();
  });
 });
 switchTab("products");
@@ -282,6 +287,38 @@ function renderTable(){
  }).join("") || '<tr><td colspan="6" class="empty">Henüz ürün yok.</td></tr>';
 }
 
+var ORDER_STATUSES = ["Yeni Sipariş","Hazırlanıyor","Kargoya Verildi","Teslim Edildi","İptal"];
+var orders = [];
+function loadOrders(){
+ apiGet("listOrders", true).then(function(res){
+  if(res.result==="error"){ document.getElementById("ordersMsg").innerHTML = '<div class="msg err">'+res.message+'</div>'; return; }
+  orders = res.data || [];
+  document.getElementById("orderCount").textContent = orders.length + " sipariş";
+  renderOrders();
+ }).catch(function(){
+  document.getElementById("ordersMsg").innerHTML = '<div class="msg err">Bağlantı hatası.</div>';
+ });
+}
+function renderOrders(){
+ var body = document.getElementById("ordersBody");
+ body.innerHTML = orders.map(function(o,i){
+  var statusOptions = ORDER_STATUSES.map(function(s){
+   return '<option value="'+esc(s)+'"'+(o["Durum"]===s?' selected':'')+'>'+esc(s)+'</option>';
+  }).join("");
+  return '<tr><td style="font-size:11.5px;color:var(--ink2)">'+esc(o["Tarih"])+'</td>'+
+   '<td class="pid">'+esc(o["Sipariş No"])+'</td>'+
+   '<td><div class="pname">'+esc(o["Ad Soyad"])+'</div><div class="pid">'+esc(o["Telefon"])+'</div></td>'+
+   '<td style="font-size:12px;max-width:220px">'+esc(o["Ürünler"])+'</td>'+
+   '<td>'+esc(o["Toplam"])+' TL</td>'+
+   '<td><select onchange="updateOrderStatus(\''+String(o["Sipariş No"]).replace(/'/g,"")+'\', this.value)" style="padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px">'+statusOptions+'</select></td></tr>';
+ }).join("") || '<tr><td colspan="6" class="empty">Henüz sipariş yok.</td></tr>';
+}
+function updateOrderStatus(orderId, status){
+ apiPost({action:"updateOrderStatus", orderId:orderId, status:status}).then(function(res){
+  if(res.result==="ok"){ document.getElementById("ordersMsg").innerHTML = '<div class="msg ok">Durum güncellendi.</div>'; }
+  else { document.getElementById("ordersMsg").innerHTML = '<div class="msg err">'+(res.message||"Hata")+'</div>'; loadOrders(); }
+ });
+}
 var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit"];
 function openForm(index){
  var p = index!==null ? products[index] : null;
