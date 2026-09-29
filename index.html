@@ -284,7 +284,7 @@ function loadProductsFromSheet(){
     shortDescription:p.shortDescription||"", description:p.description||"",
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
     images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
-    colors:colors, colors2:splitList(p.colors2), sizes:sizes, variants:variants
+    colors:colors, colors2:splitList(p.colors2), color1Label:p.color1Label||"", color2Label:p.color2Label||"", sizes:sizes, variants:variants
    };
   });
   if(fresh.length){ PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
@@ -342,7 +342,10 @@ function productBaseName(p){
 }
 function productDisplayName(p,color,color2){
  var base=productBaseName(p);
- if(color2){ return base+" ("+color+" Sweat / "+color2+" Pantolon)"; }
+ if(color2){
+  var l1=(p&&p.color1Label)||"Sweat", l2=(p&&p.color2Label)||"Pantolon";
+  return base+" ("+color+" "+l1+" / "+color2+" "+l2+")";
+ }
  return color? (base+" "+color) : base;
 }
 function colorImages(p,color){
@@ -366,7 +369,7 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){retu
 
 var _fromPopstate=false;
 function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null;
- if(view==="product"){ state.pdColor=null; state.pdColor2=null; state.pdSize=null; state.pdQty=1; }
+ if(view==="product"){ state.pdColor=opts.color||null; state.pdColor2=null; state.pdSize=null; state.pdQty=1; }
  window.scrollTo(0,0); render(); syncUrl(!_fromPopstate);
 }
 function syncUrl(pushHistory){
@@ -471,18 +474,34 @@ function bottomNav(){
  }).join('')+'</div>';
 }
 
-function productCard(p){
+function productCard(p,variantColor){
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
  var totalStock = p.variants.reduce(function(a,v){return a+v.stock;},0);
- return '<div class="card" data-goto="product" data-id="'+p.id+'">'+
-  '<div class="imgwrap">'+mediaTag(p.images[0])+(isVideo(p.images[0])?'<div class="play-badge"><span>▶</span></div>':'')+
+ var dispName = variantColor? productDisplayName(p,variantColor) : p.name;
+ var img = variantColor? colorImages(p,variantColor)[0] : p.images[0];
+ return '<div class="card" data-goto="product" data-id="'+p.id+'"'+(variantColor?' data-color="'+esc(variantColor)+'"':'')+'>'+
+  '<div class="imgwrap">'+mediaTag(img)+(isVideo(img)?'<div class="play-badge"><span>▶</span></div>':'')+
   (p.isNew?'<span class="tag">Yeni</span>':(p.isBestSeller?'<span class="tag">Çok Satan</span>':''))+
   (disc>0?'<span class="tag sale" style="top:auto;bottom:8px;left:8px;">%'+disc+'</span>':'')+
   '<button class="fav" data-fav="'+p.id+'">'+(isFav(p.id)?'❤️':'🤍')+'</button>'+
   (totalStock===0?'<div class="oos">Tükendi</div>':'')+
-  '</div><div class="info"><div class="name">'+esc(p.name)+'</div>'+
+  '</div><div class="info"><div class="name">'+esc(dispName)+'</div>'+
   '<div class="price-row"><span class="price">'+money(p.price)+'</span>'+
   (p.oldPrice?'<span class="old-price">'+money(p.oldPrice)+'</span>':'')+'</div></div></div>';
+}
+function expandVariants(list){
+ var out=[];
+ list.forEach(function(p){
+  if((!p.colors2||!p.colors2.length) && p.images.length===p.colors.length && p.colors.length>1){
+   p.colors.forEach(function(c){ out.push({product:p, color:c}); });
+  } else {
+   out.push({product:p, color:null});
+  }
+ });
+ return out;
+}
+function renderCards(list){
+ return expandVariants(list).map(function(e){ return productCard(e.product, e.color); }).join('');
 }
 
 function trustBadges(){
@@ -514,7 +533,7 @@ function viewHome(){
 function sectionBlock(title,list){
  if(!list.length) return '';
  return '<div class="section"><div class="section-head"><h2>'+title+'</h2><button class="link" data-goto="categories">Tümünü Gör</button></div>'+
- '<div class="grid">'+list.map(productCard).join('')+'</div></div>';
+ '<div class="grid">'+renderCards(list)+'</div></div>';
 }
 
 function viewCategories(){
@@ -543,7 +562,7 @@ function viewCategory(){
  var sorts=[["onerilen","Önerilen"],["yeni","En Yeni"],["artan","Fiyat ↑"],["azalan","Fiyat ↓"]];
  return header(cat,"home")+
  '<div class="filter-bar">'+sorts.map(function(s){return '<button class="sort-chip'+(state.sort===s[0]?' active':'')+'" data-sort="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
- '<div class="section">'+(list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' :
+ '<div class="section">'+(list.length? '<div class="grid">'+renderCards(list)+'</div>' :
   '<div class="empty-state"><div class="ico">🔎</div><p>Bu kategoride ürün bulunamadı.</p></div>')+'</div>';
 }
 
@@ -555,7 +574,7 @@ function viewSearch(){
  return header("Ara","home")+
  '<div class="search-box"><input id="searchInput" type="text" placeholder="Ürün ara..." value="'+esc(state.searchQ)+'"></div>'+
  '<div class="section">'+(!q? '<div class="empty-state"><div class="ico">🔍</div><p>Ürün, kategori veya renk yazarak arayın.</p></div>' :
-  (list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' : '<div class="empty-state"><div class="ico">🙁</div><p>Aradığınız ürünü bulamadık.</p></div>'))+'</div>';
+  (list.length? '<div class="grid">'+renderCards(list)+'</div>' : '<div class="empty-state"><div class="ico">🙁</div><p>Aradığınız ürünü bulamadık.</p></div>'))+'</div>';
 }
 
 function viewProduct(){
@@ -581,12 +600,12 @@ function viewProduct(){
  (p.bulkPrice2? '<div class="bulk-badge">🎁 2 Adet Al, Toplam '+money(p.bulkPrice2)+' Öde</div>' : '')+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
  '<div class="stock-line in">✓ Stokta Var</div>'+
- '<div class="opt-label">'+(hasColor2?'Sweat Rengi':'Renk')+': '+esc(color)+'</div>'+
+ '<div class="opt-label">'+(hasColor2?((p.color1Label||"Sweat")+" Rengi"):'Renk')+': '+esc(color)+'</div>'+
  '<div class="opt-row">'+p.colors.map(function(c){
   return '<button class="opt-pill'+(c===color?' selected':'')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
  }).join('')+'</div>'+
  (hasColor2? (
-  '<div class="opt-label">Pantolon Rengi: '+esc(color2)+'</div>'+
+  '<div class="opt-label">'+(p.color2Label||"Pantolon")+' Rengi: '+esc(color2)+'</div>'+
   '<div class="opt-row">'+p.colors2.map(function(c){
    return '<button class="opt-pill'+(c===color2?' selected':'')+'" data-color2="'+esc(c)+'">'+esc(c)+'</button>';
   }).join('')+'</div>'
@@ -611,7 +630,7 @@ function viewProduct(){
 function viewFavorites(){
  var list=PRODUCTS.filter(function(p){return isFav(p.id);});
  return header("Favoriler","home")+'<div class="section">'+
- (list.length? '<div class="grid">'+list.map(productCard).join('')+'</div>' :
+ (list.length? '<div class="grid">'+renderCards(list)+'</div>' :
   '<div class="empty-state"><div class="ico">🤍</div><p>Favori ürününüz bulunmuyor.</p></div>')+'</div>';
 }
 
@@ -748,14 +767,14 @@ document.addEventListener("click", function(e){
  if(t){
   var v = t.getAttribute("data-goto");
   var card = t.closest("[data-id]");
-  if(v==="product"){ go("product",{productId: (card||t).getAttribute("data-id")}); }
+  if(v==="product"){ var _el=(card||t); go("product",{productId:_el.getAttribute("data-id"), color:_el.getAttribute("data-color")}); }
   else { go(v); }
   return;
  }
  var catBtn = e.target.closest("[data-cat]");
  if(catBtn){ go("category",{category:catBtn.getAttribute("data-cat")}); return; }
  var cardEl = e.target.closest(".card[data-id]");
- if(cardEl && !e.target.closest("[data-fav]")){ go("product",{productId:cardEl.getAttribute("data-id")}); return; }
+ if(cardEl && !e.target.closest("[data-fav]")){ go("product",{productId:cardEl.getAttribute("data-id"), color:cardEl.getAttribute("data-color")}); return; }
  var favBtn = e.target.closest("[data-fav]");
  if(favBtn){ e.stopPropagation(); toggleFav(favBtn.getAttribute("data-fav")); return; }
  var sortBtn = e.target.closest("[data-sort]");
