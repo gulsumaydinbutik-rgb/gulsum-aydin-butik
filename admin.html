@@ -135,11 +135,15 @@ tr:last-child td{border-bottom:none;}
   </div>
 
   <div id="tab-settings" class="hidden">
-   <div class="pagehead"><div><h1>Ayarlar</h1><p>Banner, kategori ve genel site ayarları</p></div></div>
-   <div class="soon-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    <h3>Çok Yakında</h3>
-    <p>Banner görseli, kategori listesi ve Google Analytics bağlantısını bu ekrandan yönetebileceksiniz.</p>
+   <div class="pagehead"><div><h1>Ayarlar</h1><p>Banner, Google Analytics ve arama motoru (SEO) ayarları</p></div></div>
+   <div id="settingsMsg"></div>
+   <div class="card" style="padding:24px">
+    <div class="field"><label>Banner Görseli — Mobil (dosya adı veya tam link)</label><input id="s_heroMobileUrl" placeholder="hero-mobile.jpg"></div>
+    <div class="field"><label>Banner Görseli — Masaüstü</label><input id="s_heroDesktopUrl" placeholder="hero-desktop.jpg"></div>
+    <div class="field"><label>Google Analytics Ölçüm ID (G-XXXXXXX)</label><input id="s_gaId" placeholder="G-XXXXXXX"></div>
+    <div class="field"><label>Sayfa Başlığı (tarayıcı sekmesi / Google)</label><input id="s_metaTitle" placeholder="Gülsüm Aydın Butik — Tesettür Giyim"></div>
+    <div class="field"><label>Sayfa Açıklaması (Google'da görünen)</label><textarea id="s_metaDescription" rows="2"></textarea></div>
+    <button class="btn btn-gold" onclick="saveSettings()">Ayarları Kaydet</button>
    </div>
   </div>
 
@@ -216,9 +220,39 @@ function switchTab(tab){
  });
 }
 document.querySelectorAll(".navlink").forEach(function(el){
- el.addEventListener("click", function(){ switchTab(el.getAttribute("data-tab")); });
+ el.addEventListener("click", function(){
+  var tab = el.getAttribute("data-tab");
+  switchTab(tab);
+  if(tab==="settings") loadSettings();
+ });
 });
 switchTab("products");
+
+function loadSettings(){
+ apiGet("listSettings").then(function(res){
+  var s = res.data || {};
+  document.getElementById("s_heroMobileUrl").value = s.heroMobileUrl || "";
+  document.getElementById("s_heroDesktopUrl").value = s.heroDesktopUrl || "";
+  document.getElementById("s_gaId").value = s.gaId || "";
+  document.getElementById("s_metaTitle").value = s.metaTitle || "";
+  document.getElementById("s_metaDescription").value = s.metaDescription || "";
+ }).catch(function(){
+  document.getElementById("settingsMsg").innerHTML = '<div class="msg err">Ayarlar yüklenemedi.</div>';
+ });
+}
+function saveSettings(){
+ var settings = {
+  heroMobileUrl: document.getElementById("s_heroMobileUrl").value.trim(),
+  heroDesktopUrl: document.getElementById("s_heroDesktopUrl").value.trim(),
+  gaId: document.getElementById("s_gaId").value.trim(),
+  metaTitle: document.getElementById("s_metaTitle").value.trim(),
+  metaDescription: document.getElementById("s_metaDescription").value.trim()
+ };
+ apiPost({action:"updateSettings", settings:settings}).then(function(res){
+  if(res.result==="ok"){ document.getElementById("settingsMsg").innerHTML = '<div class="msg ok">Kaydedildi.</div>'; }
+  else { document.getElementById("settingsMsg").innerHTML = '<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
+ }).catch(function(){ document.getElementById("settingsMsg").innerHTML = '<div class="msg err">Bağlantı hatası</div>'; });
+}
 
 function loadProducts(){
  if(ADMIN_API_URL.indexOf("PASTE_")>-1){ document.getElementById("loginMsg").innerHTML='<div class="msg err">Backend henüz bağlanmadı (ADMIN_API_URL).</div>'; return; }
