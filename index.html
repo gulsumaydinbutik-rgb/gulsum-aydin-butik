@@ -284,10 +284,11 @@ function loadProductsFromSheet(){
     shortDescription:p.shortDescription||"", description:p.description||"",
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
     images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
-    colors:colors, colors2:splitList(p.colors2), color1Label:p.color1Label||"", color2Label:p.color2Label||"", sizes:sizes, variants:variants
+    colors:colors, colors2:splitList(p.colors2), color1Label:p.color1Label||"", color2Label:p.color2Label||"", sizes:sizes, variants:variants,
+    sira: (parseInt(p.sira,10)||9999)
    };
   });
-  if(fresh.length){ PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
+  if(fresh.length){ fresh.sort(function(a,b){return a.sira-b.sira;}); PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
   return false;
  }).catch(function(e){ console.warn("Sheet verisi okunamadı.",e); return false; });
 }
