@@ -78,6 +78,26 @@ tr:last-child td{border-bottom:none;}
 .soon-card svg{width:34px;height:34px;color:var(--gold-d);margin-bottom:12px;}
 .soon-card h3{font-family:var(--font-serif);color:var(--ink);margin:0 0 6px;font-size:18px;}
 
+.inv-print{font-size:13.5px;}
+.inv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--gold);padding-bottom:14px;margin-bottom:18px;}
+.inv-head h2{font-family:var(--font-serif);margin:0;font-size:20px;}
+.inv-sub{color:var(--ink2);font-size:12px;margin-top:2px;}
+.inv-orderno{text-align:right;font-family:var(--font-serif);font-size:16px;font-weight:700;}
+.inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.inv-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);font-weight:700;margin-bottom:4px;}
+.inv-val{margin-bottom:2px;}
+.inv-note{margin-top:14px;padding:10px 12px;background:var(--bg2);border-radius:9px;}
+.inv-items{border:1px solid var(--line);border-radius:10px;padding:10px 14px;}
+.inv-item-line{padding:5px 0;border-bottom:1px dashed var(--line);}
+.inv-item-line:last-child{border-bottom:none;}
+.inv-totals{margin-top:14px;padding:12px 14px;background:var(--bg2);border-radius:10px;}
+.inv-trow{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;}
+.inv-trow.total{font-weight:700;font-size:15px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px;}
+@media print{
+ body *{visibility:hidden;}
+ #invoiceBody, #invoiceBody *{visibility:visible;}
+ #invoiceBody{position:absolute;top:0;left:0;width:100%;padding:20px;}
+}
 @media (max-width:760px){
  .shell{flex-direction:column;}
  .sidebar{width:100%;display:flex;align-items:center;gap:6px;padding:14px 16px;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);}
@@ -130,7 +150,7 @@ tr:last-child td{border-bottom:none;}
    <div id="ordersMsg"></div>
    <div class="card">
     <table>
-     <thead><tr><th>Tarih</th><th>Sipariş No</th><th>Müşteri</th><th>Ürünler</th><th>Toplam</th><th>Durum</th></tr></thead>
+     <thead><tr><th>Tarih</th><th>Sipariş No</th><th>Müşteri</th><th>Ürünler</th><th>Toplam</th><th>Durum</th><th></th></tr></thead>
      <tbody id="ordersBody"></tbody>
     </table>
    </div>
@@ -158,6 +178,16 @@ tr:last-child td{border-bottom:none;}
    </div>
   </div>
 
+ </div>
+</div>
+
+<div id="invoiceModalBg" class="modal-bg hidden">
+ <div class="modal" style="max-width:640px">
+  <div id="invoiceBody" class="inv-print"></div>
+  <div class="modal-actions" style="margin-top:20px">
+   <button class="btn-gold" onclick="printOrder()">🖨️ Yazdır</button>
+   <button class="btn-ghost" onclick="closeOrderDetail()">Kapat</button>
+  </div>
  </div>
 </div>
 
@@ -310,9 +340,36 @@ function renderOrders(){
    '<td><div class="pname">'+esc(o["Ad Soyad"])+'</div><div class="pid">'+esc(o["Telefon"])+'</div></td>'+
    '<td style="font-size:12px;max-width:220px">'+esc(o["Ürünler"])+'</td>'+
    '<td>'+esc(o["Toplam"])+' TL</td>'+
-   '<td><select onchange="updateOrderStatus(\''+String(o["Sipariş No"]).replace(/'/g,"")+'\', this.value)" style="padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px">'+statusOptions+'</select></td></tr>';
- }).join("") || '<tr><td colspan="6" class="empty">Henüz sipariş yok.</td></tr>';
+   '<td><select onchange="updateOrderStatus(\''+String(o["Sipariş No"]).replace(/'/g,"")+'\', this.value)" style="padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px">'+statusOptions+'</select></td>'+
+   '<td><button class="btn-ghost" style="padding:7px 12px;font-size:12px;border-radius:7px" onclick="openOrderDetail('+i+')">Detay / Yazdır</button></td></tr>';
+ }).join("") || '<tr><td colspan="7" class="empty">Henüz sipariş yok.</td></tr>';
 }
+function openOrderDetail(i){
+ var o = orders[i];
+ var itemsHtml = String(o["Ürünler"]||"").split(",").map(function(it){ return '<div class="inv-item-line">'+esc(it.trim())+'</div>'; }).join("");
+ document.getElementById("invoiceBody").innerHTML =
+  '<div class="inv-head"><div><h2>Gülsüm Aydın Butik</h2><div class="inv-sub">Sipariş Detayı</div></div>'+
+  '<div class="inv-orderno">'+esc(o["Sipariş No"])+'<div class="inv-sub">'+esc(o["Tarih"])+'</div></div></div>'+
+  '<div class="inv-grid">'+
+   '<div><div class="inv-label">Müşteri</div><div class="inv-val">'+esc(o["Ad Soyad"])+'</div><div class="inv-val">'+esc(o["Telefon"])+'</div>'+(o["E-posta"]?'<div class="inv-val">'+esc(o["E-posta"])+'</div>':'')+'</div>'+
+   '<div><div class="inv-label">Teslimat Adresi</div><div class="inv-val">'+esc(o["Adres"])+'</div><div class="inv-val">'+esc(o["Mahalle"])+' / '+esc(o["İlçe"])+' / '+esc(o["İl"])+'</div></div>'+
+  '</div>'+
+  (o["Not"]?'<div class="inv-note"><div class="inv-label">Sipariş Notu</div><div class="inv-val">'+esc(o["Not"])+'</div></div>':'')+
+  '<div class="inv-label" style="margin-top:18px">Ürünler</div>'+
+  '<div class="inv-items">'+itemsHtml+'</div>'+
+  '<div class="inv-totals">'+
+   '<div class="inv-trow"><span>Ara Toplam</span><span>'+esc(o["Ara Toplam"])+' TL</span></div>'+
+   '<div class="inv-trow"><span>Kargo</span><span>'+(Number(o["Kargo"])===0?"Ücretsiz":esc(o["Kargo"])+' TL')+'</span></div>'+
+   '<div class="inv-trow total"><span>Toplam</span><span>'+esc(o["Toplam"])+' TL</span></div>'+
+  '</div>'+
+  '<div class="inv-grid" style="margin-top:14px">'+
+   '<div><div class="inv-label">Ödeme Yöntemi</div><div class="inv-val">'+esc(o["Ödeme"])+'</div></div>'+
+   '<div><div class="inv-label">Durum</div><div class="inv-val">'+esc(o["Durum"])+'</div></div>'+
+  '</div>';
+ document.getElementById("invoiceModalBg").classList.remove("hidden");
+}
+function closeOrderDetail(){ document.getElementById("invoiceModalBg").classList.add("hidden"); }
+function printOrder(){ window.print(); }
 function updateOrderStatus(orderId, status){
  apiPost({action:"updateOrderStatus", orderId:orderId, status:status}).then(function(res){
   if(res.result==="ok"){ document.getElementById("ordersMsg").innerHTML = '<div class="msg ok">Durum güncellendi.</div>'; }
