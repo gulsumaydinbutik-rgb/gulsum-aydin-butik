@@ -395,7 +395,13 @@ function saveProduct(){
  product.isNew = document.getElementById("f_isNew").checked ? "1":"0";
  product.isBestSeller = document.getElementById("f_isBestSeller").checked ? "1":"0";
  if(!product.id || !product.name){ document.getElementById("formMsg").innerHTML='<div class="msg err">Ürün ID ve adı zorunludur.</div>'; return; }
- apiPost({action:"upsertProduct", product:product}).then(function(res){
+ // Formda olmayan sütunları (colors2, bulkPrice2, sira, ölçüler vb.) korumak için mevcut ürünle birleştir
+ var existing = null;
+ products.forEach(function(p){ if(String(p.id)===String(product.id)) existing = p; });
+ var merged = {};
+ if(existing){ Object.keys(existing).forEach(function(k){ merged[k] = existing[k]; }); }
+ Object.keys(product).forEach(function(k){ merged[k] = product[k]; });
+ apiPost({action:"upsertProduct", product:merged}).then(function(res){
   if(res.result==="ok"){ closeForm(); loadProducts(); }
   else { document.getElementById("formMsg").innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
  }).catch(function(){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });

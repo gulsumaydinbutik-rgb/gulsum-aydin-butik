@@ -110,13 +110,15 @@ function upsertProduct(product) {
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var idCol = headers.indexOf("id");
-  var rowValues = headers.map(function (h) {
-    return product[h] !== undefined ? product[h] : "";
-  });
   var foundRow = -1;
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][idCol]) === String(product.id)) { foundRow = i + 1; break; }
   }
+  // Gönderilmeyen sütunlar mevcut değerini korur (silinmez)
+  var rowValues = headers.map(function (h, c) {
+    if (product[h] !== undefined) return product[h];
+    return foundRow > -1 ? data[foundRow - 1][c] : "";
+  });
   if (foundRow > -1) sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
   else sheet.appendRow(rowValues);
   return { result: "ok" };
