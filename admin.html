@@ -167,6 +167,7 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Banner Görseli — Mobil (dosya adı veya tam link)</label><input id="s_heroMobileUrl" placeholder="hero-mobile.jpg"></div>
     <div class="field"><label>Banner Görseli — Masaüstü</label><input id="s_heroDesktopUrl" placeholder="hero-desktop.jpg"></div>
     <div class="field"><label>Google Analytics Ölçüm ID (G-XXXXXXX)</label><input id="s_gaId" placeholder="G-XXXXXXX"></div>
+    <div class="field"><label>Meta Pixel ID (sadece rakamlar, 15-16 haneli) — boş bırakırsanız Pixel çalışmaz</label><input id="s_metaPixelId" placeholder="123456789012345" inputmode="numeric"></div>
     <div class="field"><label>Sayfa Başlığı (tarayıcı sekmesi / Google)</label><input id="s_metaTitle" placeholder="Gülsüm Aydın Butik — Tesettür Giyim"></div>
     <div class="field"><label>Sayfa Açıklaması (Google'da görünen)</label><textarea id="s_metaDescription" rows="2"></textarea></div>
     <button class="btn btn-gold" onclick="saveSettings()">Ayarları Kaydet</button>
@@ -279,6 +280,7 @@ function loadSettings(){
   document.getElementById("s_heroMobileUrl").value = s.heroMobileUrl || "";
   document.getElementById("s_heroDesktopUrl").value = s.heroDesktopUrl || "";
   document.getElementById("s_gaId").value = s.gaId || "";
+  document.getElementById("s_metaPixelId").value = s.metaPixelId || "";
   document.getElementById("s_metaTitle").value = s.metaTitle || "";
   document.getElementById("s_metaDescription").value = s.metaDescription || "";
  }).catch(function(){
@@ -290,6 +292,7 @@ function saveSettings(){
   heroMobileUrl: document.getElementById("s_heroMobileUrl").value.trim(),
   heroDesktopUrl: document.getElementById("s_heroDesktopUrl").value.trim(),
   gaId: document.getElementById("s_gaId").value.trim(),
+  metaPixelId: document.getElementById("s_metaPixelId").value.replace(/\D/g,""),
   metaTitle: document.getElementById("s_metaTitle").value.trim(),
   metaDescription: document.getElementById("s_metaDescription").value.trim()
  };
