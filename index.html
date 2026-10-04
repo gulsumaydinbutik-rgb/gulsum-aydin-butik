@@ -196,6 +196,79 @@ img{max-width:100%;display:block;}
 .acc-item{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600;}
 .social{display:flex;gap:10px;padding:20px 16px 30px;justify-content:center;}
 .social a{font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;background:var(--bg2);}
+.desk-header,.pd-cta-desk{display:none;}
+@media (min-width:900px){
+ body{font-size:15px;}
+ #app{max-width:1240px;padding-bottom:0;}
+ .bottom-nav{display:none;}
+ .header{display:none;}
+ .announcement-bar{font-size:12px;padding:9px 0;}
+ .desk-header{display:block;position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);}
+ .desk-header-in{display:flex;align-items:center;gap:28px;padding:14px 32px;}
+ .desk-brand{text-align:left;padding:0;flex:0 0 auto;}
+ .desk-brand .brand{font-size:24px;}
+ .desk-nav{display:flex;gap:4px;flex:1;flex-wrap:wrap;}
+ .dn-link{padding:9px 15px;border-radius:20px;font-size:14px;font-weight:600;color:var(--ink2);transition:background .15s,color .15s;}
+ .dn-link:hover{background:var(--bg2);color:var(--ink);}
+ .dn-link.active{background:var(--ink);color:var(--bg);}
+ .desk-actions{display:flex;gap:2px;align-items:center;flex:0 0 auto;}
+ .da-btn{position:relative;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background .15s;}
+ .da-btn:hover{background:var(--bg2);}
+ .da-btn svg{width:23px;height:23px;}
+ .da-btn .badge{top:3px;right:1px;}
+ .topbar{position:static;padding:16px 32px 4px;border-bottom:none;}
+ .topbar h3{font-size:13px;font-weight:500;color:var(--ink2);}
+ .back{font-size:26px;line-height:1;padding:0 6px;}
+ .hero{margin:22px 32px 10px;border-radius:20px;}
+ .trust-row{display:none;}
+ .section{padding:14px 32px 8px;}
+ .section:has(> .cats){display:none;}
+ .section-head{margin-bottom:16px;}
+ .section-head h2{font-size:26px;}
+ .section-head .link{font-size:14px;}
+ .grid{grid-template-columns:repeat(3,1fr);gap:22px;}
+}
+@media (min-width:1100px){
+ .grid{grid-template-columns:repeat(4,1fr);}
+}
+@media (min-width:900px) and (max-width:1099px){
+ .desk-header-in{gap:14px;padding:12px 20px;}
+ .desk-brand .brand{font-size:20px;}
+ .dn-link{padding:8px 10px;font-size:13px;}
+ .da-btn{width:38px;height:38px;}
+ .hero{margin-left:20px;margin-right:20px;}
+ .section{padding-left:20px;padding-right:20px;}
+}
+@media (min-width:900px){
+ .card{transition:box-shadow .2s,transform .2s;cursor:pointer;}
+ .card:hover{box-shadow:0 12px 30px rgba(0,0,0,.10);transform:translateY(-3px);}
+ .card .info{padding:14px 14px 16px;}
+ .card .name{font-size:16px;min-height:42px;}
+ .price{font-size:16px;}
+ .old-price{font-size:13px;}
+ .tag{font-size:11px;padding:4px 10px;}
+ .filter-bar{padding:12px 32px;flex-wrap:wrap;}
+ .sort-chip{font-size:13px;padding:8px 14px;cursor:pointer;}
+ .search-box{position:static;padding:14px 32px;max-width:680px;}
+ .social{padding:36px 32px 56px;}
+ .view{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:52px;padding:16px 32px 48px;align-items:start;max-width:1180px;margin:0 auto;}
+ .pd-gallery{display:block;aspect-ratio:auto;overflow:visible;background:none;}
+ .pd-gallery img,.pd-gallery video{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:16px;margin-bottom:14px;object-fit:cover;}
+ .pd-dots{display:none;}
+ .pd-body{padding:4px 0 0;}
+ .pd-name{font-size:30px;line-height:1.2;}
+ .pd-price{font-size:26px;}
+ .opt-label{font-size:14px;}
+ .opt-pill{font-size:14px;padding:10px 18px;transition:border-color .15s;}
+ .opt-pill:hover{border-color:var(--gold);}
+ .desc-block{font-size:14px;}
+ .sticky-cta{display:none;}
+ .pd-cta-desk{display:flex;gap:10px;margin-top:24px;}
+ .pd-cta-desk .btn-main{flex:1;padding:16px;font-size:15px;}
+ .pd-cta-desk .btn-main:hover{opacity:.88;}
+ .page-narrow{max-width:640px;margin:0 auto;padding-bottom:30px;}
+ .toast{bottom:32px;}
+}
 </style>
 </head>
 <body>
@@ -280,6 +353,7 @@ function parseColorImages(str){
  });
  return out;
 }
+function hasText(v){ v=String(v==null?"":v).trim(); return v!=="" && v!=="—"; }
 function splitList(s){ return s? s.split("|").map(function(x){return x.trim();}).filter(Boolean) : []; }
 
 function loadProductsFromSheet(){
@@ -469,18 +543,34 @@ function removeItem(key){ state.cart=state.cart.filter(function(i){return i.key!
 
 function waLink(text){ return "https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(text); }
 
+function deskHeader(){
+ var cats=["Tüm Ürünler"].concat(activeCategories());
+ function link(label,attr,active){ return '<button class="dn-link'+(active?' active':'')+'" '+attr+'>'+esc(label)+'</button>'; }
+ var links = link("Ana Sayfa",'data-goto="home"',state.view==="home") +
+  cats.map(function(c){ return link(c,'data-cat="'+esc(c)+'"', state.view==="category"&&state.category===c); }).join("");
+ return '<div class="desk-header"><div class="desk-header-in">'+
+  '<button class="desk-brand" data-goto="home"><span class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></span></button>'+
+  '<nav class="desk-nav">'+links+'</nav>'+
+  '<div class="desk-actions">'+
+   '<button class="da-btn" data-goto="search" aria-label="Ara">'+ICONS.SEARCH+'</button>'+
+   '<button class="da-btn" data-goto="favorites" aria-label="Favoriler">'+ICONS.HEART+(state.favorites.length>0?'<span class="badge">'+state.favorites.length+'</span>':'')+'</button>'+
+   '<button class="da-btn" data-goto="account" aria-label="Hesabım">'+ICONS.USER+'</button>'+
+   '<button class="da-btn" data-goto="cart" aria-label="Sepet">'+ICONS.BAG+(cartCount()>0?'<span class="badge">'+cartCount()+'</span>':'')+'</button>'+
+  '</div></div></div>';
+}
 function header(title,back){
  var announcement = '<div class="announcement-bar"><div class="announcement-track">TÜM SİPARİŞLERDE ÜCRETSİZ KARGO &nbsp;·&nbsp; KAPIDA ÖDEME İMKANI &nbsp;·&nbsp; WHATSAPP İLE HIZLI SİPARİŞ</div></div>';
 
  if(back){
-  return announcement + '<div class="topbar"><button class="back" data-goto="'+back+'">‹</button><h3>'+esc(title)+'</h3><div style="width:20px"></div></div>';
+  return announcement + deskHeader() + '<div class="topbar"><button class="back" data-goto="'+back+'">‹</button><h3>'+esc(title)+'</h3><div style="width:20px"></div></div>';
  }
- return announcement + '<div class="header"><div class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></div>'+
+ return announcement + deskHeader() + '<div class="header"><div class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></div>'+
   '<div style="display:flex;gap:4px"><button class="icon-btn" data-goto="search">🔍</button>'+
   '<button class="icon-btn" data-goto="cart">🛒'+(cartCount()>0?'<span class="badge">'+cartCount()+'</span>':'')+'</button></div></div>';
 }
 
 var ICONS = {
+ SEARCH:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>',
  HOME:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>',
  GRID:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',
  HEART:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-9.8-9.4C.9 7.9 2.4 4.8 5.6 4.1c2-.4 3.9.6 4.9 2.2 1-1.6 2.9-2.6 4.9-2.2 3.2.7 4.7 3.8 3.4 7-2.3 4.8-9.8 9.4-9.8 9.4Z"/></svg>',
@@ -647,12 +737,14 @@ function viewProduct(){
  }).join('')+'</div>'+
  '<div class="opt-label">Adet</div>'+
  '<div class="qty-row"><button class="qty-btn" data-qty="-1">−</button><span class="qty-val">'+state.pdQty+'</span><button class="qty-btn" data-qty="1">+</button></div>'+
+ '<div class="pd-cta-desk"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
+  '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>'+
  '<div class="desc-block">'+
   '<h4>Ürün Açıklaması</h4>'+esc(p.description)+
-  '<h4>Kumaş</h4>'+esc(p.fabric)+
-  '<h4>Kalıp</h4>'+esc(p.fit)+
-  '<h4>Ürün Ölçüleri</h4>'+esc(p.measurements)+
-  (p.modelInfo!=="—"?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
+  (hasText(p.fabric)?'<h4>Kumaş</h4>'+esc(p.fabric):'')+
+  (hasText(p.fit)?'<h4>Kalıp</h4>'+esc(p.fit):'')+
+  (hasText(p.measurements)?'<h4>Ürün Ölçüleri</h4>'+esc(p.measurements):'')+
+  (hasText(p.modelInfo)?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
  '</div></div></div>'+
  '<div class="sticky-cta"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
  '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>';
@@ -667,12 +759,12 @@ function viewFavorites(){
 
 function viewCart(){
  if(!state.cart.length){
-  return header("Sepetim","home")+'<div class="empty-state"><div class="ico">🛒</div><p>Sepetiniz şu anda boş.</p>'+
-  '<button class="btn" data-goto="home" style="margin-top:14px">Alışverişe Devam Et</button></div>';
+  return header("Sepetim","home")+'<div class="page-narrow"><div class="empty-state"><div class="ico">🛒</div><p>Sepetiniz şu anda boş.</p>'+
+  '<button class="btn" data-goto="home" style="margin-top:14px">Alışverişe Devam Et</button></div></div>';
  }
  var sub=cartSubtotal(); var total=sub+SHIPPING_FEE;
  return header("Sepetim","home")+
- '<div>'+state.cart.map(function(i){
+ '<div class="page-narrow"><div>'+state.cart.map(function(i){
   return '<div class="cart-item"><img src="'+i.image+'" loading="lazy"><div class="ci-info">'+
    '<div class="ci-name">'+esc(i.name)+'</div><div class="ci-var">'+esc(i.color)+(i.color2?' + '+esc(i.color2):'')+' / '+esc(i.size)+' · '+money(i.price)+(i.qty>1?' · Toplam: '+money(lineTotal(i)):'')+'</div>'+
    '<div class="ci-controls"><div class="ci-qty"><button class="mini-btn" data-cqty="'+i.key+'|-1">−</button><span>'+i.qty+'</span><button class="mini-btn" data-cqty="'+i.key+'|1">+</button></div>'+
@@ -681,7 +773,7 @@ function viewCart(){
  '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
  '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
- '<div style="padding:4px 16px 20px"><button class="btn-main" style="width:100%" data-goto="checkout">SİPARİŞİ TAMAMLA</button></div>';
+ '<div style="padding:4px 16px 20px"><button class="btn-main" style="width:100%" data-goto="checkout">SİPARİŞİ TAMAMLA</button></div></div>';
 }
 
 var CITIES=["İstanbul","Ankara","İzmir","Bursa","Antalya","Konya","Diğer"];
@@ -695,7 +787,7 @@ function viewCheckout(){
  if(!state.cart.length){ go("cart"); return ""; }
  var f=state.checkoutForm; var sub=cartSubtotal(); var total=sub+SHIPPING_FEE;
  return header("Teslimat & Ödeme","cart")+
- '<form id="checkoutForm">'+
+ '<form id="checkoutForm" class="page-narrow">'+
  '<div class="section"><h2 style="font-size:14px">Müşteri Bilgileri</h2></div>'+
  fld("firstName","Ad",f.firstName,"text",true)+
  fld("lastName","Soyad",f.lastName,"text",true)+
@@ -729,23 +821,23 @@ function viewSuccess(){
  var o=state.lastOrder;
  if(!o) { go("home"); return ""; }
  return header("Sipariş Alındı")+
- '<div class="success-wrap"><div class="tick">✓</div><h2 style="margin:0 0 6px">Siparişiniz Alındı!</h2>'+
+ '<div class="page-narrow"><div class="success-wrap"><div class="tick">✓</div><h2 style="margin:0 0 6px">Siparişiniz Alındı!</h2>'+
  '<p style="color:var(--ink2);font-size:13px">Siparişiniz başarıyla oluşturuldu.</p>'+
  '<div class="order-no">Sipariş Numarası<br><b>'+o.orderId+'</b></div></div>'+
  '<div class="summary-box"><div class="sum-row"><span>Ürün Adedi</span><span>'+o.items.reduce(function(a,i){return a+i.qty;},0)+'</span></div>'+
  '<div class="sum-row"><span>Ödeme Yöntemi</span><span>Kapıda Ödeme</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(o.total)+'</span></div></div>'+
  '<div style="padding:6px 16px"><a class="btn-main" style="display:block;text-align:center;background:#25D366;color:#fff" href="'+waLink("Merhaba, "+o.orderId+" numaralı siparişim hakkında bilgi almak istiyorum.")+'" target="_blank">WhatsApp\'tan Sipariş Bilgisi Al</a></div>'+
- '<div style="padding:12px 16px 24px"><button class="btn-main" style="width:100%;background:var(--bg2);color:var(--ink)" data-goto="home">Alışverişe Devam Et</button></div>';
+ '<div style="padding:12px 16px 24px"><button class="btn-main" style="width:100%;background:var(--bg2);color:var(--ink)" data-goto="home">Alışverişe Devam Et</button></div></div>';
 }
 
 function viewAccount(){
  return header("Hesabım")+
- '<div class="section"><p style="color:var(--ink2);font-size:13px">Misafir olarak alışveriş yapıyorsunuz.</p></div>'+
+ '<div class="page-narrow"><div class="section"><p style="color:var(--ink2);font-size:13px">Misafir olarak alışveriş yapıyorsunuz.</p></div>'+
  '<div><div class="acc-item" data-goto="cart"><span>Siparişlerim'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></div>'+
  '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
  '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
- '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a></div>';
+ '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a></div></div>';
 }
 
 function render(){
