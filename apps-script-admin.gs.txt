@@ -37,8 +37,9 @@ function doPost(e) {
   }
 
   switch (body.action) {
-    case "upsertProduct": return jsonResponse(upsertProduct(body.product));
-    case "deleteProduct": return jsonResponse(deleteProduct(body.id));
+    case "upsertProduct": return jsonResponse(withFeedRefresh_(upsertProduct(body.product)));
+    case "deleteProduct": return jsonResponse(withFeedRefresh_(deleteProduct(body.id)));
+    case "rebuildFeeds": return jsonResponse(rebuildFeeds());
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
     case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
@@ -185,3 +186,165 @@ function jsonResponse(obj) {
 // (ör. TRENDYOL_API_KEY), UrlFetchApp.fetch() ile çağırın,
 // dönen siparişleri/ürünleri bu Sheet'e veya ayrı bir sekmeye yazın.
 // ============================================================
+
+// ============================================================
+// Meta (Facebook/Instagram) ve Google Merchant Center katalog beslemeleri
+// "Sayfa1"deki ürünlerden "MetaFeed" ve "GoogleFeed" sekmelerini otomatik üretir.
+// Çalışma zamanları: panelden ürün kaydedilince/silinince, saatte bir (zamanlayıcı)
+// ve panelde "Şimdi güncelle" düğmesine basılınca.
+// ============================================================
+
+var SITE_URL = "https://www.gulsumaydin.com.tr";
+var FEED_BRAND = "Gülsüm Aydın Butik";
+var META_FEED_SHEET = "MetaFeed";
+var GOOGLE_FEED_SHEET = "GoogleFeed";
+var GOOGLE_CATEGORY = "Apparel & Accessories > Clothing";
+var GOOGLE_COLUMNS = ["id", "title", "description", "link", "image_link", "availability", "price", "brand",
+  "condition", "google_product_category", "sale_price", "color", "size", "gender", "age_group"];
+var META_COLUMNS = ["id", "title", "description", "availability", "condition", "price", "link", "image_link",
+  "brand", "sale_price", "color", "size", "gender", "age_group", "google_product_category"];
+
+function withFeedRefresh_(result) {
+  if (result && result.result === "ok") {
+    try { rebuildFeeds(); }
+    catch (err) { console.error("Katalog beslemesi güncellenemedi: " + err); }
+  }
+  return result;
+}
+
+// Bir kez elle çalıştırın: beslemeleri saatte bir otomatik yeniler
+function setupFeedTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === "rebuildFeeds") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("rebuildFeeds").timeBased().everyHours(1).create();
+}
+
+function rebuildFeeds() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { result: "error", message: "Başka bir güncelleme sürüyor, biraz sonra tekrar deneyin." };
+  try {
+    var items = getAllProducts().map(feedItem_).filter(function (x) { return x; });
+    // Okuma hatası/boş tablo durumunda mevcut beslemeleri silmemek için
+    if (!items.length) return { result: "error", message: "Beslemeye uygun ürün bulunamadı; mevcut beslemeler korundu." };
+    var g = writeFeed_(GOOGLE_FEED_SHEET, GOOGLE_COLUMNS, items);
+    var m = writeFeed_(META_FEED_SHEET, META_COLUMNS, items);
+    return { result: "ok", count: items.length, changed: g || m };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Fotoğrafı, geçerli fiyatı ve kimliği olan ürünleri besleme satırına çevirir
+function feedItem_(p) {
+  var id = String(p.id == null ? "" : p.id).trim();
+  if (!id) return null;
+
+  var colors = splitList_(p.colors);
+  var color = colors.length ? colors[0] : "Standart";
+  var photoMap = parseColorImages_(p.colorImages);
+  var notVideo = function (u) { return !isVideoUrl_(u); };
+  var imgs = (photoMap[color] && photoMap[color].length ? photoMap[color] : splitList_(p.images)).filter(notVideo);
+  if (!imgs.length) imgs = splitList_(p.images).filter(notVideo);
+  if (!imgs.length) return null; // sadece videosu olan / fotoğrafsız ürünler beslemeye girmez
+
+  var price = parsePrice_(p.price);
+  var old = p.oldPrice ? parsePrice_(p.oldPrice) : 0;
+  if (!(price > 0)) return null;
+  var onSale = old > price;
+
+  var sizes = splitList_(p.sizes);
+  var desc = String(hasText_(p.description) ? p.description : (hasText_(p.shortDescription) ? p.shortDescription : p.name || ""))
+    .replace(/\s+/g, " ").trim().slice(0, 5000);
+
+  return {
+    id: id,
+    title: String(p.name || id).replace(/\s+/g, " ").trim().slice(0, 150),
+    description: desc,
+    link: SITE_URL + "/?urun=" + encodeURIComponent(id),
+    image_link: absUrl_(imgs[0]),
+    availability: "in stock",
+    price: (onSale ? old : price).toFixed(2) + " TRY",
+    sale_price: onSale ? price.toFixed(2) + " TRY" : "",
+    brand: FEED_BRAND,
+    condition: "new",
+    google_product_category: GOOGLE_CATEGORY,
+    color: color,
+    size: sizes.length ? sizes.join("/") : "Standart",
+    gender: "female",
+    age_group: "adult"
+  };
+}
+
+// Değerler aynıysa yazmaz (gereksiz sürüm geçmişi oluşmasın). Değiştiyse true döner.
+function writeFeed_(name, columns, items) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name) || ss.insertSheet(name);
+  var values = [columns].concat(items.map(function (it) {
+    return columns.map(function (c) { return it[c] == null ? "" : String(it[c]); });
+  }));
+  var oldRows = sheet.getLastRow(), oldCols = sheet.getLastColumn();
+
+  if (oldRows === values.length && oldCols === columns.length) {
+    var current = sheet.getRange(1, 1, oldRows, oldCols).getValues().map(function (r) {
+      return r.map(function (v) { return String(v == null ? "" : v); });
+    });
+    if (JSON.stringify(current) === JSON.stringify(values)) return false;
+  }
+
+  var range = sheet.getRange(1, 1, values.length, columns.length);
+  range.setNumberFormat("@"); // "38/40" gibi değerler tarihe çevrilmesin
+  range.setValues(values);
+  if (oldRows > values.length) {
+    sheet.getRange(values.length + 1, 1, oldRows - values.length, Math.max(oldCols, columns.length)).clearContent();
+  }
+  if (oldCols > columns.length) {
+    sheet.getRange(1, columns.length + 1, Math.max(oldRows, values.length), oldCols - columns.length).clearContent();
+  }
+  return true;
+}
+
+function hasText_(v) { v = String(v == null ? "" : v).trim(); return v !== "" && v !== "—"; }
+
+function splitList_(s) {
+  return s ? String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean) : [];
+}
+
+function isVideoUrl_(u) { return /\.(mp4|webm|mov)(\?|$)/i.test(u || ""); }
+
+function absUrl_(u) {
+  u = String(u || "").trim();
+  if (!u) return "";
+  return /^https?:\/\//i.test(u) ? u : SITE_URL + "/" + u.replace(/^\/+/, "");
+}
+
+// "Siyah=url1|url2;Beyaz=url3" -> {Siyah:[url1,url2], Beyaz:[url3]}
+function parseColorImages_(str) {
+  var out = {};
+  if (!str) return out;
+  String(str).split(";").forEach(function (part) {
+    var i = part.indexOf("=");
+    if (i < 1) return;
+    var color = part.slice(0, i).trim();
+    var urls = part.slice(i + 1).split("|").map(function (u) { return u.trim(); }).filter(Boolean).slice(0, 5);
+    if (color && urls.length) out[color] = urls;
+  });
+  return out;
+}
+
+// Sitedeki parsePrice ile aynı kural (fiyatlar sitede ve beslemede birebir aynı çıksın)
+function parsePrice_(str) {
+  if (str == null) return 0;
+  var s = String(str).trim().replace(/[^0-9.,\-]/g, "");
+  if (!s) return 0;
+  if (s.indexOf(",") > -1 && s.indexOf(".") > -1) {
+    if (s.lastIndexOf(",") > s.lastIndexOf(".")) { s = s.replace(/\./g, "").replace(",", "."); }
+    else { s = s.replace(/,/g, ""); }
+  } else if (s.indexOf(",") > -1) {
+    var parts = s.split(",");
+    if (parts[parts.length - 1].length <= 2) { s = parts.slice(0, -1).join("") + "." + parts[parts.length - 1]; }
+    else { s = s.replace(/,/g, ""); }
+  }
+  var n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}

@@ -175,6 +175,12 @@ tr:last-child td{border-bottom:none;}
 
   <div id="tab-integrations" class="hidden">
    <div class="pagehead"><div><h1>Entegrasyonlar</h1><p>Pazaryerleri ve dış bağlantılar</p></div></div>
+   <div class="card" style="padding:22px;margin-bottom:18px">
+    <h3 style="font-family:var(--font-serif);margin:0 0 6px;font-size:18px">Meta &amp; Google Katalogları</h3>
+    <p style="color:var(--ink2);font-size:13px;line-height:1.6;margin:0 0 14px">Ürünleriniz Facebook/Instagram (Meta) ve Google Merchant Center beslemelerine otomatik aktarılır: ürün kaydedince veya silince hemen, ayrıca saatte bir. Fotoğrafı veya fiyatı olmayan ürünler beslemeye girmez. Meta ve Google beslemeyi günde bir kez çeker; hemen görünmesini isterseniz ilgili platformda "Şimdi getir" yapın.</p>
+    <div id="feedMsg"></div>
+    <button class="btn btn-gold" id="feedBtn" onclick="rebuildFeedsNow()">Kataloğu şimdi güncelle</button>
+   </div>
    <div class="soon-card">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
     <h3>Çok Yakında</h3>
@@ -347,6 +353,19 @@ function renderOrders(){
    '<td><select onchange="updateOrderStatus(\''+String(o["Sipariş No"]).replace(/'/g,"")+'\', this.value)" style="padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px">'+statusOptions+'</select></td>'+
    '<td><button class="btn-ghost" style="padding:7px 12px;font-size:12px;border-radius:7px" onclick="openOrderDetail('+i+')">Detay / Yazdır</button></td></tr>';
  }).join("") || '<tr><td colspan="7" class="empty">Henüz sipariş yok.</td></tr>';
+}
+function rebuildFeedsNow(){
+ var btn=document.getElementById("feedBtn"), msg=document.getElementById("feedMsg");
+ btn.disabled=true; btn.textContent="Güncelleniyor...";
+ apiPost({action:"rebuildFeeds"}).then(function(res){
+  if(res.result==="ok"){
+   msg.innerHTML='<div class="msg ok">'+res.count+' ürün Meta ve Google beslemelerine aktarıldı'+(res.changed?'.':' (zaten günceldi).')+'</div>';
+  } else {
+   msg.innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>';
+  }
+ }).catch(function(){
+  msg.innerHTML='<div class="msg err">Bağlantı hatası</div>';
+ }).then(function(){ btn.disabled=false; btn.textContent="Kataloğu şimdi güncelle"; });
 }
 function openOrderDetail(i){
  var o = orders[i];
