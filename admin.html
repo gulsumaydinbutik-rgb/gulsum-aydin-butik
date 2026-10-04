@@ -292,7 +292,7 @@ function saveSettings(){
   heroMobileUrl: document.getElementById("s_heroMobileUrl").value.trim(),
   heroDesktopUrl: document.getElementById("s_heroDesktopUrl").value.trim(),
   gaId: document.getElementById("s_gaId").value.trim(),
-  metaPixelId: document.getElementById("s_metaPixelId").value.replace(/\D/g,""),
+  metaPixelId: (function(){ var d=document.getElementById("s_metaPixelId").value.replace(/\D/g,""); return d? "'"+d : ""; })(),
   metaTitle: document.getElementById("s_metaTitle").value.trim(),
   metaDescription: document.getElementById("s_metaDescription").value.trim()
  };
