@@ -639,7 +639,8 @@ function bottomNav(){
 function productCard(p,variantColor){
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
  var totalStock = p.variants.reduce(function(a,v){return a+v.stock;},0);
- var dispName = variantColor? productDisplayName(p,variantColor) : p.name;
+ var hasC2 = p.colors2 && p.colors2.length;
+ var dispName = variantColor? (hasC2? productBaseName(p)+" ("+variantColor+" "+(p.color1Label||"Sweat")+")" : productDisplayName(p,variantColor)) : p.name;
  var img = variantColor? colorImages(p,variantColor)[0] : p.images[0];
  return '<div class="card" data-goto="product" data-id="'+p.id+'"'+(variantColor?' data-color="'+esc(variantColor)+'"':'')+'>'+
   '<div class="imgwrap">'+mediaTag(img)+(isVideo(img)?'<div class="play-badge"><span>▶</span></div>':'')+
@@ -654,12 +655,11 @@ function productCard(p,variantColor){
 function expandVariants(list){
  var out=[];
  list.forEach(function(p){
-  var noC2 = (!p.colors2||!p.colors2.length);
   var m = p.colorImagesMap || {};
   var photoColors = p.colors.filter(function(c){ return m[c] && m[c].length; });
-  if(noC2 && photoColors.length>1){
+  if(photoColors.length>1){
    photoColors.forEach(function(c){ out.push({product:p, color:c}); });
-  } else if(noC2 && !photoColors.length && p.images.length===p.colors.length && p.colors.length>1){
+  } else if(!photoColors.length && p.images.length===p.colors.length && p.colors.length>1){
    p.colors.forEach(function(c){ out.push({product:p, color:c}); });
   } else {
    out.push({product:p, color:null});
