@@ -910,6 +910,7 @@ function viewAccount(){
  '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
  '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
  '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a>'+
+ '<a class="acc-item" href="/blog/"><span>Blog – Kombin ve Stil Rehberleri</span><span>›</span></a>'+
  (window.LEGAL_ORDER||[]).map(function(o){ return '<a class="acc-item" href="?sayfa='+o[0]+'" data-goto="legal" data-page="'+o[0]+'"><span>'+esc(o[1])+'</span><span>›</span></a>'; }).join('')+'</div></div>';
 }
 
@@ -918,7 +919,7 @@ function legalLink(slug,label){ return '<a href="?sayfa='+slug+'" data-goto="leg
 function siteFooter(){
  var order = window.LEGAL_ORDER || [];
  return '<div class="site-footer"><div class="sf-brand">Gülsüm Aydın Butik</div>'+
-  '<div class="sf-links">'+order.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div>'+
+  '<div class="sf-links"><a href="/blog/">Blog</a>'+order.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div>'+
   '<div class="sf-copy">© '+new Date().getFullYear()+' Gülsüm Aydın Butik · Tüm hakları saklıdır.<br>Kapıda ödeme · 14 gün içinde cayma hakkı</div></div>';
 }
 function viewLegal(){
