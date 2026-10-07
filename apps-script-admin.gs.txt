@@ -1,5 +1,5 @@
 // ============================================================
-// Gülsüm Aydın Butik — Admin Panel Backend (v2 — Ayarlar dahil)
+// Gülsüm Aydın Butik — Admin Panel Backend (v4 — Kampanyalar dahil)
 // Ürünler Sheet'inize kurulur (Uzantılar > Apps Script)
 // Bu Sheet'te "Sayfa1" ve "Ayarlar" adında iki sekme olmalı.
 // "Ayarlar" sekmesinin başlıkları: key | value
@@ -20,6 +20,10 @@ function doGet(e) {
   var action = (e.parameter && e.parameter.action) || "listProducts";
   if (action === "listProducts") return jsonResponse({ result: "ok", data: getAllProducts() });
   if (action === "listSettings") return jsonResponse({ result: "ok", data: getAllSettings() });
+  if (action === "listCampaigns") {
+    if (!checkPassword(e.parameter.password)) return jsonResponse({ result: "error", message: "Şifre yanlış." });
+    return jsonResponse({ result: "ok", data: getAllCampaigns() });
+  }
   if (action === "listOrders") {
     if (!checkPassword(e.parameter.password)) return jsonResponse({ result: "error", message: "Şifre yanlış." });
     return jsonResponse({ result: "ok", data: getAllOrders() });
@@ -40,6 +44,8 @@ function doPost(e) {
     case "upsertProduct": return jsonResponse(withFeedRefresh_(upsertProduct(body.product)));
     case "deleteProduct": return jsonResponse(withFeedRefresh_(deleteProduct(body.id)));
     case "rebuildFeeds": return jsonResponse(rebuildFeeds());
+    case "upsertCampaign": return jsonResponse(withFeedRefresh_(upsertCampaign(body.campaign)));
+    case "deleteCampaign": return jsonResponse(withFeedRefresh_(deleteCampaign(body.id)));
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
     case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
@@ -224,7 +230,8 @@ function rebuildFeeds() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) return { result: "error", message: "Başka bir güncelleme sürüyor, biraz sonra tekrar deneyin." };
   try {
-    var items = getAllProducts().map(feedItem_).filter(function (x) { return x; });
+    var camps = getAllCampaigns();
+    var items = getAllProducts().map(function (p) { return feedItem_(p, camps); }).filter(function (x) { return x; });
     // Okuma hatası/boş tablo durumunda mevcut beslemeleri silmemek için
     if (!items.length) return { result: "error", message: "Beslemeye uygun ürün bulunamadı; mevcut beslemeler korundu." };
     var g = writeFeed_(GOOGLE_FEED_SHEET, GOOGLE_COLUMNS, items);
@@ -236,7 +243,7 @@ function rebuildFeeds() {
 }
 
 // Fotoğrafı, geçerli fiyatı ve kimliği olan ürünleri besleme satırına çevirir
-function feedItem_(p) {
+function feedItem_(p, camps) {
   var id = String(p.id == null ? "" : p.id).trim();
   if (!id) return null;
 
@@ -251,6 +258,9 @@ function feedItem_(p) {
   var price = parsePrice_(p.price);
   var old = p.oldPrice ? parsePrice_(p.oldPrice) : 0;
   if (!(price > 0)) return null;
+  // Aktif fiyat kampanyası varsa sitedeki fiyatla birebir aynı olsun (Merchant fiyat uyuşmazlığı olmasın)
+  var hit = priceCampaign_({ id: id, category: p.category, price: price }, camps || []);
+  if (hit) { old = price; price = hit.price; }
   var onSale = old > price;
 
   var sizes = splitList_(p.sizes);
@@ -347,4 +357,139 @@ function parsePrice_(str) {
   }
   var n = parseFloat(s);
   return isNaN(n) ? 0 : n;
+}
+
+
+// ============================================================
+// Kampanyalar ("Kampanyalar" sekmesi — yoksa otomatik oluşturulur)
+// tip: yuzde | tl (ürün fiyatı) · coklu_sabit | coklu_yuzde (sepet)
+// kapsam: tum | kategori | urun   ·   hedef: kategori adı veya ürün id'leri ("|" ile)
+// Sitedeki kampanya hesabıyla birebir aynı kurallar kullanılır.
+// ============================================================
+
+var CAMPAIGNS_SHEET_NAME = "Kampanyalar";
+var CAMPAIGN_COLUMNS = ["id", "ad", "tip", "kapsam", "hedef", "adet", "deger", "baslangic", "bitis", "aktif", "aciklama"];
+var CAMPAIGN_TYPES = ["yuzde", "tl", "coklu_sabit", "coklu_yuzde"];
+var CAMPAIGN_SCOPES = ["tum", "kategori", "urun"];
+
+function getCampaignsSheet_(create) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(CAMPAIGNS_SHEET_NAME);
+  if (!sheet && create) {
+    sheet = ss.insertSheet(CAMPAIGNS_SHEET_NAME);
+    sheet.getRange(1, 1, 1, CAMPAIGN_COLUMNS.length).setValues([CAMPAIGN_COLUMNS]).setFontWeight("bold");
+    sheet.getRange(2, 8, 998, 2).setNumberFormat("@"); // baslangic, bitis metin kalsın
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function todayTR_() { return Utilities.formatDate(new Date(), "Europe/Istanbul", "yyyy-MM-dd"); }
+
+function campDate_(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, "Europe/Istanbul", "yyyy-MM-dd");
+  var s = String(v == null ? "" : v).trim();
+  if (!s) return "";
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2);
+  m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+  if (m) return m[3] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[1]).slice(-2);
+  return "";
+}
+
+function getAllCampaigns() {
+  var sheet = getCampaignsSheet_(false);
+  if (!sheet || sheet.getLastRow() < 2) return [];
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  return data.slice(1)
+    .filter(function (r) { return r[0] && r[2]; })
+    .map(function (r) {
+      var o = {};
+      headers.forEach(function (h, i) { o[h] = r[i]; });
+      o.baslangic = campDate_(o.baslangic);
+      o.bitis = campDate_(o.bitis);
+      o.aktif = /^(1|true|evet)$/i.test(String(o.aktif).trim()) ? "1" : "0";
+      return o;
+    });
+}
+
+function normCampaign_(r) {
+  return {
+    id: r.id, ad: r.ad || "Kampanya",
+    tip: String(r.tip || "").trim().toLowerCase(),
+    kapsam: String(r.kapsam || "tum").trim().toLowerCase(),
+    hedef: splitList_(r.hedef).map(function (x) { return x.toLowerCase(); }),
+    adet: parseInt(r.adet, 10) || 0, deger: parsePrice_(r.deger),
+    baslangic: campDate_(r.baslangic), bitis: campDate_(r.bitis),
+    aktif: /^(1|true|evet)$/i.test(String(r.aktif == null ? "" : r.aktif).trim())
+  };
+}
+
+function campActive_(c, today) {
+  return c.aktif && (!c.baslangic || c.baslangic <= today) && (!c.bitis || c.bitis >= today);
+}
+
+function campTargets_(c, p) {
+  if (c.kapsam === "tum") return true;
+  if (c.kapsam === "kategori") return c.hedef.indexOf(String(p.category || "").toLowerCase()) > -1;
+  if (c.kapsam === "urun") return c.hedef.indexOf(String(p.id || "").toLowerCase()) > -1;
+  return false;
+}
+
+// Ürün fiyatına uygulanan en düşük fiyatlı kampanya (yoksa null). p: {id, category, price}
+function priceCampaign_(p, rawCamps) {
+  var today = todayTR_(), best = null;
+  (rawCamps || []).forEach(function (raw) {
+    var c = normCampaign_(raw);
+    if (!campActive_(c, today) || (c.tip !== "yuzde" && c.tip !== "tl") || !(c.deger > 0) || !campTargets_(c, p)) return;
+    var np = c.tip === "yuzde" ? Math.round(p.price * (1 - c.deger / 100)) : Math.round(p.price - c.deger);
+    np = Math.max(1, np);
+    if (np < p.price && (!best || np < best.price)) best = { price: np, camp: c };
+  });
+  return best;
+}
+
+function upsertCampaign(c) {
+  if (!c) return { result: "error", message: "Kampanya verisi eksik." };
+  var tip = String(c.tip || "").trim().toLowerCase();
+  var kapsam = String(c.kapsam || "").trim().toLowerCase();
+  if (CAMPAIGN_TYPES.indexOf(tip) < 0) return { result: "error", message: "Geçersiz kampanya türü." };
+  if (CAMPAIGN_SCOPES.indexOf(kapsam) < 0) return { result: "error", message: "Geçersiz kapsam." };
+  if (!String(c.ad || "").trim()) return { result: "error", message: "Kampanya adı zorunlu." };
+  var deger = parsePrice_(c.deger);
+  if (!(deger > 0)) return { result: "error", message: "İndirim değeri 0'dan büyük olmalı." };
+  if ((tip === "yuzde" || tip === "coklu_yuzde") && deger > 90) return { result: "error", message: "Yüzde en fazla 90 olabilir." };
+  var adet = parseInt(c.adet, 10) || 0;
+  if ((tip === "coklu_sabit" || tip === "coklu_yuzde") && adet < 2) return { result: "error", message: "Çoklu alım kampanyalarında adet en az 2 olmalı." };
+  if (kapsam !== "tum" && !String(c.hedef || "").trim()) return { result: "error", message: "Kategori veya ürün seçmelisiniz." };
+  var bas = campDate_(c.baslangic), bit = campDate_(c.bitis);
+  if (bas && bit && bit < bas) return { result: "error", message: "Bitiş tarihi başlangıçtan önce olamaz." };
+
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { result: "error", message: "Başka bir işlem sürüyor, tekrar deneyin." };
+  try {
+    var sheet = getCampaignsSheet_(true);
+    var id = String(c.id || "").trim() || ("k" + new Date().getTime());
+    var row = [id, String(c.ad).trim(), tip, kapsam, String(c.hedef || "").trim(), adet || "", deger,
+      bas, bit, String(c.aktif) === "0" || c.aktif === false ? "0" : "1", String(c.aciklama || "").trim()];
+    var data = sheet.getDataRange().getValues();
+    var found = -1;
+    for (var i = 1; i < data.length; i++) { if (String(data[i][0]) === id) { found = i + 1; break; } }
+    var target = found > -1 ? found : Math.max(sheet.getLastRow() + 1, 2);
+    sheet.getRange(target, 8, 1, 2).setNumberFormat("@");
+    sheet.getRange(target, 1, 1, row.length).setValues([row]);
+    return { result: "ok", id: id };
+  } finally { lock.releaseLock(); }
+}
+
+function deleteCampaign(id) {
+  if (!id) return { result: "error", message: "Kampanya ID zorunlu." };
+  var sheet = getCampaignsSheet_(false);
+  if (!sheet) return { result: "ok" };
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) { sheet.deleteRow(i + 1); break; }
+  }
+  return { result: "ok" };
 }

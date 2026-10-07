@@ -376,9 +376,114 @@ function parseColorImages(str){
 function hasText(v){ v=String(v==null?"":v).trim(); return v!=="" && v!=="—"; }
 function splitList(s){ return s? s.split("|").map(function(x){return x.trim();}).filter(Boolean) : []; }
 
+
+// ---------- Kampanyalar (Google Sheets "Kampanyalar" sekmesi) ----------
+// tip: yuzde | tl (ürün fiyatından indirim) · coklu_sabit (N adet toplam X TL) · coklu_yuzde (N ve üzeri adette %X)
+var SHEET_CAMPAIGNS_CSV_URL = SHEET_PRODUCTS_CSV_URL.replace("sheet=Sayfa1","sheet=Kampanyalar");
+var CAMPAIGNS = [];
+function campDate(s){
+ s=String(s||"").trim(); if(!s) return "";
+ var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2);
+ m=s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/); if(m) return m[3]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2);
+ return "";
+}
+function todayTR(){
+ try{ return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}); }
+ catch(e){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+}
+function normCampaign(r){
+ return {
+  id:r.id, ad:r.ad||"Kampanya", tip:String(r.tip||"").trim().toLowerCase(), kapsam:String(r.kapsam||"tum").trim().toLowerCase(),
+  hedef:splitList(r.hedef).map(function(x){return x.toLowerCase();}),
+  adet:parseInt(r.adet,10)||0, deger:parsePrice(r.deger),
+  baslangic:campDate(r.baslangic), bitis:campDate(r.bitis),
+  aktif:/^(1|true|evet)$/i.test(String(r.aktif||"").trim()), aciklama:r.aciklama||""
+ };
+}
+function loadCampaigns(){
+ if(!SHEET_CAMPAIGNS_CSV_URL) return Promise.resolve([]);
+ return fetch(SHEET_CAMPAIGNS_CSV_URL).then(function(r){return r.text();}).then(function(t){
+  var rows=csvToObjects(t);
+  // Sekme yoksa Google ilk sekmeyi döndürebilir; başlıkları doğrula
+  if(!rows.length || !("tip" in rows[0]) || !("kapsam" in rows[0])) return [];
+  return rows.filter(function(r){return r.id && r.tip;}).map(normCampaign);
+ }).catch(function(){ return []; });
+}
+function campActive(c,today){
+ return c.aktif && (!c.baslangic || c.baslangic<=today) && (!c.bitis || c.bitis>=today);
+}
+function campTargets(c,p){
+ if(c.kapsam==="tum") return true;
+ if(c.kapsam==="kategori") return c.hedef.indexOf(String(p.category||"").toLowerCase())>-1;
+ if(c.kapsam==="urun") return c.hedef.indexOf(String(p.id||"").toLowerCase())>-1;
+ return false;
+}
+function priceCampaignFor(p,today){
+ var best=null;
+ CAMPAIGNS.forEach(function(c){
+  if(!campActive(c,today) || (c.tip!=="yuzde" && c.tip!=="tl") || !(c.deger>0) || !campTargets(c,p)) return;
+  var np = c.tip==="yuzde" ? Math.round(p.price*(1-c.deger/100)) : Math.round(p.price-c.deger);
+  np=Math.max(1,np);
+  if(np<p.price && (!best || np<best.price)) best={price:np,camp:c};
+ });
+ return best;
+}
+function applyPriceCampaigns(){
+ var today=todayTR();
+ PRODUCTS.forEach(function(p){
+  var hit=priceCampaignFor(p,today);
+  if(hit){ p.campName=hit.camp.ad; p.oldPrice=p.price; p.price=hit.price; }
+ });
+}
+function refreshCartPrices(){
+ var changed=false;
+ state.cart.forEach(function(i){ var p=findProduct(i.productId); if(p && p.price!==i.price){ i.price=p.price; changed=true; } });
+ if(changed) saveLS("ga_cart",state.cart);
+}
+function cartCampaignDiscount(){
+ var today=todayTR(), best={amount:0,name:""};
+ CAMPAIGNS.forEach(function(c){
+  if(!campActive(c,today) || (c.tip!=="coklu_sabit" && c.tip!=="coklu_yuzde") || !(c.deger>0) || !(c.adet>=2)) return;
+  var units=[];
+  state.cart.forEach(function(i){
+   var p=findProduct(i.productId);
+   if(!p || p.bulkPrice2 || !campTargets(c,p)) return;
+   for(var k=0;k<i.qty;k++) units.push(i.price);
+  });
+  if(units.length<c.adet) return;
+  var amount=0;
+  if(c.tip==="coklu_yuzde"){
+   var sum=0; units.forEach(function(u){sum+=u;});
+   amount=Math.round(sum*c.deger/100);
+  } else {
+   units.sort(function(a,b){return b-a;});
+   var packs=Math.floor(units.length/c.adet);
+   for(var g=0;g<packs;g++){
+    var gs=0; for(var j=0;j<c.adet;j++) gs+=units[g*c.adet+j];
+    amount+=Math.max(0,gs-c.deger);
+   }
+  }
+  if(amount>best.amount) best={amount:amount,name:c.ad};
+ });
+ return best;
+}
+function campBadges(p){
+ var today=todayTR(), out=[];
+ CAMPAIGNS.forEach(function(c){
+  if(!campActive(c,today) || !campTargets(c,p) || !(c.deger>0)) return;
+  var t="";
+  if(c.tip==="coklu_sabit" && c.adet>=2 && !p.bulkPrice2) t=c.adet+" Adet Al, Toplam "+money(c.deger)+" Öde";
+  else if(c.tip==="coklu_yuzde" && c.adet>=2 && !p.bulkPrice2) t=c.adet+" ve Üzeri Alımda %"+c.deger+" İndirim";
+  else if((c.tip==="yuzde"||c.tip==="tl") && p.campName===c.ad) t=c.ad;
+  if(t) out.push('<div class="bulk-badge">🎁 '+esc(t)+'</div>');
+ });
+ return out.join("");
+}
+
 function loadProductsFromSheet(){
  if(!SHEET_PRODUCTS_CSV_URL || SHEET_PRODUCTS_CSV_URL.indexOf("PASTE_")>-1) return Promise.resolve(false);
- return fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}).then(function(res){
+ return Promise.all([fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}), loadCampaigns()]).then(function(arr){
+  var res=arr[0]; CAMPAIGNS=arr[1];
   var prodRows=csvToObjects(res); if(!prodRows.length) return false;
   var fresh=prodRows.filter(function(p){return p.id;}).map(function(p){
    var colors=splitList(p.colors); if(!colors.length) colors=["Standart"];
@@ -404,7 +509,7 @@ function loadProductsFromSheet(){
     colorImagesMap: parseColorImages(p.colorImages)
    };
   });
-  if(fresh.length){ fresh.sort(function(a,b){return a.sira-b.sira;}); PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); return true; }
+  if(fresh.length){ fresh.sort(function(a,b){return a.sira-b.sira;}); PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); applyPriceCampaigns(); refreshCartPrices(); return true; }
   return false;
  }).catch(function(e){ console.warn("Sheet verisi okunamadı.",e); return false; });
 }
@@ -481,7 +586,9 @@ function lineTotal(item){
  }
  return item.price*item.qty;
 }
-function cartSubtotal(){ var s=0; state.cart.forEach(function(i){s+=lineTotal(i);}); return s; }
+function cartGross(){ var s=0; state.cart.forEach(function(i){s+=lineTotal(i);}); return s; }
+function cartSubtotal(){ return cartGross()-cartCampaignDiscount().amount; }
+function discRow(){ var d=cartCampaignDiscount(); return d.amount>0 ? '<div class="sum-row"><span>Kampanya: '+esc(d.name)+'</span><span style="color:var(--ok)">−'+money(d.amount)+'</span></div>' : ''; }
 function isFav(id){ return state.favorites.indexOf(id)>-1; }
 function toggleFav(id){ var i=state.favorites.indexOf(id); if(i>-1) state.favorites.splice(i,1); else state.favorites.push(id); saveLS("ga_favs",state.favorites); render(); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
@@ -790,7 +897,7 @@ function viewProduct(){
  '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
   '<h1 class="pd-name">'+esc(dispName)+'</h1><button data-fav="'+p.id+'" style="font-size:22px">'+(isFav(p.id)?'❤️':'🤍')+'</button></div>'+
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
- (p.bulkPrice2? '<div class="bulk-badge">🎁 2 Adet Al, Toplam '+money(p.bulkPrice2)+' Öde</div>' : '')+
+ (p.bulkPrice2? '<div class="bulk-badge">🎁 2 Adet Al, Toplam '+money(p.bulkPrice2)+' Öde</div>' : '')+campBadges(p)+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
  '<div class="stock-line in">✓ Stokta Var</div>'+
  '<div class="opt-label">'+(hasColor2?((p.color1Label||"Sweat")+" Rengi"):'Renk')+': '+esc(color)+'</div>'+
@@ -842,7 +949,7 @@ function viewCart(){
    '<div class="ci-controls"><div class="ci-qty"><button class="mini-btn" data-cqty="'+i.key+'|-1">−</button><span>'+i.qty+'</span><button class="mini-btn" data-cqty="'+i.key+'|1">+</button></div>'+
    '<button class="remove" data-remove="'+i.key+'">Sil</button></div></div></div>';
  }).join('')+'</div>'+
- '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
+ '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(cartGross())+'</span></div>'+discRow()+
  '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
  '<div style="padding:4px 16px 20px"><button class="btn-main" style="width:100%" data-goto="checkout">SİPARİŞİ TAMAMLA</button></div></div>';
@@ -874,7 +981,7 @@ function viewCheckout(){
  '<div class="form-group"><label>Sipariş Notu</label><textarea name="note" rows="2">'+esc(f.note||'')+'</textarea></div>'+
  '<div class="section"><h2 style="font-size:14px">Ödeme Yöntemi</h2></div>'+
  '<div class="pay-opt">● <b style="display:inline">Kapıda Ödeme</b><br>Ödemenizi ürün teslim edildiğinde kargo görevlisine yapabilirsiniz.</div>'+
- '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
+ '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(cartGross())+'</span></div>'+discRow()+
  '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
  '<div class="check-row"><input type="checkbox" id="agree" '+(f.agree?'checked':'')+'><label for="agree"><a href="?sayfa=mesafeli-satis-sozlesmesi" target="_blank" rel="noopener">Mesafeli Satış Sözleşmesi</a>’ni, <a href="?sayfa=on-bilgilendirme-formu" target="_blank" rel="noopener">Ön Bilgilendirme Formu</a>’nu ve <a href="?sayfa=kvkk-aydinlatma-metni" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>’ni okudum, kabul ediyorum.</label></div>'+
@@ -1057,7 +1164,8 @@ document.addEventListener("submit", function(e){
  var order={
   orderId:genOrderId(), createdAt:new Date().toISOString(),
   customerName:f.firstName+" "+f.lastName, customerPhone:f.phone, customerEmail:f.email||"",
-  city:f.city, district:f.district, neighborhood:f.neighborhood, address:f.address, note:f.note||"",
+  city:f.city, district:f.district, neighborhood:f.neighborhood, address:f.address,
+  note:(function(){ var d=cartCampaignDiscount(); var n=f.note||""; return d.amount>0 ? (n?n+" | ":"")+"Kampanya: "+d.name+" (−"+d.amount+" TL)" : n; })(),
   items:state.cart.slice(), subtotal:cartSubtotal(), shipping:SHIPPING_FEE, total:cartSubtotal()+SHIPPING_FEE,
   paymentMethod:"Kapıda Ödeme", status:"Yeni Sipariş"
  };

@@ -76,6 +76,14 @@ tr:last-child td{border-bottom:none;}
 .modal-actions{display:flex;gap:10px;margin-top:4px;}
 .modal-actions button{flex:1;padding:12px;border-radius:9px;}
 .hidden{display:none;}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.pill.on{background:#EAF6EC;color:var(--ok);} .pill.off{background:#F1ECE4;color:var(--ink2);} .pill.plan{background:#FFF3DA;color:#9A6A12;}
+.field select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px;background:#fff;}
+.pickbox{border:1px solid var(--line);border-radius:9px;max-height:190px;overflow:auto;padding:6px 10px;}
+.pickbox label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink);padding:5px 0;margin:0;}
+.pickbox input{width:auto;}
+.camp-preview{background:var(--bg2);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin-bottom:14px;}
+.camp-preview b{color:var(--gold-d);}
 
 .empty{text-align:center;padding:60px 20px;color:var(--ink2);}
 .empty svg{width:36px;height:36px;color:var(--gold-d);margin-bottom:12px;}
@@ -131,6 +139,7 @@ tr:last-child td{border-bottom:none;}
   <small>Yönetim Paneli</small>
   <button class="navlink" data-tab="products"><span class="dot"></span> Ürünler</button>
   <button class="navlink" data-tab="orders"><span class="dot"></span> Siparişler</button>
+  <button class="navlink" data-tab="campaigns"><span class="dot"></span> Kampanyalar</button>
   <button class="navlink" data-tab="settings"><span class="dot"></span> Ayarlar</button>
   <button class="navlink" data-tab="integrations"><span class="dot"></span> Entegrasyonlar</button>
  </div>
@@ -159,6 +168,21 @@ tr:last-child td{border-bottom:none;}
      <tbody id="ordersBody"></tbody>
     </table>
    </div>
+  </div>
+
+  <div id="tab-campaigns" class="hidden">
+   <div class="pagehead">
+    <div><h1>Kampanyalar</h1><p>İndirim, 2'li / 3'lü alım fırsatları. Sitede ve Meta/Google kataloğunda otomatik uygulanır.</p></div>
+    <button class="btn btn-gold" onclick="openCampaignForm(null)">+ Yeni Kampanya</button>
+   </div>
+   <div id="campMsg"></div>
+   <div class="card">
+    <table>
+     <thead><tr><th>Kampanya</th><th>Ne yapar?</th><th>Kapsam</th><th>Tarih</th><th>Durum</th><th></th></tr></thead>
+     <tbody id="campBody"></tbody>
+    </table>
+   </div>
+   <p style="color:var(--ink2);font-size:12px;line-height:1.6;margin-top:12px">Kurallar: Aynı ürüne birden fazla fiyat kampanyası uyarsa en düşük fiyat kazanır (üst üste binmez). Sepette çoklu alım kampanyalarından yalnızca müşteriye en çok indirim sağlayanı uygulanır. 2'li fiyatı tanımlı ürünler (Ürün tablosundaki "bulkPrice2") çoklu alım kampanyalarına dahil edilmez.</p>
   </div>
 
   <div id="tab-settings" class="hidden">
@@ -199,6 +223,42 @@ tr:last-child td{border-bottom:none;}
   <div class="modal-actions" style="margin-top:20px">
    <button class="btn-gold" onclick="printOrder()">🖨️ Yazdır</button>
    <button class="btn-ghost" onclick="closeOrderDetail()">Kapat</button>
+  </div>
+ </div>
+</div>
+
+<div id="campModalBg" class="modal-bg hidden">
+ <div class="modal">
+  <h2 id="campModalTitle">Yeni Kampanya</h2>
+  <div id="campFormMsg"></div>
+  <div class="field"><label>Kampanya adı (müşteri sitede görür)</label><input id="c_ad" placeholder="Örn: Sonbahar İndirimi"></div>
+  <div class="field"><label>Kampanya türü</label>
+   <select id="c_tip" onchange="campFormChanged()">
+    <option value="yuzde">Yüzde indirim (%)</option>
+    <option value="tl">TL indirim</option>
+    <option value="coklu_yuzde">Çoklu alım — N adet ve üzerinde % indirim</option>
+    <option value="coklu_sabit">Çoklu alım — N adet toplam X TL</option>
+   </select></div>
+  <div class="grid2">
+   <div class="field" id="c_adet_wrap"><label>Adet (N)</label><input id="c_adet" type="number" min="2" value="2" oninput="campFormChanged()"></div>
+   <div class="field"><label id="c_deger_label">İndirim yüzdesi (%)</label><input id="c_deger" type="number" min="1" oninput="campFormChanged()"></div>
+  </div>
+  <div class="field"><label>Kapsam</label>
+   <select id="c_kapsam" onchange="campFormChanged()">
+    <option value="tum">Tüm ürünler</option>
+    <option value="kategori">Seçili kategoriler</option>
+    <option value="urun">Seçili ürünler</option>
+   </select></div>
+  <div class="field hidden" id="c_hedef_wrap"><label id="c_hedef_label">Seçim</label><div class="pickbox" id="c_hedef_box"></div></div>
+  <div class="grid2">
+   <div class="field"><label>Başlangıç (boşsa hemen)</label><input id="c_baslangic" type="date" onchange="campFormChanged()"></div>
+   <div class="field"><label>Bitiş (boşsa süresiz)</label><input id="c_bitis" type="date" onchange="campFormChanged()"></div>
+  </div>
+  <div class="checks"><label><input type="checkbox" id="c_aktif" checked onchange="campFormChanged()"> Aktif</label></div>
+  <div class="camp-preview" id="c_preview"></div>
+  <div class="modal-actions">
+   <button class="btn-main" onclick="saveCampaign()">Kaydet</button>
+   <button class="btn-ghost" onclick="closeCampaignForm()">Vazgeç</button>
   </div>
  </div>
 </div>
@@ -258,7 +318,7 @@ function apiPost(body){
 }
 
 function switchTab(tab){
- ["products","orders","settings","integrations"].forEach(function(t){
+ ["products","orders","campaigns","settings","integrations"].forEach(function(t){
   document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
  });
  document.querySelectorAll(".navlink").forEach(function(el){
@@ -271,6 +331,7 @@ document.querySelectorAll(".navlink").forEach(function(el){
   switchTab(tab);
   if(tab==="settings") loadSettings();
   if(tab==="orders") loadOrders();
+  if(tab==="campaigns") loadCampaigns();
  });
 });
 switchTab("products");
@@ -329,6 +390,158 @@ function renderTable(){
    '<td class="row-actions"><button class="btn-ghost" onclick="openForm('+i+')">Düzenle</button>'+
    '<button class="btn-danger" onclick="deleteProduct(\''+String(p.id).replace(/'/g,"")+'\')">Sil</button></td></tr>';
  }).join("") || '<tr><td colspan="6" class="empty">Henüz ürün yok.</td></tr>';
+}
+
+
+// ---------- Kampanyalar ----------
+var campaigns = [];
+var CAMP_TYPE_LABEL = {yuzde:"Yüzde indirim", tl:"TL indirim", coklu_yuzde:"Çoklu alım %", coklu_sabit:"Çoklu alım paket fiyatı"};
+function trDate(d){ if(!d) return ""; var p=String(d).split("-"); return p.length===3 ? p[2]+"."+p[1]+"."+p[0] : d; }
+function todayIstanbul(){ return new Date().toLocaleDateString("en-CA",{timeZone:"Europe/Istanbul"}); }
+function campStatus(c){
+ if(String(c.aktif)!=="1") return {t:"Pasif",k:"off"};
+ var t=todayIstanbul();
+ if(c.bitis && c.bitis<t) return {t:"Süresi doldu",k:"off"};
+ if(c.baslangic && c.baslangic>t) return {t:"Planlandı",k:"plan"};
+ return {t:"Yayında",k:"on"};
+}
+function campSummary(c){
+ var d=Number(c.deger), n=Number(c.adet);
+ if(c.tip==="yuzde") return "%"+d+" indirim";
+ if(c.tip==="tl") return d+" TL indirim";
+ if(c.tip==="coklu_yuzde") return n+" ve üzeri alımda %"+d+" indirim";
+ if(c.tip==="coklu_sabit") return n+" adet toplam "+d+" TL";
+ return "";
+}
+function campScope(c){
+ if(c.kapsam==="tum") return "Tüm ürünler";
+ var names = String(c.hedef||"").split("|").map(function(x){return x.trim();}).filter(Boolean);
+ if(c.kapsam==="urun"){ names = names.map(function(id){ var p=products.filter(function(p){return String(p.id)===id;})[0]; return p? p.name : id; }); }
+ return (c.kapsam==="kategori"?"Kategori: ":"Ürün: ")+names.join(", ");
+}
+function loadCampaigns(){
+ apiGet("listCampaigns", true).then(function(res){
+  if(res.result==="error"){ document.getElementById("campMsg").innerHTML='<div class="msg err">'+esc(res.message)+(String(res.message).indexOf("Bilinmeyen")>-1?' — Apps Script kodunu güncelleyip "Yeni sürüm" olarak dağıtmanız gerekir.':'')+'</div>'; return; }
+  campaigns = res.data || [];
+  renderCampaigns();
+ }).catch(function(){ document.getElementById("campMsg").innerHTML='<div class="msg err">Bağlantı hatası.</div>'; });
+}
+function renderCampaigns(){
+ document.getElementById("campBody").innerHTML = campaigns.map(function(c,i){
+  var st=campStatus(c);
+  return '<tr><td><div class="pname">'+esc(c.ad)+'</div><div class="pid">'+esc(CAMP_TYPE_LABEL[c.tip]||c.tip)+'</div></td>'+
+   '<td>'+esc(campSummary(c))+'</td>'+
+   '<td style="font-size:12px;max-width:200px">'+esc(campScope(c))+'</td>'+
+   '<td style="font-size:12px;color:var(--ink2)">'+(c.baslangic||c.bitis? esc(trDate(c.baslangic)||"hemen")+" → "+esc(trDate(c.bitis)||"süresiz") : "Süresiz")+'</td>'+
+   '<td><span class="pill '+st.k+'">'+st.t+'</span></td>'+
+   '<td class="row-actions"><button class="btn-ghost" onclick="openCampaignForm('+i+')">Düzenle</button>'+
+   '<button class="btn-ghost" onclick="toggleCampaign('+i+')">'+(String(c.aktif)==="1"?"Durdur":"Başlat")+'</button>'+
+   '<button class="btn-danger" onclick="deleteCampaign('+i+')">Sil</button></td></tr>';
+ }).join("") || '<tr><td colspan="6" class="empty">Henüz kampanya yok. "+ Yeni Kampanya" ile başlayın.</td></tr>';
+}
+var editingCampaignId = null;
+function categoryList(){ var seen={}, out=[]; products.forEach(function(p){ var c=String(p.category||"").trim(); if(c && !seen[c]){ seen[c]=1; out.push(c); } }); return out; }
+function openCampaignForm(i){
+ var c = i!==null ? campaigns[i] : null;
+ editingCampaignId = c ? c.id : null;
+ document.getElementById("campModalTitle").textContent = c ? "Kampanyayı Düzenle" : "Yeni Kampanya";
+ document.getElementById("c_ad").value = c? c.ad : "";
+ document.getElementById("c_tip").value = c? c.tip : "yuzde";
+ document.getElementById("c_adet").value = c && c.adet ? c.adet : 2;
+ document.getElementById("c_deger").value = c? c.deger : "";
+ document.getElementById("c_kapsam").value = c? c.kapsam : "tum";
+ document.getElementById("c_baslangic").value = c? (c.baslangic||"") : "";
+ document.getElementById("c_bitis").value = c? (c.bitis||"") : "";
+ document.getElementById("c_aktif").checked = c? String(c.aktif)==="1" : true;
+ window._campSelected = c ? String(c.hedef||"").split("|").map(function(x){return x.trim();}).filter(Boolean) : [];
+ var hb=document.getElementById("c_hedef_box"); hb.innerHTML=""; hb.removeAttribute("data-kapsam");
+ document.getElementById("campFormMsg").innerHTML="";
+ campFormChanged(true);
+ document.getElementById("campModalBg").classList.remove("hidden");
+}
+function closeCampaignForm(){ document.getElementById("campModalBg").classList.add("hidden"); }
+function readSelected(){
+ var boxes=document.querySelectorAll("#c_hedef_box input[type=checkbox]");
+ if(boxes.length){ window._campSelected=[]; boxes.forEach(function(b){ if(b.checked) window._campSelected.push(b.value); }); }
+ return window._campSelected||[];
+}
+function campFormChanged(rebuildPick){
+ document.getElementById("campFormMsg").innerHTML="";
+ var tip=document.getElementById("c_tip").value, kapsam=document.getElementById("c_kapsam").value;
+ var multi = tip==="coklu_yuzde" || tip==="coklu_sabit";
+ document.getElementById("c_adet_wrap").classList.toggle("hidden", !multi);
+ document.getElementById("c_deger_label").textContent = tip==="yuzde"||tip==="coklu_yuzde" ? "İndirim yüzdesi (%)" : (tip==="tl" ? "İndirim tutarı (TL)" : "Paket fiyatı (TL)");
+ var wrap=document.getElementById("c_hedef_wrap"), box=document.getElementById("c_hedef_box");
+ if(kapsam==="tum"){ wrap.classList.add("hidden"); }
+ else {
+  wrap.classList.remove("hidden");
+  var prev = readSelected();
+  var needRebuild = rebuildPick===true || box.getAttribute("data-kapsam")!==kapsam;
+  if(needRebuild){
+   if(box.getAttribute("data-kapsam") && box.getAttribute("data-kapsam")!==kapsam){ prev=[]; window._campSelected=[]; }
+   document.getElementById("c_hedef_label").textContent = kapsam==="kategori" ? "Kategoriler" : "Ürünler";
+   var items = kapsam==="kategori" ? categoryList().map(function(c){return {v:c,t:c};}) : products.map(function(p){return {v:String(p.id),t:p.name+" ("+p.id+")"};});
+   box.innerHTML = items.map(function(it){ return '<label><input type="checkbox" value="'+esc(it.v)+'"'+(prev.indexOf(it.v)>-1?' checked':'')+' onchange="campFormChanged()"> '+esc(it.t)+'</label>'; }).join("");
+   box.setAttribute("data-kapsam", kapsam);
+  }
+ }
+ if(kapsam==="tum"){ box.setAttribute("data-kapsam","tum"); box.innerHTML=""; window._campSelected=[]; }
+ renderCampPreview();
+}
+function campTargetsAdmin(kapsam, hedefList, p){
+ if(kapsam==="tum") return true;
+ var low = hedefList.map(function(x){return String(x).toLowerCase();});
+ if(kapsam==="kategori") return low.indexOf(String(p.category||"").toLowerCase())>-1;
+ return low.indexOf(String(p.id||"").toLowerCase())>-1;
+}
+function renderCampPreview(){
+ var tip=document.getElementById("c_tip").value, kapsam=document.getElementById("c_kapsam").value;
+ var deger=Number(document.getElementById("c_deger").value)||0, adet=Number(document.getElementById("c_adet").value)||0;
+ var hedef = kapsam==="tum" ? [] : readSelected();
+ var c={tip:tip,deger:deger,adet:adet};
+ var text = deger>0 ? "<b>"+esc(campSummary(c))+"</b>" : "Değeri girin.";
+ var hit = products.filter(function(p){ return campTargetsAdmin(kapsam,hedef,p); });
+ text += "<br>Kapsam: <b>"+(kapsam==="tum" ? "tüm ürünler" : (hedef.length? hit.length+" ürün" : "henüz seçim yapılmadı"))+"</b>";
+ if((tip==="yuzde"||tip==="tl") && deger>0 && hit.length){
+  text += "<br>"+hit.slice(0,4).map(function(p){
+   var pr=Number(String(p.price).replace(",",".")); if(!(pr>0)) return "";
+   var np = tip==="yuzde" ? Math.round(pr*(1-deger/100)) : Math.round(pr-deger); np=Math.max(1,np);
+   return esc(p.name)+": <s>"+pr+" TL</s> → <b>"+np+" TL</b>";
+  }).filter(Boolean).join("<br>")+(hit.length>4?"<br>… ve "+(hit.length-4)+" ürün daha":"");
+ }
+ document.getElementById("c_preview").innerHTML = text;
+}
+function saveCampaign(){
+ var kapsam=document.getElementById("c_kapsam").value, tip=document.getElementById("c_tip").value;
+ var camp = {
+  id: editingCampaignId||"", ad: document.getElementById("c_ad").value.trim(), tip: tip, kapsam: kapsam,
+  hedef: kapsam==="tum" ? "" : readSelected().join("|"),
+  adet: (tip==="coklu_yuzde"||tip==="coklu_sabit") ? document.getElementById("c_adet").value : "",
+  deger: document.getElementById("c_deger").value,
+  baslangic: document.getElementById("c_baslangic").value, bitis: document.getElementById("c_bitis").value,
+  aktif: document.getElementById("c_aktif").checked ? "1" : "0"
+ };
+ if(!camp.ad){ document.getElementById("campFormMsg").innerHTML='<div class="msg err">Kampanya adı zorunlu.</div>'; return; }
+ if(!(Number(camp.deger)>0)){ document.getElementById("campFormMsg").innerHTML='<div class="msg err">İndirim değerini girin.</div>'; return; }
+ if(kapsam!=="tum" && !camp.hedef){ document.getElementById("campFormMsg").innerHTML='<div class="msg err">En az bir kategori veya ürün seçin.</div>'; return; }
+ apiPost({action:"upsertCampaign", campaign:camp}).then(function(res){
+  if(res.result==="ok"){ closeCampaignForm(); loadCampaigns(); document.getElementById("campMsg").innerHTML='<div class="msg ok">Kampanya kaydedildi. Sitede birkaç dakika içinde görünür; Meta/Google kataloğu da güncellenir.</div>'; }
+  else { document.getElementById("campFormMsg").innerHTML='<div class="msg err">'+esc(res.message||"Hata oluştu")+'</div>'; }
+ }).catch(function(){ document.getElementById("campFormMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
+}
+function toggleCampaign(i){
+ var c=campaigns[i], copy={}; Object.keys(c).forEach(function(k){copy[k]=c[k];});
+ copy.aktif = String(c.aktif)==="1" ? "0" : "1";
+ apiPost({action:"upsertCampaign", campaign:copy}).then(function(res){
+  if(res.result==="ok"){ loadCampaigns(); } else { alert(res.message||"Hata oluştu"); }
+ });
+}
+function deleteCampaign(i){
+ var c=campaigns[i];
+ if(!confirm('"'+c.ad+'" kampanyasını silmek istediğinize emin misiniz?')) return;
+ apiPost({action:"deleteCampaign", id:c.id}).then(function(res){
+  if(res.result==="ok"){ loadCampaigns(); } else { alert(res.message||"Hata oluştu"); }
+ });
 }
 
 var ORDER_STATUSES = ["Yeni Sipariş","Hazırlanıyor","Kargoya Verildi","Teslim Edildi","İptal"];
