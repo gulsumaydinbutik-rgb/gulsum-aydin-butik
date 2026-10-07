@@ -196,6 +196,23 @@ img{max-width:100%;display:block;}
 .acc-item{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--line);font-size:14px;font-weight:600;}
 .social{display:flex;gap:10px;padding:20px 16px 30px;justify-content:center;}
 .social a{font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;background:var(--bg2);}
+
+.site-footer{margin-top:10px;padding:22px 16px 26px;border-top:1px solid var(--line);background:var(--bg2);font-size:12px;color:var(--ink2);text-align:center;}
+.site-footer .sf-brand{font-family:var(--font-serif);font-size:15px;color:var(--ink);margin-bottom:10px;}
+.site-footer .sf-links{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-bottom:12px;}
+.site-footer .sf-links a{color:var(--ink2);text-decoration:underline;text-underline-offset:2px;}
+.site-footer .sf-links a:hover{color:var(--gold-d);}
+.site-footer .sf-copy{font-size:11px;line-height:1.6;}
+.lg-wrap{padding:6px 16px 28px;font-size:14px;line-height:1.7;color:var(--ink);}
+.lg-wrap h3{font-family:var(--font-serif);font-size:16px;margin:20px 0 6px;color:var(--ink);}
+.lg-wrap p,.lg-wrap li{color:var(--ink);}
+.lg-wrap ul,.lg-wrap ol{padding-left:20px;margin:6px 0;}
+.lg-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px;}
+.lg-tbl td{border:1px solid var(--line);padding:7px 9px;vertical-align:top;}
+.lg-tbl td:first-child{width:36%;background:var(--bg2);font-weight:600;}
+.lg-nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px;padding-top:14px;border-top:1px solid var(--line);}
+.lg-nav a{font-size:12px;padding:6px 10px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);}
+.check-row label a{text-decoration:underline;color:var(--gold-d);}
 .desk-header,.pd-cta-desk{display:none;}
 @media (min-width:900px){
  body{font-size:15px;}
@@ -267,12 +284,15 @@ img{max-width:100%;display:block;}
  .pd-cta-desk .btn-main{flex:1;padding:16px;font-size:15px;}
  .pd-cta-desk .btn-main:hover{opacity:.88;}
  .page-narrow{max-width:640px;margin:0 auto;padding-bottom:30px;}
+ .lg-wrap{max-width:820px;margin:0 auto;padding:10px 32px 48px;}
+ .site-footer{padding:36px 32px 40px;margin-top:30px;}
  .toast{bottom:32px;}
 }
 </style>
 </head>
 <body>
 <div id="app"></div>
+<script src="legal.js"></script>
 <script>
 (function(){
 "use strict";
@@ -393,7 +413,7 @@ function loadLS(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v)
 function saveLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 
 var state = {
- view:"home", productId:null, category:null,
+ view:"home", productId:null, category:null, legalPage:null,
  cart: loadLS("ga_cart",[]),
  favorites: loadLS("ga_favs",[]),
  lastOrder: loadLS("ga_last_order",null),
@@ -511,7 +531,7 @@ function trackPurchase(order){
 }
 
 var _fromPopstate=false;
-function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null;
+function go(view,opts){ opts=opts||{}; state.view=view; state.productId=opts.productId||null; state.category=opts.category||null; state.legalPage=(view==="legal")?(opts.page||null):null;
  if(view==="product"){ state.pdColor=opts.color||null; state.pdColor2=null; state.pdSize=null; state.pdQty=1; }
  window.scrollTo(0,0); render(); syncUrl(!_fromPopstate);
  trackPage();
@@ -521,27 +541,32 @@ function syncUrl(pushHistory){
  url.search = "";
  if(state.view==="product" && state.productId){ url.searchParams.set("urun", state.productId); }
  else if(state.view==="category" && state.category){ url.searchParams.set("kategori", state.category); }
+ else if(state.view==="legal" && state.legalPage){ url.searchParams.set("sayfa", state.legalPage); }
  var newUrl = url.pathname + url.search;
- var histState = {view:state.view, productId:state.productId, category:state.category};
+ var histState = {view:state.view, productId:state.productId, category:state.category, legalPage:state.legalPage};
  if(pushHistory){ history.pushState(histState, "", newUrl); } else { history.replaceState(histState, "", newUrl); }
  var p = state.view==="product" ? findProduct(state.productId) : null;
- document.title = p ? (productDisplayName(p, state.pdColor||p.colors[0]) + " — Gülsüm Aydın Butik") : "Gülsüm Aydın Butik — Tesettür Giyim";
+ var lp = (state.view==="legal" && window.LEGAL_PAGES && window.LEGAL_PAGES[state.legalPage]) ? window.LEGAL_PAGES[state.legalPage] : null;
+ document.title = p ? (productDisplayName(p, state.pdColor||p.colors[0]) + " — Gülsüm Aydın Butik") : (lp ? (lp.title + " — Gülsüm Aydın Butik") : "Gülsüm Aydın Butik — Tesettür Giyim");
 }
 function openFromUrl(){
  var params = new URLSearchParams(window.location.search);
  var urunId = params.get("urun");
  var kategori = params.get("kategori");
+ var sayfa = params.get("sayfa");
+ if(sayfa && window.LEGAL_PAGES && window.LEGAL_PAGES[sayfa]){ go("legal",{page:sayfa}); return; }
  if(urunId && findProduct(urunId)){ go("product",{productId:urunId}); }
  else if(kategori){ go("category",{category:kategori}); }
 }
 window.addEventListener("popstate", function(e){
  _fromPopstate=true;
  var st=e.state;
- if(st){ state.view=st.view||"home"; state.productId=st.productId||null; state.category=st.category||null; }
+ if(st){ state.view=st.view||"home"; state.productId=st.productId||null; state.category=st.category||null; state.legalPage=st.legalPage||null; }
  else {
   var params=new URLSearchParams(window.location.search);
-  var urunId=params.get("urun"), kategori=params.get("kategori");
-  if(urunId && findProduct(urunId)){ state.view="product"; state.productId=urunId; }
+  var urunId=params.get("urun"), kategori=params.get("kategori"), sayfa=params.get("sayfa");
+  if(sayfa && window.LEGAL_PAGES && window.LEGAL_PAGES[sayfa]){ state.view="legal"; state.legalPage=sayfa; }
+  else if(urunId && findProduct(urunId)){ state.view="product"; state.productId=urunId; }
   else if(kategori){ state.view="category"; state.category=kategori; }
   else { state.view="home"; state.productId=null; state.category=null; }
  }
@@ -852,7 +877,7 @@ function viewCheckout(){
  '<div class="summary-box"><div class="sum-row"><span>Ara Toplam</span><span>'+money(sub)+'</span></div>'+
  '<div class="sum-row"><span>Kargo</span><span'+(SHIPPING_FEE===0?' class="free"':'')+'>'+(SHIPPING_FEE===0?'ÜCRETSİZ':money(SHIPPING_FEE))+'</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(total)+'</span></div></div>'+
- '<div class="check-row"><input type="checkbox" id="agree" '+(f.agree?'checked':'')+'><label for="agree">Mesafeli satış sözleşmesini ve ilgili bilgilendirmeleri okudum ve kabul ediyorum.</label></div>'+
+ '<div class="check-row"><input type="checkbox" id="agree" '+(f.agree?'checked':'')+'><label for="agree"><a href="?sayfa=mesafeli-satis-sozlesmesi" target="_blank" rel="noopener">Mesafeli Satış Sözleşmesi</a>’ni, <a href="?sayfa=on-bilgilendirme-formu" target="_blank" rel="noopener">Ön Bilgilendirme Formu</a>’nu ve <a href="?sayfa=kvkk-aydinlatma-metni" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>’ni okudum, kabul ediyorum.</label></div>'+
  (state.formErrors.agree?'<div class="form-group" style="margin-top:-8px"><div class="err">'+state.formErrors.agree+'</div></div>':'')+
  '<div style="padding:6px 16px 24px"><button type="submit" class="btn-main" style="width:100%">SİPARİŞİ TAMAMLA</button></div>'+
  '</form>';
@@ -884,9 +909,25 @@ function viewAccount(){
  '<div><div class="acc-item" data-goto="cart"><span>Siparişlerim'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></div>'+
  '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
  '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
- '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a></div></div>';
+ '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a>'+
+ (window.LEGAL_ORDER||[]).map(function(o){ return '<a class="acc-item" href="?sayfa='+o[0]+'" data-goto="legal" data-page="'+o[0]+'"><span>'+esc(o[1])+'</span><span>›</span></a>'; }).join('')+'</div></div>';
 }
 
+
+function legalLink(slug,label){ return '<a href="?sayfa='+slug+'" data-goto="legal" data-page="'+slug+'">'+esc(label)+'</a>'; }
+function siteFooter(){
+ var order = window.LEGAL_ORDER || [];
+ return '<div class="site-footer"><div class="sf-brand">Gülsüm Aydın Butik</div>'+
+  '<div class="sf-links">'+order.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div>'+
+  '<div class="sf-copy">© '+new Date().getFullYear()+' Gülsüm Aydın Butik · Tüm hakları saklıdır.<br>Kapıda ödeme · 14 gün içinde cayma hakkı</div></div>';
+}
+function viewLegal(){
+ var pg = window.LEGAL_PAGES && window.LEGAL_PAGES[state.legalPage];
+ if(!pg){ return header("Sayfa bulunamadı","home")+'<div class="page-narrow"><div class="empty-state"><p>Aradığınız sayfa bulunamadı.</p></div></div>'; }
+ var others = (window.LEGAL_ORDER||[]).filter(function(o){return o[0]!==state.legalPage;});
+ return header(pg.title,"home")+'<div class="lg-wrap"><h2 style="font-family:var(--font-serif);font-size:22px;margin:10px 0 4px">'+esc(pg.title)+'</h2>'+pg.html+
+  '<div class="lg-nav">'+others.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div></div>';
+}
 function render(){
  var html="";
  switch(state.view){
@@ -900,10 +941,11 @@ function render(){
   case "checkout": html=viewCheckout(); break;
   case "success": html=viewSuccess(); break;
   case "account": html=viewAccount(); break;
+  case "legal": html=viewLegal(); break;
   default: html=viewHome();
  }
  var app=document.getElementById("app");
- app.innerHTML = html + bottomNav() + '<div class="toast" id="toast"></div>' + renderLightbox();
+ app.innerHTML = html + siteFooter() + bottomNav() + '<div class="toast" id="toast"></div>' + renderLightbox();
  if(state.view==="search"){
   var si=document.getElementById("searchInput");
   if(si){ si.focus(); var v=si.value; si.value=""; si.value=v; }
@@ -946,7 +988,8 @@ document.addEventListener("click", function(e){
  if(t){
   var v = t.getAttribute("data-goto");
   var card = t.closest("[data-id]");
-  if(v==="product"){ var _el=(card||t); go("product",{productId:_el.getAttribute("data-id"), color:_el.getAttribute("data-color")}); }
+  if(v==="legal"){ e.preventDefault(); go("legal",{page:t.getAttribute("data-page")}); }
+  else if(v==="product"){ var _el=(card||t); go("product",{productId:_el.getAttribute("data-id"), color:_el.getAttribute("data-color")}); }
   else { go(v); }
   return;
  }
@@ -1048,6 +1091,7 @@ function applySettings(){
 
 render();
 loadSettingsFromSheet().then(function(updated){ if(updated){ applySettings(); render(); } });
+(function(){ var sp=new URLSearchParams(window.location.search).get("sayfa"); if(sp && window.LEGAL_PAGES && window.LEGAL_PAGES[sp]){ state.view="legal"; state.legalPage=sp; render(); document.title=window.LEGAL_PAGES[sp].title+" — Gülsüm Aydın Butik"; } })();
 loadProductsFromSheet().then(function(updated){ if(updated) render(); _fromPopstate=true; openFromUrl(); _fromPopstate=false; })
  .catch(function(err){ if(window.console) console.error(err); })
  .then(function(){ _routeResolved=true; trackPage(); });
