@@ -48,6 +48,16 @@ function doPost(e) {
     case "deleteCampaign": return jsonResponse(withFeedRefresh_(deleteCampaign(body.id)));
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
     case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status));
+    case "listBlog": return jsonResponse({ result: "ok", data: getAllBlog_() });
+    case "upsertBlog": return jsonResponse(upsertBlog_(body.post));
+    case "deleteBlog": return jsonResponse(deleteBlog_(body.slug));
+    case "metaStatus":
+    case "metaSaveConfig":
+    case "metaDisconnect":
+    case "metaDashboard":
+    case "metaSetStatus":
+    case "metaSetBudget":
+      return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
 }
@@ -492,4 +502,336 @@ function deleteCampaign(id) {
     if (String(data[i][0]) === String(id)) { sheet.deleteRow(i + 1); break; }
   }
   return { result: "ok" };
+}
+
+// ============================================================
+// Meta Reklamları — panelde istatistik, durdur/başlat ve günlük bütçe
+// Erişim anahtarı ve reklam hesabı numarası Script Properties'te saklanır
+// (META_ACCESS_TOKEN, META_AD_ACCOUNT_ID). Panelin "Reklamlar" sekmesinden
+// kaydedilir; anahtar hiçbir zaman panele veya siteye geri gönderilmez.
+// İLK KURULUMDA: aşağıdaki metaYetkiVer fonksiyonunu bir kez elle çalıştırın.
+// ============================================================
+
+var META_API = "https://graph.facebook.com/v23.0/";
+var META_TOKEN_PROP = "META_ACCESS_TOKEN";
+var META_ACCOUNT_PROP = "META_AD_ACCOUNT_ID";
+var META_LOG_SHEET = "ReklamGecmisi";
+var META_PRESETS = ["today", "yesterday", "last_7d", "last_30d", "this_month", "last_month", "maximum"];
+var META_MAX_DAILY_BUDGET = 50000; // TL — yanlışlıkla fazladan sıfır yazılmasına karşı üst sınır
+var META_INSIGHT_FIELDS = "spend,impressions,reach,clicks,inline_link_clicks,ctr,cpc,actions,action_values";
+
+// Editörde bir kez çalıştırın: Google'ın "dış bağlantı" iznini onaylamanızı ister.
+function metaYetkiVer() {
+  UrlFetchApp.fetch("https://graph.facebook.com/", { muteHttpExceptions: true });
+  Logger.log("İzin verildi. Şimdi Dağıt > Dağıtımları yönet > yeni sürüm yayınlayın.");
+}
+
+function handleMetaAction_(body) {
+  try {
+    switch (body.action) {
+      case "metaStatus": return metaStatus_();
+      case "metaSaveConfig": return metaSaveConfig_(body.accountId, body.token);
+      case "metaDisconnect": return metaDisconnect_();
+      case "metaDashboard": return metaDashboard_(body.preset, body.refresh);
+      case "metaSetStatus": return metaSetStatus_(body.id, body.status);
+      case "metaSetBudget": return metaSetBudget_(body.id, body.dailyBudget);
+    }
+    return { result: "error", message: "Bilinmeyen işlem." };
+  } catch (err) {
+    return { result: "error", message: String(err && err.message ? err.message : err) };
+  }
+}
+
+function metaConfig_() {
+  var p = PropertiesService.getScriptProperties();
+  var token = p.getProperty(META_TOKEN_PROP), acc = p.getProperty(META_ACCOUNT_PROP);
+  return token && acc ? { token: token, account: acc } : null;
+}
+
+function metaApi_(path, params, method, tokenOverride) {
+  var token = tokenOverride || (metaConfig_() || {}).token;
+  if (!token) throw new Error("Meta bağlantısı henüz kurulmadı.");
+  params = params || {};
+  method = method || "get";
+  var url = META_API + path;
+  var opts = { method: method, muteHttpExceptions: true, headers: { Authorization: "Bearer " + token } };
+  if (method === "get") {
+    var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }).join("&");
+    if (q) url += "?" + q;
+  } else {
+    opts.payload = params;
+  }
+  var res = UrlFetchApp.fetch(url, opts);
+  var json;
+  try { json = JSON.parse(res.getContentText() || "{}"); }
+  catch (e) { throw new Error("Meta'dan beklenmeyen yanıt geldi (" + res.getResponseCode() + ")."); }
+  if (json.error) throw new Error(metaErrorText_(json.error));
+  return json;
+}
+
+function metaErrorText_(e) {
+  var code = Number(e.code);
+  if (code === 190) return "Meta erişim anahtarı geçersiz veya süresi dolmuş. Reklamlar sekmesinden yeni anahtar girin.";
+  if (code === 10 || code === 200 || code === 294 || (code >= 200 && code < 300))
+    return "Bu işlem için izin yok. Sistem kullanıcısına reklam hesabında 'Kampanyaları yönet' yetkisi ve ads_read / ads_management izinleri verilmeli.";
+  if (code === 4 || code === 17 || code === 32 || code === 613 || code === 80004)
+    return "Meta istek sınırına ulaşıldı, birkaç dakika sonra tekrar deneyin.";
+  if (code === 100 && /act_/.test(e.message || "")) return "Reklam hesabı bulunamadı. Hesap numarasını kontrol edin.";
+  return "Meta: " + (e.error_user_msg || e.message || "bilinmeyen hata");
+}
+
+function metaStatus_() {
+  var cfg = metaConfig_();
+  if (!cfg) return { result: "ok", connected: false };
+  var acc = metaApi_("act_" + cfg.account, { fields: "name,currency,account_status" });
+  return { result: "ok", connected: true, accountId: cfg.account, name: acc.name, currency: acc.currency, accountStatus: acc.account_status };
+}
+
+function metaSaveConfig_(accountId, token) {
+  accountId = String(accountId || "").replace(/^act_/i, "").replace(/\D/g, "");
+  token = String(token || "").trim();
+  if (!accountId) return { result: "error", message: "Reklam hesabı numarası gerekli (sadece rakamlar)." };
+  if (token.length < 50) return { result: "error", message: "Erişim anahtarı eksik veya hatalı görünüyor." };
+  // Kaydetmeden önce anahtarın gerçekten çalıştığını doğrula
+  var acc = metaApi_("act_" + accountId, { fields: "name,currency,account_status" }, "get", token);
+  PropertiesService.getScriptProperties().setProperties(
+    (function () { var o = {}; o[META_TOKEN_PROP] = token; o[META_ACCOUNT_PROP] = accountId; return o; })()
+  );
+  metaClearCache_();
+  metaLog_("Bağlantı kuruldu", acc.name, "", "");
+  return { result: "ok", name: acc.name, currency: acc.currency };
+}
+
+function metaDisconnect_() {
+  var p = PropertiesService.getScriptProperties();
+  p.deleteProperty(META_TOKEN_PROP);
+  p.deleteProperty(META_ACCOUNT_PROP);
+  metaClearCache_();
+  metaLog_("Bağlantı kaldırıldı", "", "", "");
+  return { result: "ok" };
+}
+
+function metaDashboard_(preset, refresh) {
+  var cfg = metaConfig_();
+  if (!cfg) return { result: "ok", connected: false };
+  if (META_PRESETS.indexOf(preset) < 0) preset = "last_7d";
+  var cache = CacheService.getScriptCache();
+  var key = "metaDash_" + preset;
+  if (!refresh) {
+    var hit = cache.get(key);
+    if (hit) return JSON.parse(hit);
+  }
+  var act = "act_" + cfg.account;
+  var acc = metaApi_(act, { fields: "name,currency,account_status" });
+  var sum = metaApi_(act + "/insights", { date_preset: preset, fields: META_INSIGHT_FIELDS });
+  var daily = metaApi_(act + "/insights", {
+    date_preset: preset, fields: "spend,actions",
+    time_increment: preset === "maximum" ? "monthly" : 1, limit: 400
+  });
+  var camps = metaApi_(act + "/campaigns", {
+    fields: "id,name,status,effective_status,objective,daily_budget,lifetime_budget,insights.date_preset(" + preset + "){" + META_INSIGHT_FIELDS + "}",
+    limit: 200
+  });
+  var adsets = metaApi_(act + "/adsets", {
+    fields: "id,name,campaign_id,status,effective_status,daily_budget,lifetime_budget,insights.date_preset(" + preset + "){" + META_INSIGHT_FIELDS + "}",
+    limit: 400
+  });
+
+  var adsetsByCamp = {};
+  (adsets.data || []).forEach(function (a) {
+    (adsetsByCamp[a.campaign_id] = adsetsByCamp[a.campaign_id] || []).push({
+      id: a.id, name: a.name, status: a.status, effectiveStatus: a.effective_status,
+      dailyBudget: a.daily_budget ? Number(a.daily_budget) / 100 : null,
+      lifetimeBudget: a.lifetime_budget && Number(a.lifetime_budget) > 0 ? Number(a.lifetime_budget) / 100 : null,
+      m: metaMetrics_(a.insights && a.insights.data && a.insights.data[0])
+    });
+  });
+
+  var campaigns = (camps.data || []).map(function (c) {
+    var campBudget = !!(c.daily_budget || (c.lifetime_budget && Number(c.lifetime_budget) > 0));
+    return {
+      id: c.id, name: c.name, status: c.status, effectiveStatus: c.effective_status, objective: c.objective,
+      dailyBudget: c.daily_budget ? Number(c.daily_budget) / 100 : null,
+      lifetimeBudget: c.lifetime_budget && Number(c.lifetime_budget) > 0 ? Number(c.lifetime_budget) / 100 : null,
+      m: metaMetrics_(c.insights && c.insights.data && c.insights.data[0]),
+      // Bütçe kampanyada değilse reklam setlerinde yönetilir
+      adsets: campBudget ? [] : (adsetsByCamp[c.id] || [])
+    };
+  });
+  campaigns.sort(function (a, b) {
+    var aa = a.effectiveStatus === "ACTIVE" ? 0 : 1, bb = b.effectiveStatus === "ACTIVE" ? 0 : 1;
+    return aa - bb || b.m.spend - a.m.spend;
+  });
+
+  var out = {
+    result: "ok", connected: true, preset: preset, updatedAt: new Date().toISOString(),
+    account: { id: cfg.account, name: acc.name, currency: acc.currency, status: acc.account_status },
+    summary: metaMetrics_(sum.data && sum.data[0]),
+    daily: (daily.data || []).map(function (d) {
+      return { date: d.date_start, spend: Number(d.spend || 0), purchases: metaAction_(d.actions, META_PURCHASE_TYPES) };
+    }),
+    campaigns: campaigns
+  };
+  try { cache.put(key, JSON.stringify(out), 300); } catch (e) { /* büyük yanıt önbelleğe sığmazsa sorun değil */ }
+  return out;
+}
+
+var META_PURCHASE_TYPES = ["omni_purchase", "purchase", "offsite_conversion.fb_pixel_purchase"];
+var META_ATC_TYPES = ["omni_add_to_cart", "add_to_cart", "offsite_conversion.fb_pixel_add_to_cart"];
+var META_MSG_TYPES = ["onsite_conversion.messaging_conversation_started_7d"];
+
+function metaAction_(list, types) {
+  if (!list || !list.length) return 0;
+  for (var t = 0; t < types.length; t++) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].action_type === types[t]) return Number(list[i].value || 0);
+    }
+  }
+  return 0;
+}
+
+function metaMetrics_(ins) {
+  ins = ins || {};
+  var spend = Number(ins.spend || 0);
+  var purchaseValue = metaAction_(ins.action_values, META_PURCHASE_TYPES);
+  return {
+    spend: spend,
+    impressions: Number(ins.impressions || 0),
+    reach: Number(ins.reach || 0),
+    linkClicks: Number(ins.inline_link_clicks || 0),
+    ctr: Number(ins.ctr || 0),
+    cpc: Number(ins.cpc || 0),
+    addToCart: metaAction_(ins.actions, META_ATC_TYPES),
+    purchases: metaAction_(ins.actions, META_PURCHASE_TYPES),
+    purchaseValue: purchaseValue,
+    messages: metaAction_(ins.actions, META_MSG_TYPES),
+    roas: spend > 0 ? purchaseValue / spend : 0
+  };
+}
+
+// Düzenlenecek kampanya/reklam setinin bu reklam hesabına ait olduğunu doğrular
+function metaOwnedObject_(id, fields) {
+  var cfg = metaConfig_();
+  if (!cfg) throw new Error("Meta bağlantısı henüz kurulmadı.");
+  if (!/^\d+$/.test(String(id || ""))) throw new Error("Geçersiz kampanya numarası.");
+  var obj = metaApi_(String(id), { fields: "account_id,name," + fields });
+  if (String(obj.account_id) !== String(cfg.account)) throw new Error("Bu kampanya bağlı reklam hesabına ait değil.");
+  return obj;
+}
+
+function metaSetStatus_(id, status) {
+  if (status !== "ACTIVE" && status !== "PAUSED") return { result: "error", message: "Geçersiz durum." };
+  var obj = metaOwnedObject_(id, "status");
+  metaApi_(String(id), { status: status }, "post");
+  metaClearCache_();
+  metaLog_(status === "ACTIVE" ? "Başlatıldı" : "Durduruldu", obj.name, obj.status, status);
+  return { result: "ok" };
+}
+
+function metaSetBudget_(id, dailyBudget) {
+  var tl = Number(dailyBudget);
+  if (!(tl > 0)) return { result: "error", message: "Geçerli bir günlük bütçe girin." };
+  if (tl > META_MAX_DAILY_BUDGET) return { result: "error", message: "Günlük bütçe " + META_MAX_DAILY_BUDGET + " TL'yi geçemez (güvenlik sınırı)." };
+  var obj = metaOwnedObject_(id, "daily_budget");
+  if (!obj.daily_budget) return { result: "error", message: "Bu kampanyada günlük bütçe yok (toplam bütçe kullanılıyor). Reklam Yöneticisi'nden düzenleyin." };
+  var oldTl = Number(obj.daily_budget) / 100;
+  metaApi_(String(id), { daily_budget: String(Math.round(tl * 100)) }, "post");
+  metaClearCache_();
+  metaLog_("Günlük bütçe değişti", obj.name, oldTl + " TL", tl + " TL");
+  return { result: "ok", oldBudget: oldTl, newBudget: tl };
+}
+
+function metaClearCache_() {
+  CacheService.getScriptCache().removeAll(META_PRESETS.map(function (p) { return "metaDash_" + p; }));
+}
+
+// Panelden yapılan her değişiklik "ReklamGecmisi" sekmesine not edilir
+function metaLog_(action, name, before, after) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName(META_LOG_SHEET);
+    if (!sh) { sh = ss.insertSheet(META_LOG_SHEET); sh.appendRow(["Tarih", "İşlem", "Kampanya / Reklam Seti", "Önce", "Sonra"]); }
+    sh.appendRow([new Date(), action, name || "", before || "", after || ""]);
+  } catch (e) { console.error("Reklam geçmişi yazılamadı: " + e); }
+}
+
+// ============================================================
+// Blog — yazılar "Blog" sekmesinde tutulur. GitHub her saat bu sekmeden
+// sitedeki /blog/ sayfalarını yeniden üretir (scripts/build-blog.mjs).
+// ============================================================
+
+var BLOG_SHEET_NAME = "Blog";
+var BLOG_COLUMNS = ["slug", "title", "metaTitle", "metaDescription", "focusKeyword", "excerpt", "coverImage",
+  "content", "relatedProducts", "tags", "date", "updated", "published"];
+
+function getBlogSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(BLOG_SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(BLOG_SHEET_NAME);
+    sh.getRange(1, 1, 1, BLOG_COLUMNS.length).setValues([BLOG_COLUMNS]);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function getAllBlog_() {
+  var data = getBlogSheet_().getDataRange().getDisplayValues();
+  var headers = data[0];
+  return data.slice(1).filter(function (r) { return r[0]; }).map(function (r) {
+    var o = {};
+    headers.forEach(function (h, i) { o[h] = r[i]; });
+    return o;
+  });
+}
+
+function blogToday_() {
+  return Utilities.formatDate(new Date(), "Europe/Istanbul", "yyyy-MM-dd");
+}
+
+function upsertBlog_(post) {
+  if (!post) return { result: "error", message: "Yazı verisi eksik." };
+  var slug = String(post.slug || "").trim().toLowerCase();
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return { result: "error", message: "Adres (slug) sadece küçük harf, rakam ve tire içerebilir." };
+  if (!String(post.title || "").trim()) return { result: "error", message: "Başlık zorunlu." };
+  if (String(post.content || "").length > 45000) return { result: "error", message: "Yazı çok uzun (tablo hücresi sınırı). Lütfen iki yazıya bölün." };
+
+  var sh = getBlogSheet_();
+  var data = sh.getDataRange().getDisplayValues();
+  var headers = data[0];
+  BLOG_COLUMNS.forEach(function (c) {
+    if (headers.indexOf(c) < 0) { headers.push(c); sh.getRange(1, headers.length).setValue(c); }
+  });
+  var slugCol = headers.indexOf("slug");
+  var row = -1, origSlug = String(post.originalSlug || slug);
+  for (var i = 1; i < data.length; i++) {
+    var s = String(data[i][slugCol]);
+    if (s === origSlug) row = i + 1;
+    else if (s === slug) return { result: "error", message: "Bu adresle başka bir yazı var." };
+  }
+  var old = row > -1 ? data[row - 1] : [];
+  var today = blogToday_();
+  post.slug = slug;
+  post.updated = today;
+  if (!post.date) post.date = row > -1 ? (old[headers.indexOf("date")] || today) : today;
+  post.published = /^(1|true)$/i.test(String(post.published)) ? "1" : "0";
+
+  var values = headers.map(function (h, c) {
+    if (post[h] !== undefined) return String(post[h]);
+    return row > -1 ? (old[c] == null ? "" : old[c]) : "";
+  });
+  var target = row > -1 ? sh.getRange(row, 1, 1, values.length) : sh.getRange(sh.getLastRow() + 1, 1, 1, values.length);
+  target.setNumberFormat("@").setValues([values]);
+  return { result: "ok", slug: slug };
+}
+
+function deleteBlog_(slug) {
+  if (!slug) return { result: "error", message: "Adres eksik." };
+  var sh = getBlogSheet_();
+  var data = sh.getDataRange().getDisplayValues();
+  var slugCol = data[0].indexOf("slug");
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][slugCol]) === String(slug)) { sh.deleteRow(i + 1); return { result: "ok" }; }
+  }
+  return { result: "error", message: "Yazı bulunamadı." };
 }

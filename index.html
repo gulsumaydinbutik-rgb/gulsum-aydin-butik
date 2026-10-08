@@ -81,6 +81,14 @@ img{max-width:100%;display:block;}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .section-head h2{font-family:var(--font-serif);font-size:19px;font-weight:600;margin:0;padding-bottom:6px;border-bottom:2px solid var(--gold);display:inline-block;}
 .section-head .link{font-size:12px;color:var(--gold-d);font-weight:600;}
+.blog-row{display:grid;grid-auto-flow:column;grid-auto-columns:78%;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;}
+.blog-card{scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;}
+.blog-card .bimg{aspect-ratio:4/3;background:var(--bg2);}
+.blog-card .bimg img{width:100%;height:100%;object-fit:cover;object-position:top;display:block;}
+.blog-card .btxt{padding:10px 12px 14px;}
+.blog-card .btag{font-size:10.5px;font-weight:700;color:var(--gold-d);text-transform:uppercase;letter-spacing:.4px;}
+.blog-card .bt{font-family:var(--font-serif);font-size:16px;font-weight:600;line-height:1.3;margin-top:4px;}
+@media(min-width:700px){.blog-row{grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,1fr);overflow:visible;}}
 .cats{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none;}
 .cats::-webkit-scrollbar{display:none;}
 .cat-chip{flex:0 0 auto;padding:9px 16px;border-radius:20px;background:var(--bg2);font-size:13px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
@@ -310,7 +318,7 @@ function igIcon(id,size){
 var SHIPPING_FEE = 0;
 
 var IMG = function(seed,w,h){ return "https://picsum.photos/seed/"+seed+"/"+(w||600)+"/"+(h||800); };
-var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Üst Giyim","Alt Giyim"];
+var CATEGORIES = ["Yeni Gelenler","Elbise","Takım","Tunik","Şal","Üst Giyim","Dış Giyim","Alt Giyim"];
 function activeCategories(){
  return CATEGORIES.filter(function(c){
   if(c==="Yeni Gelenler") return PRODUCTS.some(function(p){return p.isNew;});
@@ -726,7 +734,8 @@ function deskHeader(){
  var cats=["Tüm Ürünler"].concat(activeCategories());
  function link(label,attr,active){ return '<button class="dn-link'+(active?' active':'')+'" '+attr+'>'+esc(label)+'</button>'; }
  var links = link("Ana Sayfa",'data-goto="home"',state.view==="home") +
-  cats.map(function(c){ return link(c,'data-cat="'+esc(c)+'"', state.view==="category"&&state.category===c); }).join("");
+  cats.map(function(c){ return link(c,'data-cat="'+esc(c)+'"', state.view==="category"&&state.category===c); }).join("") +
+  '<a class="dn-link" href="/blog/" style="text-decoration:none">Blog</a>';
  return '<div class="desk-header"><div class="desk-header-in">'+
   '<button class="desk-brand" data-goto="home"><span class="brand">Gülsüm Aydın Butik<small>Tesettür Giyim</small></span></button>'+
   '<nav class="desk-nav">'+links+'</nav>'+
@@ -825,10 +834,27 @@ function viewHome(){
   sectionBlock("Tüm Ürünler",PRODUCTS)+
   sectionBlock("Yeni Gelenler",news)+
   sectionBlock("Çok Satanlar",bests) : skeletonGrid())+
+ blogSection()+
  '<div class="social"><a href="'+waLink("Merhaba, ürünler hakkında bilgi almak istiyorum.")+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+WA_ICON_SM+' WhatsApp\'tan Bilgi Al</a>'+
  '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+igIcon('igHome')+' @'+IG_HANDLE+'</a></div>';
 }
 
+// Blog yazıları /blog/posts.json'dan gelir (GitHub her saat tablodan üretir)
+var BLOG_POSTS = [];
+function loadBlogPosts(){
+ return fetch("/blog/posts.json",{cache:"no-cache"}).then(function(r){ return r.ok? r.json() : []; })
+  .then(function(list){ BLOG_POSTS = Array.isArray(list)? list : []; return BLOG_POSTS.length>0; })
+  .catch(function(){ return false; });
+}
+function blogSection(){
+ if(!BLOG_POSTS.length) return '';
+ return '<div class="section"><div class="section-head"><h2>Stil Rehberi</h2><a class="link" href="/blog/" style="text-decoration:none">Tüm Yazılar</a></div>'+
+  '<div class="blog-row">'+BLOG_POSTS.slice(0,3).map(function(b){
+   return '<a class="blog-card" href="/blog/'+encodeURIComponent(b.slug)+'/">'+
+    '<div class="bimg">'+(b.coverImage?'<img src="'+esc(b.coverImage)+'" alt="'+esc(b.title)+'" loading="lazy">':'')+'</div>'+
+    '<div class="btxt">'+(b.tag?'<div class="btag">'+esc(b.tag)+'</div>':'')+'<div class="bt">'+esc(b.title)+'</div></div></a>';
+  }).join('')+'</div></div>';
+}
 function sectionBlock(title,list){
  if(!list.length) return '';
  return '<div class="section"><div class="section-head"><h2>'+title+'</h2><button class="link" data-goto="categories">Tümünü Gör</button></div>'+
@@ -1200,6 +1226,7 @@ function applySettings(){
 
 render();
 loadSettingsFromSheet().then(function(updated){ if(updated){ applySettings(); render(); } });
+loadBlogPosts().then(function(has){ if(has && state.view==="home") render(); });
 (function(){ var sp=new URLSearchParams(window.location.search).get("sayfa"); if(sp && window.LEGAL_PAGES && window.LEGAL_PAGES[sp]){ state.view="legal"; state.legalPage=sp; render(); document.title=window.LEGAL_PAGES[sp].title+" — Gülsüm Aydın Butik"; } })();
 loadProductsFromSheet().then(function(updated){ if(updated) render(); _fromPopstate=true; openFromUrl(); _fromPopstate=false; })
  .catch(function(err){ if(window.console) console.error(err); })

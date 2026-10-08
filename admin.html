@@ -106,6 +106,69 @@ tr:last-child td{border-bottom:none;}
 .inv-totals{margin-top:14px;padding:12px 14px;background:var(--bg2);border-radius:10px;}
 .inv-trow{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;}
 .inv-trow.total{font-weight:700;font-size:15px;border-top:1px solid var(--line);margin-top:6px;padding-top:8px;}
+/* Blog */
+.modal.wide{max-width:920px;}
+.seo-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:20px;align-items:start;}
+.seo-side{position:sticky;top:10px;background:var(--bg2);border-radius:12px;padding:16px;}
+.seo-side h4{margin:0 0 4px;font-size:13px;}
+.seo-score{font-family:var(--font-serif);font-size:30px;font-weight:700;}
+.seo-list{list-style:none;padding:0;margin:10px 0 0;font-size:12px;line-height:1.5;}
+.seo-list li{display:flex;gap:7px;margin-bottom:6px;color:var(--ink2);}
+.seo-list li b{flex-shrink:0;width:16px;text-align:center;}
+.seo-list li.ok b{color:var(--ok);} .seo-list li.no b{color:var(--danger);}
+.counter{float:right;font-weight:600;text-transform:none;letter-spacing:0;}
+.counter.ok{color:var(--ok);} .counter.no{color:var(--danger);}
+.gprev{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:14px;}
+.gprev .u{font-size:12px;color:#202124;} .gprev .t{font-size:17px;color:#1a0dab;margin:2px 0;line-height:1.3;} .gprev .d{font-size:12.5px;color:#4d5156;line-height:1.5;}
+.ed-tools{display:flex;gap:4px;flex-wrap:wrap;padding:6px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:var(--bg2);}
+.ed-tools button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:5px 9px;font-size:12px;font-weight:600;}
+.ed-tools button:hover{border-color:var(--gold);}
+.ed-area{min-height:320px;max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:0 0 9px 9px;padding:14px 16px;background:#fff;font-size:14.5px;line-height:1.65;outline:none;}
+.ed-area h2{font-family:var(--font-serif);font-size:20px;margin:18px 0 8px;} .ed-area h3{font-size:16px;margin:14px 0 6px;}
+.ed-area p{margin:0 0 10px;} .ed-area a{color:var(--gold-d);}
+textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;font-size:12px;border:1px solid var(--line);border-radius:0 0 9px 9px;padding:12px;}
+.pchips{display:flex;flex-wrap:wrap;gap:6px;max-height:130px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+.pchip{font-size:11.5px;padding:5px 9px;border-radius:14px;border:1px solid var(--line);background:#fff;font-weight:500;}
+.pchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.cover-row{display:flex;gap:10px;align-items:center;} .cover-row img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:var(--bg2);flex-shrink:0;}
+@media (max-width:760px){.seo-grid{grid-template-columns:1fr;} .seo-side{position:static;}}
+/* Reklamlar */
+.ads-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.chip{padding:8px 13px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink2);}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.ads-meta{margin-left:auto;font-size:11.5px;color:var(--ink2);display:flex;gap:10px;align-items:center;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.kpi .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);font-weight:700;}
+.kpi .v{font-family:var(--font-serif);font-size:22px;font-weight:700;margin-top:4px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.kpi .s{font-size:11px;color:var(--ink2);margin-top:2px;}
+.kpi.hero{border-color:var(--gold);}
+.chart-card{padding:18px 18px 12px;margin-bottom:16px;}
+.chart-card h3{font-size:13px;margin:0 0 2px;font-weight:700;}
+.chart-card .sub{font-size:11.5px;color:var(--ink2);margin-bottom:12px;}
+.bars{display:flex;align-items:flex-end;gap:2px;height:140px;border-bottom:1px solid var(--line);position:relative;}
+.bar{flex:1;display:flex;align-items:flex-end;height:100%;position:relative;cursor:default;}
+.bar i{display:block;width:100%;max-width:38px;margin:0 auto;background:var(--gold);border-radius:4px 4px 0 0;min-height:1px;}
+.bar:hover i{background:var(--gold-d);}
+.bar .tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11.5px;padding:6px 9px;border-radius:7px;white-space:nowrap;z-index:5;pointer-events:none;}
+.bar:hover .tip{display:block;}
+.bar-axis{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink2);margin-top:6px;}
+.camp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.camp-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+.camp-name{font-weight:700;font-size:14px;}
+.camp-sub{font-size:11.5px;color:var(--ink2);margin-top:2px;}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;}
+.st.on{background:#EAF6EC;color:var(--ok);} .st.off{background:var(--bg2);color:var(--ink2);} .st.warn{background:#FBF1E2;color:#8A5A12;}
+.camp-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px;}
+.camp-stats div{font-size:11px;color:var(--ink2);} .camp-stats b{display:block;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.camp-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.camp-actions button{padding:7px 12px;font-size:12px;border-radius:7px;}
+.budget-in{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink2);}
+.budget-in input{width:90px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;}
+.adset{border-top:1px dashed var(--line);margin-top:10px;padding-top:10px;}
+.help{font-size:12.5px;color:var(--ink2);line-height:1.65;}
+.help ol{padding-left:18px;margin:8px 0;} .help li{margin-bottom:4px;}
+.help code{background:var(--bg2);padding:1px 5px;border-radius:4px;font-size:11.5px;color:var(--ink);}
 @media print{
  body *{visibility:hidden;}
  #invoiceBody, #invoiceBody *{visibility:visible;}
@@ -140,6 +203,8 @@ tr:last-child td{border-bottom:none;}
   <button class="navlink" data-tab="products"><span class="dot"></span> Ürünler</button>
   <button class="navlink" data-tab="orders"><span class="dot"></span> Siparişler</button>
   <button class="navlink" data-tab="campaigns"><span class="dot"></span> Kampanyalar</button>
+  <button class="navlink" data-tab="blog"><span class="dot"></span> Blog</button>
+  <button class="navlink" data-tab="ads"><span class="dot"></span> Reklamlar</button>
   <button class="navlink" data-tab="settings"><span class="dot"></span> Ayarlar</button>
   <button class="navlink" data-tab="integrations"><span class="dot"></span> Entegrasyonlar</button>
  </div>
@@ -183,6 +248,53 @@ tr:last-child td{border-bottom:none;}
     </table>
    </div>
    <p style="color:var(--ink2);font-size:12px;line-height:1.6;margin-top:12px">Kurallar: Aynı ürüne birden fazla fiyat kampanyası uyarsa en düşük fiyat kazanır (üst üste binmez). Sepette çoklu alım kampanyalarından yalnızca müşteriye en çok indirim sağlayanı uygulanır. 2'li fiyatı tanımlı ürünler (Ürün tablosundaki "bulkPrice2") çoklu alım kampanyalarına dahil edilmez.</p>
+  </div>
+
+  <div id="tab-blog" class="hidden">
+   <div class="pagehead">
+    <div><h1>Blog</h1><p>Yazılar kaydedildikten sonra en geç 1 saat içinde sitede güncellenir.</p></div>
+    <button class="btn btn-gold" onclick="openBlog(null)">+ Yeni Yazı</button>
+   </div>
+   <div id="blogMsg"></div>
+   <div class="card">
+    <table>
+     <thead><tr><th>Yazı</th><th>Durum</th><th>Tarih</th><th>SEO</th><th></th></tr></thead>
+     <tbody id="blogBody"><tr><td colspan="5" class="empty">Yükleniyor…</td></tr></tbody>
+    </table>
+   </div>
+  </div>
+
+  <div id="tab-ads" class="hidden">
+   <div class="pagehead"><div><h1>Meta Reklamları</h1><p id="adsAccount">Facebook &amp; Instagram reklam performansı</p></div></div>
+   <div id="adsMsg"></div>
+
+   <div id="adsSetup" class="card hidden" style="padding:24px">
+    <h3 style="font-family:var(--font-serif);margin:0 0 6px;font-size:18px">Reklam hesabını bağla</h3>
+    <p class="help" style="margin:0 0 16px">Bağlantı bir kez kurulur. Erişim anahtarı Google tarafında gizli olarak saklanır; panelde veya sitede bir daha görünmez.</p>
+    <div class="field"><label>Reklam Hesabı Numarası</label><input id="m_account" placeholder="ör. 1234567890123456" inputmode="numeric"></div>
+    <div class="field"><label>Sistem Kullanıcısı Erişim Anahtarı</label><input id="m_token" type="password" placeholder="EAA… ile başlayan uzun anahtar" autocomplete="off"></div>
+    <button class="btn btn-gold" id="m_saveBtn" onclick="metaSaveConfig()">Bağla ve test et</button>
+    <details class="help" style="margin-top:18px">
+     <summary style="cursor:pointer;font-weight:600;color:var(--ink)">Bu bilgileri nereden bulurum?</summary>
+     <ol>
+      <li><b>Hesap numarası:</b> Reklam Yöneticisi'ni açın; adres çubuğundaki <code>act=</code> sonrasındaki rakamlar.</li>
+      <li><b>Uygulama:</b> developers.facebook.com → Uygulamalarım → Uygulama oluştur → "Diğer" → tür "İşletme" → işletme portföyünüzü seçin.</li>
+      <li><b>Sistem kullanıcısı:</b> İşletme Ayarları → Kullanıcılar → Sistem kullanıcıları → Ekle (rol: Yönetici).</li>
+      <li>Sistem kullanıcısında <b>Varlık ata</b> → Reklam hesapları → hesabınızı seçin → <b>Kampanyaları yönet</b> yetkisini açın. Aynı yerden oluşturduğunuz uygulamayı da atayın.</li>
+      <li><b>Yeni anahtar oluştur</b> → uygulamayı seçin → süre: <b>Hiçbir zaman</b> → izinler: <code>ads_read</code> ve <code>ads_management</code> → oluşturun ve kopyalayın.</li>
+     </ol>
+    </details>
+   </div>
+
+   <div id="adsDash" class="hidden">
+    <div class="ads-bar" id="adsPresets"></div>
+    <div class="kpis" id="adsKpis"></div>
+    <div class="card chart-card" id="adsChart"></div>
+    <div class="pagehead" style="margin:22px 0 12px"><div><h1 style="font-size:20px">Kampanyalar</h1><p>Durdurma, başlatma ve günlük bütçe değişiklikleri hemen Meta'ya uygulanır.</p></div></div>
+    <div id="adsCampaigns"></div>
+    <p class="help" style="margin-top:18px">Yeni reklam oluşturma, görsel/metin ve hedef kitle ayarları için <a href="https://adsmanager.facebook.com/" target="_blank">Reklam Yöneticisi</a>'ni kullanın. Panelden yapılan her değişiklik tablodaki <b>ReklamGecmisi</b> sekmesine kaydedilir.
+     <button class="btn-ghost" style="margin-left:6px;padding:5px 10px;border-radius:7px;font-size:11.5px" onclick="metaDisconnect()">Bağlantıyı kaldır</button></p>
+   </div>
   </div>
 
   <div id="tab-settings" class="hidden">
@@ -263,6 +375,57 @@ tr:last-child td{border-bottom:none;}
  </div>
 </div>
 
+<div id="blogModalBg" class="modal-bg hidden">
+ <div class="modal wide">
+  <h2 id="blogModalTitle">Yeni Yazı</h2>
+  <div id="blogFormMsg"></div>
+  <div class="seo-grid">
+   <div>
+    <div class="field"><label>Başlık (sayfada görünen)</label><input id="b_title" oninput="blogTitleInput()"></div>
+    <div class="grid2">
+     <div class="field"><label>Adres (slug)</label><input id="b_slug" oninput="blogSlugTouched=true;seoCheck()" placeholder="ornek-yazi-adresi"></div>
+     <div class="field"><label>Odak Anahtar Kelime</label><input id="b_focusKeyword" oninput="seoCheck()" placeholder="ör. scuba kumaş"></div>
+    </div>
+    <div class="field"><label>Google Başlığı (meta title) <span class="counter" id="c_metaTitle"></span></label><input id="b_metaTitle" oninput="seoCheck()"></div>
+    <div class="field"><label>Google Açıklaması (meta description) <span class="counter" id="c_metaDescription"></span></label><textarea id="b_metaDescription" rows="2" oninput="seoCheck()"></textarea></div>
+    <div class="gprev"><div class="u">gulsumaydin.com.tr › blog › <span id="gp_slug"></span></div><div class="t" id="gp_title"></div><div class="d" id="gp_desc"></div></div>
+    <div class="field"><label>Kısa Özet (blog listesinde görünür)</label><textarea id="b_excerpt" rows="2"></textarea></div>
+    <div class="field"><label>Kapak Görseli (link)</label><div class="cover-row"><img id="b_coverPrev" alt=""><input id="b_coverImage" oninput="blogCoverPrev();seoCheck()" placeholder="https://www.gulsumaydin.com.tr/assets/urunler/p16-1.jpg"></div></div>
+    <div class="field"><label>İçerik</label>
+     <div class="ed-tools">
+      <button type="button" onclick="edCmd('formatBlock','h2')">Ara Başlık</button>
+      <button type="button" onclick="edCmd('formatBlock','h3')">Alt Başlık</button>
+      <button type="button" onclick="edCmd('formatBlock','p')">Paragraf</button>
+      <button type="button" onclick="edCmd('bold')"><b>K</b> Kalın</button>
+      <button type="button" onclick="edCmd('insertUnorderedList')">• Liste</button>
+      <button type="button" onclick="edCmd('insertOrderedList')">1. Liste</button>
+      <button type="button" onclick="edLink()">🔗 Bağlantı</button>
+      <button type="button" onclick="edCmd('unlink')">Bağlantıyı Kaldır</button>
+      <button type="button" onclick="edToggleHtml()" id="edHtmlBtn" style="margin-left:auto">HTML</button>
+     </div>
+     <div id="b_editor" class="ed-area" contenteditable="true" oninput="seoCheck()"></div>
+     <textarea id="b_html" class="ed-html hidden" oninput="seoCheck()"></textarea>
+    </div>
+    <div class="field"><label>Yazıda Geçen Ürünler (yazının altında kart olarak gösterilir)</label><div class="pchips" id="b_products"></div></div>
+    <div class="grid2">
+     <div class="field"><label>Kategori / Etiket</label><input id="b_tags" placeholder="Kumaş Rehberi"></div>
+     <div class="field"><label>Yayın Tarihi</label><input id="b_date" type="date"></div>
+    </div>
+    <div class="checks"><label><input type="checkbox" id="b_published"> Sitede yayınla (işaretli değilse taslak olarak kalır)</label></div>
+   </div>
+   <div class="seo-side">
+    <h4>SEO Puanı</h4>
+    <div class="seo-score" id="seoScore">—</div>
+    <ul class="seo-list" id="seoList"></ul>
+   </div>
+  </div>
+  <div class="modal-actions" style="margin-top:12px">
+   <button class="btn-main" id="blogSaveBtn" onclick="saveBlog()">Kaydet</button>
+   <button class="btn-ghost" onclick="closeBlog()">Vazgeç</button>
+  </div>
+ </div>
+</div>
+
 <div id="modalBg" class="modal-bg hidden">
  <div class="modal">
   <h2 id="modalTitle">Yeni Ürün</h2>
@@ -318,7 +481,7 @@ function apiPost(body){
 }
 
 function switchTab(tab){
- ["products","orders","campaigns","settings","integrations"].forEach(function(t){
+ ["products","orders","campaigns","blog","ads","settings","integrations"].forEach(function(t){
   document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
  });
  document.querySelectorAll(".navlink").forEach(function(el){
@@ -332,6 +495,8 @@ document.querySelectorAll(".navlink").forEach(function(el){
   if(tab==="settings") loadSettings();
   if(tab==="orders") loadOrders();
   if(tab==="campaigns") loadCampaigns();
+  if(tab==="ads") loadAds(false);
+  if(tab==="blog") loadBlog();
  });
 });
 switchTab("products");
@@ -616,6 +781,306 @@ function updateOrderStatus(orderId, status){
   else { document.getElementById("ordersMsg").innerHTML = '<div class="msg err">'+(res.message||"Hata")+'</div>'; loadOrders(); }
  });
 }
+// ---------- Blog ----------
+var blogPosts = [], blogEditing = null, blogSlugTouched = false, blogSelProducts = [], edHtmlMode = false;
+function bEl(id){ return document.getElementById(id); }
+function trLower(s){ return String(s||"").toLocaleLowerCase("tr-TR"); }
+function slugifyTR(t){
+ var map={"ç":"c","ğ":"g","ı":"i","ö":"o","ş":"s","ü":"u","Ç":"c","Ğ":"g","İ":"i","I":"i","Ö":"o","Ş":"s","Ü":"u"};
+ return String(t||"").replace(/[çğıöşüÇĞİIÖŞÜ]/g,function(c){return map[c];}).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,80);
+}
+function loadBlog(){
+ apiPost({action:"listBlog"}).then(function(res){
+  if(res.result==="error"){
+   bEl("blogMsg").innerHTML='<div class="msg err">'+esc(/Bilinmeyen işlem/.test(res.message||"")?"Blog özelliği için Apps Script'te yeni sürümün yayınlanması gerekiyor.":res.message)+'</div>';
+   bEl("blogBody").innerHTML=""; return;
+  }
+  blogPosts = (res.data||[]).slice().sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); });
+  renderBlogList();
+ }).catch(function(){ bEl("blogMsg").innerHTML='<div class="msg err">Bağlantı hatası.</div>'; });
+}
+function renderBlogList(){
+ bEl("blogBody").innerHTML = blogPosts.map(function(p,i){
+  var sc = seoScoreFor(p);
+  var on = /^(1|true)$/i.test(p.published||"");
+  return '<tr><td><div class="pname">'+esc(p.title)+'</div><div class="pid">/blog/'+esc(p.slug)+'/</div></td>'+
+   '<td><span class="tagpill" style="'+(on?'background:#EAF6EC;color:var(--ok)':'')+'">'+(on?'Yayında':'Taslak')+'</span></td>'+
+   '<td style="font-size:12px;color:var(--ink2)">'+esc(p.date)+'</td>'+
+   '<td><b style="color:'+(sc.pct>=80?'var(--ok)':sc.pct>=50?'#8A5A12':'var(--danger)')+'">'+sc.pct+'</b><span style="color:var(--ink2);font-size:11px">/100</span></td>'+
+   '<td class="row-actions">'+(on?'<a class="btn-ghost" style="padding:7px 12px;font-size:12px;border-radius:7px;text-decoration:none" href="/blog/'+encodeURIComponent(p.slug)+'/" target="_blank">Gör</a>':'')+
+   '<button class="btn-ghost" onclick="openBlog('+i+')">Düzenle</button><button class="btn-danger" onclick="deleteBlog('+i+')">Sil</button></td></tr>';
+ }).join("") || '<tr><td colspan="5" class="empty">Henüz yazı yok.</td></tr>';
+}
+function openBlog(i){
+ var p = i===null ? null : blogPosts[i];
+ blogEditing = p; blogSlugTouched = !!p; edHtmlMode = false;
+ bEl("blogModalTitle").textContent = p ? "Yazıyı Düzenle" : "Yeni Yazı";
+ ["title","slug","focusKeyword","metaTitle","metaDescription","excerpt","coverImage","tags"].forEach(function(k){ bEl("b_"+k).value = p ? (p[k]||"") : ""; });
+ bEl("b_date").value = p ? (p.date||"") : new Date().toISOString().slice(0,10);
+ bEl("b_published").checked = p ? /^(1|true)$/i.test(p.published||"") : true;
+ bEl("b_editor").innerHTML = p ? (p.content||"") : "<p></p>";
+ bEl("b_html").classList.add("hidden"); bEl("b_editor").classList.remove("hidden"); bEl("edHtmlBtn").textContent="HTML";
+ blogSelProducts = p ? String(p.relatedProducts||"").split("|").map(function(x){return x.trim();}).filter(Boolean) : [];
+ renderProductChips(); blogCoverPrev();
+ bEl("blogFormMsg").innerHTML="";
+ bEl("blogModalBg").classList.remove("hidden");
+ seoCheck();
+}
+function closeBlog(){ bEl("blogModalBg").classList.add("hidden"); }
+function blogTitleInput(){ if(!blogSlugTouched) bEl("b_slug").value = slugifyTR(bEl("b_title").value); seoCheck(); }
+function blogCoverPrev(){ var u=bEl("b_coverImage").value.trim(); var im=bEl("b_coverPrev"); if(u){ im.src=u; im.style.visibility="visible"; } else { im.removeAttribute("src"); im.style.visibility="hidden"; } }
+function renderProductChips(){
+ bEl("b_products").innerHTML = products.map(function(p){
+  var on = blogSelProducts.indexOf(String(p.id))>-1;
+  return '<button type="button" class="pchip'+(on?' on':'')+'" onclick="toggleBlogProduct(\''+String(p.id).replace(/'/g,"")+'\')">'+esc(p.name)+' <span style="opacity:.6">'+esc(p.id)+'</span></button>';
+ }).join("");
+}
+function toggleBlogProduct(id){
+ var i=blogSelProducts.indexOf(id); if(i>-1) blogSelProducts.splice(i,1); else blogSelProducts.push(id);
+ renderProductChips(); seoCheck();
+}
+function edCmd(cmd,val){
+ if(edHtmlMode) return;
+ bEl("b_editor").focus();
+ document.execCommand(cmd,false,val?("<"+val+">"):null);
+ seoCheck();
+}
+function edLink(){
+ if(edHtmlMode) return;
+ var u = prompt("Bağlantı adresi (ör. /?urun=p16 veya /blog/scuba-kumas-nedir/):","/?urun=");
+ if(u){ bEl("b_editor").focus(); document.execCommand("createLink",false,u); seoCheck(); }
+}
+function edToggleHtml(){
+ if(!edHtmlMode){ bEl("b_html").value = bEl("b_editor").innerHTML; }
+ else { bEl("b_editor").innerHTML = bEl("b_html").value; }
+ edHtmlMode = !edHtmlMode;
+ bEl("b_html").classList.toggle("hidden",!edHtmlMode); bEl("b_editor").classList.toggle("hidden",edHtmlMode);
+ bEl("edHtmlBtn").textContent = edHtmlMode ? "Görsel Düzen" : "HTML";
+}
+// Kopyala-yapıştırda dış sitelerin stillerini taşımasın: düz metin olarak yapıştır
+document.addEventListener("paste", function(e){
+ if(e.target.closest && e.target.closest("#b_editor")){
+  e.preventDefault();
+  var t=(e.clipboardData||window.clipboardData).getData("text/plain");
+  document.execCommand("insertText",false,t);
+ }
+});
+function cleanEditorHtml(h){
+ return String(h||"").replace(/\s(style|class|dir)="[^"]*"/gi,"").replace(/<span>|<\/span>/gi,"").replace(/<div>/gi,"<p>").replace(/<\/div>/gi,"</p>")
+  .replace(/<p><br><\/p>/gi,"").replace(/<b>/gi,"<strong>").replace(/<\/b>/gi,"</strong>").replace(/&nbsp;/g," ").trim();
+}
+function blogFormData(){
+ var html = edHtmlMode ? bEl("b_html").value : bEl("b_editor").innerHTML;
+ return {
+  title:bEl("b_title").value.trim(), slug:bEl("b_slug").value.trim(), focusKeyword:bEl("b_focusKeyword").value.trim(),
+  metaTitle:bEl("b_metaTitle").value.trim(), metaDescription:bEl("b_metaDescription").value.trim(),
+  excerpt:bEl("b_excerpt").value.trim(), coverImage:bEl("b_coverImage").value.trim(), content:cleanEditorHtml(html),
+  relatedProducts:blogSelProducts.join("|"), tags:bEl("b_tags").value.trim(), date:bEl("b_date").value,
+  published:bEl("b_published").checked?"1":"0"
+ };
+}
+function seoScoreFor(p){
+ var kw = trLower(p.focusKeyword).trim();
+ var text = String(p.content||"").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ").replace(/\s+/g," ").trim();
+ var words = text ? text.split(" ").length : 0;
+ var firstP = (/<p[^>]*>([\s\S]*?)<\/p>/i.exec(p.content||"")||[])[1]||"";
+ var h2 = (String(p.content||"").match(/<h2/gi)||[]).length;
+ var internal = (String(p.content||"").match(/href="(\/|https:\/\/www\.gulsumaydin\.com\.tr)/gi)||[]).length;
+ var mt = (p.metaTitle||p.title||"").length, md = (p.metaDescription||"").length;
+ var kwSlug = slugifyTR(kw);
+ var checks = [
+  [!!kw, "Odak anahtar kelime belirlendi"],
+  [!!kw && trLower(p.title).indexOf(kw)>-1, "Odak kelime başlıkta geçiyor"],
+  [!!kw && trLower(p.metaDescription).indexOf(kw)>-1, "Odak kelime Google açıklamasında"],
+  [!!kw && trLower(firstP.replace(/<[^>]+>/g,"")).indexOf(kw)>-1, "Odak kelime ilk paragrafta"],
+  [!!kwSlug && String(p.slug||"").indexOf(kwSlug)>-1, "Odak kelime adreste (slug)"],
+  [mt>=30 && mt<=60, "Google başlığı 30–60 karakter ("+mt+")"],
+  [md>=120 && md<=160, "Google açıklaması 120–160 karakter ("+md+")"],
+  [words>=600, "En az 600 kelime ("+words+")"],
+  [h2>=3, "En az 3 ara başlık ("+h2+")"],
+  [internal>=2, "En az 2 site içi bağlantı ("+internal+")"],
+  [!!p.coverImage, "Kapak görseli var"],
+  [!!String(p.relatedProducts||""), "Yazıya ürün bağlandı"]
+ ];
+ var ok = checks.filter(function(c){return c[0];}).length;
+ return {pct:Math.round(ok/checks.length*100), checks:checks};
+}
+function seoCheck(){
+ var p = blogFormData();
+ var mt=(p.metaTitle||p.title), md=p.metaDescription;
+ function counter(id,len,min,max){ var el=bEl(id); el.textContent=len+" karakter"; el.className="counter "+(len>=min&&len<=max?"ok":"no"); }
+ counter("c_metaTitle",(p.metaTitle||"").length,30,60);
+ counter("c_metaDescription",md.length,120,160);
+ bEl("gp_slug").textContent = p.slug||"…";
+ bEl("gp_title").textContent = mt ? (mt.length>62? mt.slice(0,60)+"…" : mt) : "Google'da görünecek başlık";
+ bEl("gp_desc").textContent = md ? (md.length>162? md.slice(0,158)+"…" : md) : "Google'da başlığın altında görünecek açıklama.";
+ var sc = seoScoreFor(p);
+ bEl("seoScore").textContent = sc.pct+"/100";
+ bEl("seoScore").style.color = sc.pct>=80?"var(--ok)":sc.pct>=50?"#8A5A12":"var(--danger)";
+ bEl("seoList").innerHTML = sc.checks.map(function(c){ return '<li class="'+(c[0]?'ok':'no')+'"><b>'+(c[0]?'✓':'✗')+'</b><span>'+esc(c[1])+'</span></li>'; }).join("");
+}
+function saveBlog(){
+ var p = blogFormData();
+ if(!p.title){ bEl("blogFormMsg").innerHTML='<div class="msg err">Başlık zorunlu.</div>'; return; }
+ if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(p.slug)){ bEl("blogFormMsg").innerHTML='<div class="msg err">Adres (slug) sadece küçük harf, rakam ve tire içerebilir.</div>'; return; }
+ if(blogEditing && blogEditing.slug!==p.slug && /^(1|true)$/i.test(blogEditing.published||"") && !confirm("Yayındaki bir yazının adresini değiştiriyorsunuz. Eski adrese gelen ziyaretçiler sayfayı bulamaz. Devam edilsin mi?")) return;
+ p.originalSlug = blogEditing ? blogEditing.slug : p.slug;
+ var btn=bEl("blogSaveBtn"); btn.disabled=true; btn.textContent="Kaydediliyor…";
+ apiPost({action:"upsertBlog", post:p}).then(function(res){
+  if(res.result==="ok"){ closeBlog(); bEl("blogMsg").innerHTML='<div class="msg ok">Kaydedildi. Sitede en geç 1 saat içinde güncellenir.</div>'; loadBlog(); }
+  else bEl("blogFormMsg").innerHTML='<div class="msg err">'+esc(res.message||"Hata oluştu")+'</div>';
+ }).catch(function(){ bEl("blogFormMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; })
+ .then(function(){ btn.disabled=false; btn.textContent="Kaydet"; });
+}
+function deleteBlog(i){
+ var p=blogPosts[i];
+ if(!confirm('"'+p.title+'" silinsin mi? Bu işlem geri alınamaz. (Sadece gizlemek için düzenleyip "Sitede yayınla" işaretini kaldırabilirsiniz.)')) return;
+ apiPost({action:"deleteBlog", slug:p.slug}).then(function(res){
+  if(res.result==="ok"){ bEl("blogMsg").innerHTML='<div class="msg ok">Yazı silindi.</div>'; loadBlog(); }
+  else bEl("blogMsg").innerHTML='<div class="msg err">'+esc(res.message||"Hata")+'</div>';
+ });
+}
+
+// ---------- Meta Reklamları ----------
+var ADS_PRESETS = [["today","Bugün"],["yesterday","Dün"],["last_7d","Son 7 gün"],["last_30d","Son 30 gün"],["this_month","Bu ay"],["last_month","Geçen ay"]];
+var adsPreset = "last_7d", adsData = null;
+function adsEl(id){ return document.getElementById(id); }
+function adsMsg(type, text){ adsEl("adsMsg").innerHTML = text ? '<div class="msg '+type+'">'+esc(text)+'</div>' : ""; }
+function fmtTL(n){ return Number(n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2})+" TL"; }
+function fmtN(n){ return Math.round(Number(n||0)).toLocaleString("tr-TR"); }
+function fmtPct(n){ return Number(n||0).toLocaleString("tr-TR",{maximumFractionDigits:2})+"%"; }
+function backendOld(res){ return res && res.result==="error" && /Bilinmeyen işlem/.test(res.message||""); }
+
+function loadAds(refresh){
+ adsMsg("", "");
+ if(!adsData || refresh){ adsEl("adsCampaigns").innerHTML = '<div class="empty">Yükleniyor…</div>'; }
+ apiPost({action:"metaDashboard", preset:adsPreset, refresh:!!refresh}).then(function(res){
+  if(backendOld(res)){ adsMsg("err","Reklam özelliği için Apps Script'te yeni sürümün yayınlanması gerekiyor."); return; }
+  if(res.result==="error"){ adsMsg("err", res.message); showAdsSetup(false); adsEl("adsDash").classList.remove("hidden"); return; }
+  if(!res.connected){ showAdsSetup(true); return; }
+  showAdsSetup(false);
+  adsData = res; renderAds();
+ }).catch(function(){ adsMsg("err","Bağlantı hatası."); });
+}
+function showAdsSetup(on){
+ adsEl("adsSetup").classList.toggle("hidden", !on);
+ adsEl("adsDash").classList.toggle("hidden", on);
+}
+function setAdsPreset(p){ adsPreset = p; loadAds(false); }
+
+function renderAds(){
+ var d = adsData, m = d.summary;
+ adsEl("adsAccount").textContent = d.account.name + " · Hesap " + d.account.id;
+ var upd = new Date(d.updatedAt);
+ adsEl("adsPresets").innerHTML = ADS_PRESETS.map(function(p){
+  return '<button class="chip'+(p[0]===adsPreset?' on':'')+'" onclick="setAdsPreset(\''+p[0]+'\')">'+p[1]+'</button>';
+ }).join("") + '<span class="ads-meta">Güncellendi: '+upd.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})+
+  ' <button class="btn-ghost" style="padding:6px 11px;border-radius:7px;font-size:12px" onclick="loadAds(true)">↻ Yenile</button></span>';
+
+ var k = [
+  ["Harcama", fmtTL(m.spend), "", true],
+  ["Satın Alma", fmtN(m.purchases), m.purchases? "Satış başı "+fmtTL(m.spend/m.purchases):"Pixel ile ölçülen", true],
+  ["Satış Tutarı", fmtTL(m.purchaseValue), "", false],
+  ["ROAS", m.roas? m.roas.toLocaleString("tr-TR",{maximumFractionDigits:2})+"x":"—", "Her 1 TL reklama dönen satış", false],
+  ["Sepete Ekleme", fmtN(m.addToCart), "", false],
+  ["Link Tıklaması", fmtN(m.linkClicks), "Tıklama başı "+fmtTL(m.cpc), false],
+  ["Gösterim", fmtN(m.impressions), "Tıklama oranı "+fmtPct(m.ctr), false],
+  ["Erişim", fmtN(m.reach), "Tekil kişi", false]
+ ];
+ if(m.messages) k.push(["Mesaj Başlatma", fmtN(m.messages), "Mesaj başı "+fmtTL(m.spend/m.messages), false]);
+ adsEl("adsKpis").innerHTML = k.map(function(x){
+  return '<div class="kpi'+(x[3]?' hero':'')+'"><div class="k">'+x[0]+'</div><div class="v">'+x[1]+'</div>'+(x[2]?'<div class="s">'+esc(x[2])+'</div>':'')+'</div>';
+ }).join("");
+
+ // Günlük harcama grafiği (tek seri)
+ var days = d.daily || [];
+ if(days.length > 1){
+  var max = Math.max.apply(null, days.map(function(x){return x.spend;})) || 1;
+  var bars = days.map(function(x){
+   var h = Math.max(0.5, x.spend/max*100);
+   var dt = new Date(x.date+"T00:00:00").toLocaleDateString("tr-TR",{day:"numeric",month:"short"});
+   return '<div class="bar"><i style="height:'+h+'%"></i><span class="tip">'+dt+' · '+fmtTL(x.spend)+(x.purchases?' · '+fmtN(x.purchases)+' satış':'')+'</span></div>';
+  }).join("");
+  var first = new Date(days[0].date+"T00:00:00").toLocaleDateString("tr-TR",{day:"numeric",month:"short"});
+  var last = new Date(days[days.length-1].date+"T00:00:00").toLocaleDateString("tr-TR",{day:"numeric",month:"short"});
+  adsEl("adsChart").innerHTML = '<h3>Günlük harcama</h3><div class="sub">En yüksek gün: '+fmtTL(max)+' · çubukların üzerine gelince detay görünür</div>'+
+   '<div class="bars">'+bars+'</div><div class="bar-axis"><span>'+first+'</span><span>'+last+'</span></div>';
+  adsEl("adsChart").classList.remove("hidden");
+ } else { adsEl("adsChart").classList.add("hidden"); }
+
+ var camps = d.campaigns || [];
+ adsEl("adsCampaigns").innerHTML = camps.length ? camps.map(function(c){
+  var html = campBlock(c, "camp");
+  return '<div class="camp">'+html+(c.adsets||[]).map(function(a){ return '<div class="adset">'+campBlock(a,"adset")+'</div>'; }).join("")+'</div>';
+ }).join("") : '<div class="empty">Bu reklam hesabında kampanya yok.</div>';
+}
+
+var ADS_STATUS_TR = {ACTIVE:["Yayında","on"],PAUSED:["Durduruldu","off"],CAMPAIGN_PAUSED:["Kampanya durduruldu","off"],ADSET_PAUSED:["Reklam seti durduruldu","off"],
+ IN_PROCESS:["İşleniyor","warn"],WITH_ISSUES:["Sorun var","warn"],PENDING_REVIEW:["İncelemede","warn"],DISAPPROVED:["Reddedildi","warn"],PENDING_BILLING_INFO:["Ödeme bilgisi bekleniyor","warn"]};
+var ADS_OBJ_TR = {OUTCOME_SALES:"Satış",OUTCOME_TRAFFIC:"Trafik",OUTCOME_ENGAGEMENT:"Etkileşim",OUTCOME_AWARENESS:"Bilinirlik",OUTCOME_LEADS:"Potansiyel müşteri",OUTCOME_APP_PROMOTION:"Uygulama",MESSAGES:"Mesaj",CONVERSIONS:"Dönüşüm",LINK_CLICKS:"Trafik"};
+
+function campBlock(c, kind){
+ var st = ADS_STATUS_TR[c.effectiveStatus] || [c.effectiveStatus, "off"];
+ var m = c.m, isOn = c.status==="ACTIVE";
+ var budget = c.dailyBudget!=null
+  ? '<span class="budget-in">Günlük <input type="number" min="1" step="1" id="bud_'+c.id+'" value="'+Math.round(c.dailyBudget)+'"> TL <button class="btn-ghost" onclick="metaBudget(\''+c.id+'\','+c.dailyBudget+')">Kaydet</button></span>'
+  : (c.lifetimeBudget!=null ? '<span class="budget-in">Toplam bütçe '+fmtTL(c.lifetimeBudget)+'</span>'
+  : (kind==="camp" && c.adsets && c.adsets.length ? '<span class="budget-in">Bütçe reklam setlerinde ↓</span>' : ''));
+ var sub = kind==="camp" ? (ADS_OBJ_TR[c.objective]||"Kampanya") : "Reklam seti";
+ var stats = [["Harcama",fmtTL(m.spend)],["Satın alma",fmtN(m.purchases)],["Satış tutarı",fmtTL(m.purchaseValue)],["ROAS",m.roas?m.roas.toLocaleString("tr-TR",{maximumFractionDigits:2})+"x":"—"],
+  ["Link tıklaması",fmtN(m.linkClicks)],["Tıklama başı",m.cpc?fmtTL(m.cpc):"—"],["Gösterim",fmtN(m.impressions)]];
+ if(m.messages) stats.push(["Mesaj",fmtN(m.messages)]);
+ return '<div class="camp-top"><div><div class="camp-name" style="'+(kind==="adset"?'font-size:13px':'')+'">'+esc(c.name)+'</div>'+
+  '<div class="camp-sub">'+sub+' · <span class="st '+st[1]+'">'+esc(st[0])+'</span></div></div>'+
+  '<div class="camp-actions">'+budget+
+  '<button class="'+(isOn?'btn-ghost':'btn-gold')+'" onclick="metaToggle(\''+c.id+'\',\''+(isOn?'PAUSED':'ACTIVE')+'\',this)">'+(isOn?'⏸ Durdur':'▶ Başlat')+'</button></div></div>'+
+  '<div class="camp-stats">'+stats.map(function(s){return '<div>'+s[0]+'<b>'+s[1]+'</b></div>';}).join("")+'</div>';
+}
+function findAdsObj(id){
+ var found=null;
+ (adsData.campaigns||[]).forEach(function(c){ if(c.id===id) found=c; (c.adsets||[]).forEach(function(a){ if(a.id===id) found=a; }); });
+ return found;
+}
+function metaToggle(id, status, btn){
+ var o = findAdsObj(id); var name = o? o.name : id;
+ if(!confirm('"'+name+'" '+(status==="PAUSED"?"durdurulsun mu?":"yeniden başlatılsın mı? Harcama hemen başlar."))) return;
+ btn.disabled = true; btn.textContent = "…";
+ apiPost({action:"metaSetStatus", id:id, status:status}).then(function(res){
+  if(res.result==="ok"){ adsMsg("ok", '"'+name+'" '+(status==="PAUSED"?"durduruldu.":"başlatıldı.")); loadAds(true); }
+  else { adsMsg("err", res.message||"Hata oluştu"); btn.disabled=false; renderAds(); }
+ }).catch(function(){ adsMsg("err","Bağlantı hatası."); renderAds(); });
+}
+function metaBudget(id, oldVal){
+ var v = Number(adsEl("bud_"+id).value);
+ if(!(v>0)){ adsMsg("err","Geçerli bir günlük bütçe girin."); return; }
+ if(v===Math.round(oldVal)) return;
+ var o = findAdsObj(id); var name = o? o.name : id;
+ var warn = v > oldVal*2 ? "\n\nDİKKAT: Bütçe 2 katından fazla artıyor." : "";
+ if(!confirm('"'+name+'" günlük bütçesi '+fmtTL(oldVal)+' → '+fmtTL(v)+' olsun mu?'+warn)) return;
+ apiPost({action:"metaSetBudget", id:id, dailyBudget:v}).then(function(res){
+  if(res.result==="ok"){ adsMsg("ok", '"'+name+'" günlük bütçesi '+fmtTL(v)+' olarak güncellendi.'); loadAds(true); }
+  else adsMsg("err", res.message||"Hata oluştu");
+ }).catch(function(){ adsMsg("err","Bağlantı hatası."); });
+}
+function metaSaveConfig(){
+ var acc = adsEl("m_account").value.trim(), tok = adsEl("m_token").value.trim(), btn = adsEl("m_saveBtn");
+ if(!acc || !tok){ adsMsg("err","Hesap numarası ve erişim anahtarı gerekli."); return; }
+ btn.disabled = true; btn.textContent = "Test ediliyor…";
+ apiPost({action:"metaSaveConfig", accountId:acc, token:tok}).then(function(res){
+  if(backendOld(res)){ adsMsg("err","Reklam özelliği için Apps Script'te yeni sürümün yayınlanması gerekiyor."); return; }
+  if(res.result==="ok"){ adsEl("m_token").value=""; adsMsg("ok", '"'+res.name+'" reklam hesabı bağlandı.'); loadAds(true); }
+  else adsMsg("err", res.message||"Hata oluştu");
+ }).catch(function(){ adsMsg("err","Bağlantı hatası."); })
+ .then(function(){ btn.disabled=false; btn.textContent="Bağla ve test et"; });
+}
+function metaDisconnect(){
+ if(!confirm("Meta reklam hesabı bağlantısı kaldırılsın mı? (Reklamlarınız etkilenmez, sadece panel bağlantısı silinir.)")) return;
+ apiPost({action:"metaDisconnect"}).then(function(res){
+  if(res.result==="ok"){ adsData=null; showAdsSetup(true); adsMsg("ok","Bağlantı kaldırıldı."); }
+  else adsMsg("err", res.message||"Hata");
+ });
+}
+
 var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit"];
 function openForm(index){
  var p = index!==null ? products[index] : null;
