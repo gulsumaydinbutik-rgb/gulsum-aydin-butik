@@ -645,7 +645,7 @@ function loadProducts(){
 function renderTable(){
  document.getElementById("prodCount").textContent = products.length + " ürün";
  var body = document.getElementById("prodBody");
- body.innerHTML = products.map(function(p,i){
+ body.innerHTML = products.map(function(p,i){return [p,i];}).reverse().map(function(pi){ var p=pi[0], i=pi[1];
   var tags=[]; if(String(p.isNew).toLowerCase()==="true"||p.isNew==="1") tags.push('<span class="tagpill">Yeni</span>');
   if(String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") tags.push('<span class="tagpill">Çok Satan</span>');
   return '<tr><td><div class="pname">'+esc(p.name)+'</div><div class="pid">'+esc(p.id)+'</div></td>'+

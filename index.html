@@ -493,7 +493,7 @@ function loadProductsFromSheet(){
  return Promise.all([fetch(SHEET_PRODUCTS_CSV_URL).then(function(r){return r.text();}), loadCampaigns()]).then(function(arr){
   var res=arr[0]; CAMPAIGNS=arr[1];
   var prodRows=csvToObjects(res); if(!prodRows.length) return false;
-  var fresh=prodRows.filter(function(p){return p.id;}).map(function(p){
+  var fresh=prodRows.filter(function(p){return p.id;}).map(function(p,rowIdx){
    var colors=splitList(p.colors); if(!colors.length) colors=["Standart"];
    var sizes=splitList(p.sizes); if(!sizes.length) sizes=["Standart"];
    
@@ -513,11 +513,11 @@ function loadProductsFromSheet(){
     fabric:p.fabric||"", fit:p.fit||"", measurements:p.measurements||"", modelInfo:p.modelInfo||"",
     images:splitList(p.images).length?splitList(p.images):[IMG(p.id)],
     colors:colors, colors2:splitList(p.colors2), color1Label:p.color1Label||"", color2Label:p.color2Label||"", sizes:sizes, variants:variants,
-    sira: (parseInt(p.sira,10)||9999),
+    sira: (parseInt(p.sira,10)||9999), ord: rowIdx,
     colorImagesMap: parseColorImages(p.colorImages)
    };
   });
-  if(fresh.length){ fresh.sort(function(a,b){return a.sira-b.sira;}); PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); applyPriceCampaigns(); refreshCartPrices(); return true; }
+  if(fresh.length){ fresh.sort(function(a,b){return b.ord-a.ord;}); PRODUCTS.length=0; fresh.forEach(function(p){PRODUCTS.push(p);}); applyPriceCampaigns(); refreshCartPrices(); return true; }
   return false;
  }).catch(function(e){ console.warn("Sheet verisi okunamadı.",e); return false; });
 }
@@ -530,7 +530,7 @@ var state = {
  cart: loadLS("ga_cart",[]),
  favorites: loadLS("ga_favs",[]),
  lastOrder: loadLS("ga_last_order",null),
- sort:"onerilen", searchQ:"",
+ sort:"yeni", searchQ:"",
  pdColor:null, pdColor2:null, pdSize:null, pdQty:1,
  checkoutForm: loadLS("ga_checkout_draft",{}),
  formErrors:{},
@@ -881,10 +881,9 @@ function viewCategory(){
  var list = cat==="Yeni Gelenler"? PRODUCTS.filter(function(p){return p.isNew;})
   : cat==="Tüm Ürünler"? PRODUCTS
   : PRODUCTS.filter(function(p){return p.category===cat;});
- if(state.sort==="yeni") list=list.slice().reverse();
  if(state.sort==="artan") list=list.slice().sort(function(a,b){return a.price-b.price;});
  if(state.sort==="azalan") list=list.slice().sort(function(a,b){return b.price-a.price;});
- var sorts=[["onerilen","Önerilen"],["yeni","En Yeni"],["artan","Fiyat ↑"],["azalan","Fiyat ↓"]];
+ var sorts=[["yeni","En Yeni"],["artan","Fiyat ↑"],["azalan","Fiyat ↓"]];
  return header(cat,"home")+
  '<div class="filter-bar">'+sorts.map(function(s){return '<button class="sort-chip'+(state.sort===s[0]?' active':'')+'" data-sort="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
  '<div class="section">'+(list.length? '<div class="grid">'+renderCards(list)+'</div>' :
