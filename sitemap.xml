@@ -14,6 +14,7 @@
 <url><loc>https://www.gulsumaydin.com.tr/?kategori=Tak%C4%B1m</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?kategori=Alt%20Giyim</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?kategori=D%C4%B1%C5%9F%20Giyim</loc><priority>0.6</priority></url>
+<url><loc>https://www.gulsumaydin.com.tr/?kategori=Elbise</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p1</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p2</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p3</loc><priority>0.6</priority></url>
@@ -34,4 +35,5 @@
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p17</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p18</loc><priority>0.6</priority></url>
 <url><loc>https://www.gulsumaydin.com.tr/?urun=p19</loc><priority>0.6</priority></url>
+<url><loc>https://www.gulsumaydin.com.tr/?urun=p20</loc><priority>0.6</priority></url>
 </urlset>
