@@ -132,6 +132,34 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
 .pchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
 .cover-row{display:flex;gap:10px;align-items:center;} .cover-row img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:var(--bg2);flex-shrink:0;}
 @media (max-width:760px){.seo-grid{grid-template-columns:1fr;} .seo-side{position:static;}}
+/* Yeni reklam */
+.seg{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.seg button{padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink2);}
+.seg button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.goal-list{display:grid;gap:8px;margin-bottom:14px;}
+.goal{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:13px;}
+.goal input{margin-top:3px;} .goal b{display:block;font-size:13.5px;} .goal span{color:var(--ink2);font-size:12px;}
+.goal.on{border-color:var(--gold);background:var(--bg2);}
+.field .goal{text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);margin:0;display:flex;}
+.field .goal input,.field .imgpick input{width:auto;padding:0;}
+.field .goal span{display:block;margin-top:2px;}
+.imgpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;}
+.imgpick label{position:relative;cursor:pointer;border-radius:9px;overflow:hidden;border:2px solid transparent;aspect-ratio:3/4;background:var(--bg2);}
+.imgpick label.on{border-color:var(--gold);}
+.imgpick img{width:100%;height:100%;object-fit:cover;display:block;}
+.imgpick input{position:absolute;top:5px;left:5px;}
+.imgpick .no{position:absolute;bottom:4px;right:6px;background:var(--ink);color:#fff;font-size:10.5px;font-weight:700;border-radius:8px;padding:1px 6px;}
+.iggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:340px;overflow:auto;}
+.igitem{position:relative;cursor:pointer;border-radius:9px;overflow:hidden;border:2px solid transparent;aspect-ratio:4/5;background:var(--bg2);}
+.igitem.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);}
+.igitem img{width:100%;height:100%;object-fit:cover;display:block;}
+.igitem .t{position:absolute;top:5px;left:5px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;}
+.igitem .m{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:10.5px;padding:14px 6px 5px;}
+.ad-sum{background:var(--bg2);border-radius:10px;padding:12px 14px;font-size:13px;margin:6px 0 14px;line-height:1.6;}
+.pv-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;}
+.pv-wrap iframe{border:1px solid var(--line);border-radius:10px;background:#fff;flex-shrink:0;}
+.setup-line{font-size:12.5px;color:var(--ink2);background:var(--bg2);border-radius:9px;padding:9px 12px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.setup-line select{padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;}
 /* Reklamlar */
 .ads-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
 .chip{padding:8px 13px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink2);}
@@ -265,7 +293,8 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
   </div>
 
   <div id="tab-ads" class="hidden">
-   <div class="pagehead"><div><h1>Meta Reklamları</h1><p id="adsAccount">Facebook &amp; Instagram reklam performansı</p></div></div>
+   <div class="pagehead"><div><h1>Meta Reklamları</h1><p id="adsAccount">Facebook &amp; Instagram reklam performansı</p></div>
+    <button class="btn btn-gold hidden" id="newAdBtn" onclick="openNewAd()">+ Yeni Reklam</button></div>
    <div id="adsMsg"></div>
 
    <div id="adsSetup" class="card hidden" style="padding:24px">
@@ -326,6 +355,61 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
    </div>
   </div>
 
+ </div>
+</div>
+
+<div id="adModalBg" class="modal-bg hidden">
+ <div class="modal wide">
+  <h2>Yeni Reklam</h2>
+  <div id="adFormMsg"></div>
+  <div id="adSetup" class="setup-line">Sayfa bilgileri yükleniyor…</div>
+  <div id="adForm">
+   <div class="seg"><button type="button" id="kindProduct" class="on" onclick="setAdKind('product')">🛍️ Ürün Reklamı</button><button type="button" id="kindIg" onclick="setAdKind('igpost')">📸 Instagram Gönderisi / Reels</button></div>
+
+   <div id="adProductBox">
+    <div class="field"><label>Ürün</label><select id="ad_product" onchange="adProductChanged()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"></select></div>
+    <div class="field"><label>Fotoğraflar <span style="text-transform:none;font-weight:500">(1 fotoğraf = tek görsel, 2+ = kaydırmalı reklam, en fazla 10)</span></label><div class="imgpick" id="ad_images"></div></div>
+    <div class="field"><label>Reklam Metni</label><textarea id="ad_text" rows="5"></textarea></div>
+    <div class="grid2">
+     <div class="field"><label>Başlık</label><input id="ad_headline"></div>
+     <div class="field"><label>Alt Açıklama</label><input id="ad_desc"></div>
+    </div>
+   </div>
+
+   <div id="adIgBox" class="hidden">
+    <div class="field"><label>Öne çıkarılacak gönderi</label><div class="iggrid" id="ad_iggrid"><div class="empty">Yükleniyor…</div></div>
+     <button type="button" class="btn-ghost hidden" id="igMoreBtn" style="margin-top:8px;padding:7px 12px;border-radius:7px;font-size:12px" onclick="loadIgMedia(true)">Daha fazla göster</button></div>
+    <p class="help" style="margin:-4px 0 12px">Telifli müzik veya efekt içeren gönderiler Meta tarafından reklama çevrilmeyebilir.</p>
+   </div>
+
+   <div class="field"><label>Reklamın Amacı</label><div class="goal-list" id="ad_goals"></div></div>
+   <div class="field" id="ad_linkBox"><label>Gidilecek Sayfa</label><select id="ad_link" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"></select></div>
+
+   <div class="grid2">
+    <div class="field"><label>Günlük Bütçe (TL)</label><input id="ad_budget" type="number" min="1" value="150" oninput="adSummary()"></div>
+    <div class="field"><label>Süre</label><select id="ad_days" onchange="adSummary()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px">
+     <option value="3">3 gün</option><option value="5">5 gün</option><option value="7" selected>7 gün</option><option value="14">14 gün</option><option value="30">30 gün</option><option value="0">Ben durdurana kadar</option></select></div>
+   </div>
+   <div class="grid2">
+    <div class="field"><label>Kitle</label><select id="ad_gender" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"><option value="female">Kadınlar</option><option value="all">Herkes</option></select></div>
+    <div class="field"><label>Yaş Aralığı</label><div style="display:flex;gap:8px;align-items:center"><input id="ad_ageMin" type="number" min="18" max="65" value="20" style="width:80px"> – <input id="ad_ageMax" type="number" min="18" max="65" value="55" style="width:80px"></div></div>
+   </div>
+   <div class="ad-sum" id="ad_sum"></div>
+   <div class="modal-actions">
+    <button class="btn-main" id="adCreateBtn" onclick="createAd()">Reklamı Oluştur (duraklatılmış)</button>
+    <button class="btn-ghost" onclick="closeNewAd()">Vazgeç</button>
+   </div>
+  </div>
+
+  <div id="adDone" class="hidden">
+   <div class="msg ok" id="adDoneMsg"></div>
+   <p class="help">Reklam <b>duraklatılmış</b> olarak oluşturuldu, henüz para harcanmıyor. Önizlemeyi kontrol et; hazırsan yayınla. Meta reklamı yayınlamadan önce kısa bir incelemeden geçirir.</p>
+   <div class="pv-wrap" id="adPreviews"></div>
+   <div class="modal-actions" style="margin-top:14px">
+    <button class="btn-gold" id="adPublishBtn" onclick="publishNewAd()">▶ Yayınla</button>
+    <button class="btn-ghost" onclick="closeNewAd()">Şimdilik bekletsin</button>
+   </div>
+  </div>
  </div>
 </div>
 
@@ -941,6 +1025,163 @@ function deleteBlog(i){
  });
 }
 
+// ---------- Yeni Reklam ----------
+var adKind = "product", adGoal = "traffic", adSel = [], adIgSel = null, adIgItems = [], adIgNext = "", adNewCampaignId = null, adSetupData = null;
+var SITE = "https://www.gulsumaydin.com.tr";
+var AD_GOALS = {
+ product: [["traffic","Ürün sayfasına ziyaretçi","Ürünü görmek isteyenleri sitedeki ürün sayfasına getirir. Başlangıç için önerilir."],
+           ["sales","Sitede satış","Meta, satın alma ihtimali yüksek kişilere gösterir. Sitede Pixel ile satış verisi biriktikçe daha iyi çalışır."],
+           ["whatsapp","WhatsApp'tan mesaj","Reklama tıklayan kişi doğrudan WhatsApp sohbeti başlatır. WhatsApp hattının Facebook sayfasına bağlı olması gerekir."]],
+ igpost: [["reach","Daha çok kişiye göster","Gönderiyi yeni kişilere ulaştırır; takipçi ve etkileşim kazanmak için."],
+          ["traffic","Siteye ziyaretçi","Gönderinin altına 'Daha fazla bilgi' düğmesi eklenir, siteye yönlendirir."],
+          ["igdm","Instagram DM'den mesaj","Gönderinin altına 'Mesaj gönder' düğmesi eklenir, müşteri DM'den yazar."]]
+};
+function aEl(id){ return document.getElementById(id); }
+function adMsg(type,text){ aEl("adFormMsg").innerHTML = text? '<div class="msg '+type+'">'+esc(text)+'</div>' : ""; }
+function splitL(s){ return String(s||"").split("|").map(function(x){return x.trim();}).filter(Boolean); }
+function absU(u){ return /^https?:\/\//i.test(u)? u : SITE+"/"+String(u||"").replace(/^\/+/,""); }
+function isVid(u){ return /\.(mp4|mov|webm)(\?|$)/i.test(u||""); }
+function productImages(p){
+ var list = splitL(p.images);
+ String(p.colorImages||"").split(";").forEach(function(part){ var i=part.indexOf("="); if(i>0) splitL(part.slice(i+1)).forEach(function(u){ list.push(u); }); });
+ var seen={}; return list.map(absU).filter(function(u){ if(isVid(u)||seen[u]) return false; seen[u]=1; return true; });
+}
+function trPrice(n){ n=Number(String(n||"").replace(/[^0-9.,]/g,"").replace(",",".")); return n? n.toLocaleString("tr-TR")+" TL" : ""; }
+
+function openNewAd(){
+ adNewCampaignId=null; adMsg("","");
+ aEl("adForm").classList.remove("hidden"); aEl("adDone").classList.add("hidden");
+ aEl("ad_product").innerHTML = products.map(function(p,i){ return '<option value="'+i+'">'+esc(p.name)+' ('+esc(p.id)+')</option>'; }).join("");
+ aEl("ad_link").innerHTML = '<option value="'+SITE+'/">Ana sayfa</option>'+products.map(function(p){ return '<option value="'+SITE+'/?urun='+encodeURIComponent(p.id)+'">'+esc(p.name)+'</option>'; }).join("");
+ setAdKind("product");
+ if(products.length){ aEl("ad_product").value = String(products.length-1); adProductChanged(); }
+ aEl("adModalBg").classList.remove("hidden");
+ loadAdSetup();
+}
+function closeNewAd(){ aEl("adModalBg").classList.add("hidden"); if(adNewCampaignId) loadAds(true); }
+function loadAdSetup(){
+ aEl("adSetup").textContent = "Sayfa bilgileri yükleniyor…";
+ apiPost({action:"metaAdSetup"}).then(function(res){
+  if(res.result!=="ok"){ aEl("adSetup").innerHTML = '<span style="color:var(--danger)">'+esc(res.message||"Sayfa bilgisi alınamadı")+'</span>'; return; }
+  adSetupData = res;
+  if(!res.pages.length){ aEl("adSetup").innerHTML = '<span style="color:var(--danger)">Sistem kullanıcısına atanmış Facebook sayfası yok. İşletme ayarlarında sistem kullanıcısına sayfanı varlık olarak ata.</span>'; return; }
+  aEl("adSetup").innerHTML = 'Yayınlanacak sayfa: <select id="ad_page" onchange="saveAdSetup()">'+res.pages.map(function(p){ return '<option value="'+esc(p.id)+'"'+(p.id===res.pageId?' selected':'')+'>'+esc(p.name)+(p.igUsername?' · @'+esc(p.igUsername):' · (Instagram bağlı değil)')+'</option>'; }).join("")+'</select>'+
+   (res.pixels.length? ' Pixel: <select id="ad_pixel" onchange="saveAdSetup()">'+res.pixels.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===res.pixelId?' selected':'')+'>'+esc(x.name||x.id)+'</option>'; }).join("")+'</select>' : '');
+  if(adKind==="igpost") loadIgMedia(false);
+ }).catch(function(){ aEl("adSetup").textContent = "Bağlantı hatası."; });
+}
+function saveAdSetup(){
+ var pg=aEl("ad_page"), px=aEl("ad_pixel");
+ apiPost({action:"metaSaveAdSetup", pageId:pg?pg.value:"", pixelId:px?px.value:""}).then(function(res){
+  if(res.result!=="ok") adMsg("err",res.message||"Kaydedilemedi"); else { adIgItems=[]; adIgSel=null; if(adKind==="igpost") loadIgMedia(false); }
+ });
+}
+function setAdKind(k){
+ adKind=k; aEl("kindProduct").classList.toggle("on",k==="product"); aEl("kindIg").classList.toggle("on",k==="igpost");
+ aEl("adProductBox").classList.toggle("hidden",k!=="product"); aEl("adIgBox").classList.toggle("hidden",k!=="igpost");
+ adGoal = k==="product" ? "traffic" : "reach";
+ renderGoals();
+ if(k==="igpost" && !adIgItems.length && adSetupData) loadIgMedia(false);
+}
+function renderGoals(){
+ aEl("ad_goals").innerHTML = AD_GOALS[adKind].map(function(g){
+  return '<label class="goal'+(g[0]===adGoal?' on':'')+'"><input type="radio" name="adgoal" value="'+g[0]+'"'+(g[0]===adGoal?' checked':'')+' onchange="adGoal=this.value;renderGoals()"><div><b>'+g[1]+'</b><span>'+g[2]+'</span></div></label>';
+ }).join("");
+ // Ürün reklamında bağlantı ürün sayfasıdır; Instagram'da yalnızca site trafiğinde sorulur
+ aEl("ad_linkBox").classList.toggle("hidden", !(adKind==="igpost" && adGoal==="traffic"));
+ adSummary();
+}
+function adProductChanged(){
+ var p = products[Number(aEl("ad_product").value)]; if(!p) return;
+ var imgs = productImages(p);
+ adSel = imgs.slice(0, Math.min(imgs.length, 5));
+ aEl("ad_images").innerHTML = imgs.map(function(u){
+  var i=adSel.indexOf(u);
+  return '<label class="'+(i>-1?'on':'')+'"><img src="'+esc(u)+'" alt="" loading="lazy"><input type="checkbox" '+(i>-1?'checked':'')+' onchange="toggleAdImg(\''+esc(u).replace(/'/g,"")+'\')">'+(i>-1?'<span class="no">'+(i+1)+'</span>':'')+'</label>';
+ }).join("") || '<div class="help">Bu ürünün fotoğrafı yok (sadece video). Instagram gönderisi seçeneğini kullanabilirsin.</div>';
+ var price = trPrice(p.price), old = trPrice(p.oldPrice);
+ var colors = splitL(p.colors);
+ aEl("ad_text").value = "✨ "+p.name+"\n\n"+(p.shortDescription||"")+
+  (colors.length>1? "\n🎨 "+colors.length+" renk seçeneği: "+colors.join(", ") : "")+
+  "\n\n💰 "+price+(old? " (yerine "+old+")" : "")+"\n🚚 Ücretsiz kargo · 💵 Kapıda ödeme\n\n👉 Hemen incele, kapında öde!";
+ aEl("ad_headline").value = p.name;
+ aEl("ad_desc").value = price+" · Kapıda ödeme";
+ adSummary();
+}
+function toggleAdImg(u){
+ var i=adSel.indexOf(u); if(i>-1) adSel.splice(i,1); else if(adSel.length<10) adSel.push(u);
+ var keep = adSel.slice(); var p = products[Number(aEl("ad_product").value)];
+ var imgs = productImages(p);
+ aEl("ad_images").innerHTML = imgs.map(function(x){
+  var k=keep.indexOf(x);
+  return '<label class="'+(k>-1?'on':'')+'"><img src="'+esc(x)+'" alt="" loading="lazy"><input type="checkbox" '+(k>-1?'checked':'')+' onchange="toggleAdImg(\''+esc(x).replace(/'/g,"")+'\')">'+(k>-1?'<span class="no">'+(k+1)+'</span>':'')+'</label>';
+ }).join("");
+ adSummary();
+}
+function loadIgMedia(more){
+ if(!more){ adIgItems=[]; adIgNext=""; aEl("ad_iggrid").innerHTML='<div class="empty">Yükleniyor…</div>'; }
+ apiPost({action:"metaIgMedia", after: more? adIgNext : ""}).then(function(res){
+  if(res.result!=="ok"){ aEl("ad_iggrid").innerHTML='<div class="msg err">'+esc(res.message||"Gönderiler alınamadı")+'</div>'; return; }
+  adIgItems = adIgItems.concat(res.items); adIgNext = res.next || "";
+  aEl("igMoreBtn").classList.toggle("hidden", !adIgNext);
+  renderIg();
+ }).catch(function(){ aEl("ad_iggrid").innerHTML='<div class="msg err">Bağlantı hatası.</div>'; });
+}
+function renderIg(){
+ aEl("ad_iggrid").innerHTML = adIgItems.map(function(m,i){
+  var d = m.date? new Date(m.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}) : "";
+  return '<div class="igitem'+(adIgSel===i?' on':'')+'" onclick="adIgSel='+i+';renderIg();adSummary()" title="'+esc(m.caption.slice(0,120))+'">'+
+   (m.thumb?'<img src="'+esc(m.thumb)+'" alt="" loading="lazy">':'')+'<span class="t">'+(m.type==="REELS"?"Reels":m.type==="CAROUSEL_ALBUM"?"Albüm":m.type==="VIDEO"?"Video":"Foto")+'</span>'+
+   '<div class="m">'+d+' · ♥ '+m.likes+'</div></div>';
+ }).join("") || '<div class="empty">Gönderi bulunamadı.</div>';
+}
+function adSummary(){
+ var b = Number(aEl("ad_budget").value)||0, d = Number(aEl("ad_days").value)||0;
+ var g = (AD_GOALS[adKind].filter(function(x){return x[0]===adGoal;})[0]||[])[1]||"";
+ var what = adKind==="product" ? (adSel.length>1? adSel.length+" fotoğraflı kaydırmalı reklam" : adSel.length? "Tek görselli reklam" : "Fotoğraf seçilmedi")
+  : (adIgSel!==null? "Seçili Instagram "+(adIgItems[adIgSel].type==="REELS"?"Reels'i":"gönderisi") : "Gönderi seçilmedi");
+ aEl("ad_sum").innerHTML = '<b>'+esc(what)+'</b> · Amaç: '+esc(g)+'<br>Günlük '+trPrice(b)+(d? ' × '+d+' gün = en fazla <b>'+trPrice(b*d)+'</b>' : ' · durdurana kadar (aylık en fazla yaklaşık <b>'+trPrice(b*30)+'</b>)')+
+  '<br><span style="color:var(--ink2)">Facebook ve Instagram\'da (akış, hikâye, Reels) gösterilir. Türkiye geneli.</span>';
+}
+function createAd(){
+ adMsg("","");
+ var p = products[Number(aEl("ad_product").value)];
+ var spec = { kind:adKind, goal:adGoal, dailyBudget:Number(aEl("ad_budget").value), days:Number(aEl("ad_days").value),
+  gender:aEl("ad_gender").value, ageMin:Number(aEl("ad_ageMin").value), ageMax:Number(aEl("ad_ageMax").value) };
+ if(adKind==="product"){
+  if(!p){ adMsg("err","Ürün seçin."); return; }
+  if(!adSel.length){ adMsg("err","En az bir fotoğraf seçin."); return; }
+  spec.name = p.name; spec.images = adSel.slice(); spec.primaryText = aEl("ad_text").value.trim();
+  spec.headline = aEl("ad_headline").value.trim(); spec.description = aEl("ad_desc").value.trim();
+  spec.link = SITE+"/?urun="+encodeURIComponent(p.id)+"&utm_source=meta&utm_medium=paid&utm_campaign=panel";
+ } else {
+  if(adIgSel===null){ adMsg("err","Öne çıkarmak istediğin gönderiyi seç."); return; }
+  var m = adIgItems[adIgSel];
+  spec.mediaId = m.id; spec.name = "Instagram "+(m.type==="REELS"?"Reels":"gönderi")+" "+(m.caption||"").replace(/\s+/g," ").slice(0,30);
+  spec.link = aEl("ad_link").value + (aEl("ad_link").value.indexOf("?")>-1?"&":"?") + "utm_source=meta&utm_medium=paid&utm_campaign=panel";
+ }
+ if(!(spec.dailyBudget>=1)){ adMsg("err","Günlük bütçe girin."); return; }
+ if(spec.ageMin>spec.ageMax){ adMsg("err","Yaş aralığını kontrol edin."); return; }
+ var btn=aEl("adCreateBtn"); btn.disabled=true; btn.textContent="Oluşturuluyor… (fotoğraflar yükleniyor, 1 dk sürebilir)";
+ apiPost({action:"metaCreateAd", spec:spec}).then(function(res){
+  if(res.result!=="ok"){ adMsg("err", res.message||"Reklam oluşturulamadı"); return; }
+  adNewCampaignId = res.campaignId;
+  aEl("adForm").classList.add("hidden"); aEl("adDone").classList.remove("hidden");
+  aEl("adDoneMsg").textContent = '"'+res.name+'" oluşturuldu.';
+  aEl("adPreviews").innerHTML = (res.previews||[]).map(function(pv){ return pv.html.replace(/width="\d+"/,'width="320"').replace(/height="\d+"/,'height="560"'); }).join("") || '<p class="help">Önizleme alınamadı; reklamı Reklam Yöneticisi\'nde görebilirsin.</p>';
+ }).catch(function(){ adMsg("err","Bağlantı hatası. Reklam oluşmuş olabilir; listeyi yenileyip kontrol et."); })
+ .then(function(){ btn.disabled=false; btn.textContent="Reklamı Oluştur (duraklatılmış)"; });
+}
+function publishNewAd(){
+ if(!adNewCampaignId) return;
+ if(!confirm("Reklam yayınlansın mı? Meta onayladıktan sonra harcama başlar.")) return;
+ var btn=aEl("adPublishBtn"); btn.disabled=true; btn.textContent="Yayınlanıyor…";
+ apiPost({action:"metaSetStatus", id:adNewCampaignId, status:"ACTIVE"}).then(function(res){
+  if(res.result==="ok"){ adNewCampaignId=null; aEl("adModalBg").classList.add("hidden"); adsMsg("ok","Reklam yayına alındı. Meta incelemesinden sonra gösterilmeye başlar."); loadAds(true); }
+  else alert(res.message||"Yayınlanamadı");
+ }).catch(function(){ alert("Bağlantı hatası."); }).then(function(){ btn.disabled=false; btn.textContent="▶ Yayınla"; });
+}
+
 // ---------- Meta Reklamları ----------
 var ADS_PRESETS = [["today","Bugün"],["yesterday","Dün"],["last_7d","Son 7 gün"],["last_30d","Son 30 gün"],["this_month","Bu ay"],["last_month","Geçen ay"]];
 var adsPreset = "last_7d", adsData = null;
@@ -959,6 +1200,7 @@ function loadAds(refresh){
   if(res.result==="error"){ adsMsg("err", res.message); showAdsSetup(false); adsEl("adsDash").classList.remove("hidden"); return; }
   if(!res.connected){ showAdsSetup(true); return; }
   showAdsSetup(false);
+  adsEl("newAdBtn").classList.remove("hidden");
   adsData = res; renderAds();
  }).catch(function(){ adsMsg("err","Bağlantı hatası."); });
 }

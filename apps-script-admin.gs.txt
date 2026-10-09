@@ -57,6 +57,10 @@ function doPost(e) {
     case "metaDashboard":
     case "metaSetStatus":
     case "metaSetBudget":
+    case "metaAdSetup":
+    case "metaSaveAdSetup":
+    case "metaIgMedia":
+    case "metaCreateAd":
       return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
@@ -535,6 +539,10 @@ function handleMetaAction_(body) {
       case "metaDashboard": return metaDashboard_(body.preset, body.refresh);
       case "metaSetStatus": return metaSetStatus_(body.id, body.status);
       case "metaSetBudget": return metaSetBudget_(body.id, body.dailyBudget);
+      case "metaAdSetup": return metaAdSetup_();
+      case "metaSaveAdSetup": return metaSaveAdSetup_(body.pageId, body.pixelId);
+      case "metaIgMedia": return metaIgMedia_(body.after);
+      case "metaCreateAd": return metaCreateAd_(body.spec || {});
     }
     return { result: "error", message: "Bilinmeyen işlem." };
   } catch (err) {
@@ -555,7 +563,7 @@ function metaApi_(path, params, method, tokenOverride) {
   method = method || "get";
   var url = META_API + path;
   var opts = { method: method, muteHttpExceptions: true, headers: { Authorization: "Bearer " + token } };
-  if (method === "get") {
+  if (method === "get" || method === "delete") {
     var q = Object.keys(params).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(params[k]); }).join("&");
     if (q) url += "?" + q;
   } else {
@@ -606,6 +614,9 @@ function metaDisconnect_() {
   var p = PropertiesService.getScriptProperties();
   p.deleteProperty(META_TOKEN_PROP);
   p.deleteProperty(META_ACCOUNT_PROP);
+  p.deleteProperty(META_PAGE_PROP);
+  p.deleteProperty(META_IG_PROP);
+  p.deleteProperty(META_PIXEL_PROP);
   metaClearCache_();
   metaLog_("Bağlantı kaldırıldı", "", "", "");
   return { result: "ok" };
@@ -834,4 +845,191 @@ function deleteBlog_(slug) {
     if (String(data[i][slugCol]) === String(slug)) { sh.deleteRow(i + 1); return { result: "ok" }; }
   }
   return { result: "error", message: "Yazı bulunamadı." };
+}
+
+// ============================================================
+// Panelden reklam oluşturma (Hızlı Reklam)
+// Ürün reklamı: ürün fotoğrafları (tek görsel veya kaydırmalı) + metin + bağlantı
+// Instagram gönderisi/Reels: mevcut paylaşımı reklam olarak öne çıkarma
+// Güvenlik: kampanya her zaman DURAKLATILMIŞ oluşturulur; panelde "Yayınla" denince başlar.
+// Bir adım hata verirse önceki adımlarda oluşturulanlar silinir.
+// ============================================================
+
+var META_PAGE_PROP = "META_PAGE_ID";
+var META_IG_PROP = "META_IG_USER_ID";
+var META_PIXEL_PROP = "META_PIXEL_ID";
+var META_MAX_AD_DAYS = 90;
+
+function metaAdSetup_() {
+  var cfg = metaConfig_();
+  if (!cfg) return { result: "ok", connected: false };
+  var props = PropertiesService.getScriptProperties();
+  var pages = (metaApi_("me/accounts", { fields: "id,name,instagram_business_account{id,username}", limit: 50 }).data || [])
+    .map(function (p) {
+      var ig = p.instagram_business_account || {};
+      return { id: p.id, name: p.name, igId: ig.id || "", igUsername: ig.username || "" };
+    });
+  var pixels = [];
+  try { pixels = (metaApi_("act_" + cfg.account + "/adspixels", { fields: "id,name", limit: 25 }).data || []).map(function (x) { return { id: x.id, name: x.name }; }); }
+  catch (e) { /* piksel listesi okunamazsa ayardaki piksel kullanılır */ }
+
+  var pageId = props.getProperty(META_PAGE_PROP) || "";
+  var page = pages.filter(function (p) { return p.id === pageId; })[0];
+  if (!page && pages.length) {
+    page = pages.filter(function (p) { return p.igId; })[0] || pages[0];
+    props.setProperty(META_PAGE_PROP, page.id);
+    if (page.igId) props.setProperty(META_IG_PROP, page.igId); else props.deleteProperty(META_IG_PROP);
+  }
+  var pixelId = props.getProperty(META_PIXEL_PROP) || String(getAllSettings().metaPixelId || "").replace(/\D/g, "") || (pixels[0] ? pixels[0].id : "");
+  return { result: "ok", connected: true, pages: pages, pageId: page ? page.id : "", igId: page ? page.igId : "", igUsername: page ? page.igUsername : "", pixels: pixels, pixelId: pixelId };
+}
+
+function metaSaveAdSetup_(pageId, pixelId) {
+  var pages = metaApi_("me/accounts", { fields: "id,instagram_business_account{id}", limit: 50 }).data || [];
+  var page = pages.filter(function (p) { return p.id === String(pageId); })[0];
+  if (!page) return { result: "error", message: "Bu Facebook sayfası sistem kullanıcısına atanmamış." };
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty(META_PAGE_PROP, page.id);
+  if (page.instagram_business_account) props.setProperty(META_IG_PROP, page.instagram_business_account.id); else props.deleteProperty(META_IG_PROP);
+  if (pixelId) props.setProperty(META_PIXEL_PROP, String(pixelId).replace(/\D/g, ""));
+  return { result: "ok" };
+}
+
+function metaIgMedia_(after) {
+  var ig = PropertiesService.getScriptProperties().getProperty(META_IG_PROP);
+  if (!ig) return { result: "error", message: "Seçili Facebook sayfasına bağlı bir Instagram işletme hesabı bulunamadı." };
+  var params = { fields: "id,caption,media_type,media_product_type,thumbnail_url,media_url,permalink,timestamp,like_count,comments_count", limit: 24 };
+  if (after) params.after = after;
+  var res = metaApi_(ig + "/media", params);
+  return {
+    result: "ok",
+    items: (res.data || []).map(function (m) {
+      return { id: m.id, caption: m.caption || "", type: m.media_product_type === "REELS" ? "REELS" : m.media_type,
+        thumb: m.thumbnail_url || m.media_url || "", permalink: m.permalink, date: m.timestamp, likes: m.like_count || 0, comments: m.comments_count || 0 };
+    }),
+    next: res.paging && res.paging.next && res.paging.cursors ? res.paging.cursors.after : ""
+  };
+}
+
+// Ürün fotoğrafını Meta'ya yükler, görsel kodunu (hash) döndürür
+function metaUploadImage_(act, url) {
+  var r = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (r.getResponseCode() !== 200) throw new Error("Görsel indirilemedi: " + url);
+  var res = metaApi_(act + "/adimages", { bytes: Utilities.base64Encode(r.getBlob().getBytes()) }, "post");
+  var keys = Object.keys(res.images || {});
+  if (!keys.length || !res.images[keys[0]].hash) throw new Error("Görsel Meta'ya yüklenemedi.");
+  return res.images[keys[0]].hash;
+}
+
+function metaCreateAd_(spec) {
+  var cfg = metaConfig_();
+  if (!cfg) return { result: "error", message: "Meta bağlantısı henüz kurulmadı." };
+  var props = PropertiesService.getScriptProperties();
+  var pageId = props.getProperty(META_PAGE_PROP), igId = props.getProperty(META_IG_PROP) || "";
+  if (!pageId) return { result: "error", message: "Önce reklamın yayınlanacağı Facebook sayfasını seçin." };
+  var act = "act_" + cfg.account;
+  var kind = spec.kind === "igpost" ? "igpost" : "product";
+  var goal = String(spec.goal || "traffic");
+  var allowed = kind === "igpost" ? ["reach", "traffic", "igdm"] : ["sales", "traffic", "whatsapp"];
+  if (allowed.indexOf(goal) < 0) return { result: "error", message: "Bu reklam türü için geçersiz hedef." };
+
+  var budget = Number(spec.dailyBudget);
+  if (!(budget >= 1)) return { result: "error", message: "Geçerli bir günlük bütçe girin." };
+  if (budget > META_MAX_DAILY_BUDGET) return { result: "error", message: "Günlük bütçe " + META_MAX_DAILY_BUDGET + " TL'yi geçemez (güvenlik sınırı)." };
+  var days = Math.max(0, Math.min(META_MAX_AD_DAYS, parseInt(spec.days, 10) || 0));
+  var ageMin = Math.max(18, Math.min(65, parseInt(spec.ageMin, 10) || 18));
+  var ageMax = Math.max(ageMin, Math.min(65, parseInt(spec.ageMax, 10) || 65));
+  var link = String(spec.link || SITE_URL + "/").trim();
+  if (!/^https:\/\//i.test(link)) return { result: "error", message: "Bağlantı https:// ile başlamalı." };
+  var pixelId = props.getProperty(META_PIXEL_PROP) || String(getAllSettings().metaPixelId || "").replace(/\D/g, "");
+  if (goal === "sales" && !pixelId) return { result: "error", message: "Satış hedefi için Meta Pixel gerekli. Ayarlar sekmesinden Pixel ID girin ya da 'Siteye trafik' hedefini seçin." };
+  if (goal === "igdm" && !igId) return { result: "error", message: "Instagram mesaj hedefi için sayfaya bağlı Instagram hesabı gerekli." };
+
+  var stamp = Utilities.formatDate(new Date(), "Europe/Istanbul", "yyyy-MM-dd HH:mm");
+  var baseName = "Panel | " + String(spec.name || (kind === "igpost" ? "Instagram gönderisi" : "Ürün")).slice(0, 60) + " | " + stamp;
+  var created = {};
+
+  try {
+    // 1) Reklam görseli/metni (önce bu: hata verirse hiçbir şey oluşmaz)
+    var creativeParams = { name: baseName };
+    if (kind === "igpost") {
+      if (!/^\d+$/.test(String(spec.mediaId || ""))) throw new Error("Instagram gönderisi seçilmedi.");
+      if (!igId) throw new Error("Seçili sayfaya bağlı Instagram hesabı yok.");
+      creativeParams.object_id = pageId;
+      creativeParams.instagram_user_id = igId;
+      creativeParams.source_instagram_media_id = String(spec.mediaId);
+      if (goal === "traffic") creativeParams.call_to_action = JSON.stringify({ type: "LEARN_MORE", value: { link: link } });
+      if (goal === "igdm") creativeParams.call_to_action = JSON.stringify({ type: "MESSAGE_PAGE", value: { app_destination: "INSTAGRAM_DIRECT" } });
+    } else {
+      var images = (spec.images || []).filter(function (u) { return /^https:\/\//i.test(u) && !/\.(mp4|mov|webm)(\?|$)/i.test(u); }).slice(0, 10);
+      if (!images.length) throw new Error("En az bir ürün fotoğrafı seçin.");
+      var message = String(spec.primaryText || "").slice(0, 2000);
+      var headline = String(spec.headline || spec.name || "").slice(0, 120);
+      var descr = String(spec.description || "").slice(0, 120);
+      var waLink = "https://api.whatsapp.com/send";
+      var cta = goal === "whatsapp"
+        ? { type: "WHATSAPP_MESSAGE", value: { app_destination: "WHATSAPP" } }
+        : { type: "SHOP_NOW", value: { link: link } };
+      var hashes = images.map(function (u) { return metaUploadImage_(act, u); });
+      var linkData = { message: message, link: goal === "whatsapp" ? waLink : link, call_to_action: cta };
+      if (hashes.length === 1) {
+        linkData.image_hash = hashes[0]; linkData.name = headline; if (descr) linkData.description = descr;
+      } else {
+        linkData.child_attachments = hashes.map(function (h) {
+          var c = { link: goal === "whatsapp" ? waLink : link, image_hash: h, name: headline, call_to_action: cta };
+          if (descr) c.description = descr;
+          return c;
+        });
+        linkData.multi_share_optimized = true;
+        linkData.multi_share_end_card = false;
+      }
+      var story = { page_id: pageId, link_data: linkData };
+      if (igId) story.instagram_user_id = igId;
+      creativeParams.object_story_spec = JSON.stringify(story);
+    }
+    var creative = metaApi_(act + "/adcreatives", creativeParams, "post");
+    created.creativeId = creative.id;
+
+    // 2) Kampanya — kampanya bütçesiyle, DURAKLATILMIŞ
+    var objective = { sales: "OUTCOME_SALES", traffic: "OUTCOME_TRAFFIC", whatsapp: "OUTCOME_ENGAGEMENT", igdm: "OUTCOME_ENGAGEMENT", reach: "OUTCOME_AWARENESS" }[goal];
+    var camp = metaApi_(act + "/campaigns", {
+      name: baseName, objective: objective, status: "PAUSED", buying_type: "AUCTION",
+      special_ad_categories: "[]", daily_budget: String(Math.round(budget * 100)), bid_strategy: "LOWEST_COST_WITHOUT_CAP"
+    }, "post");
+    created.campaignId = camp.id;
+
+    // 3) Reklam seti — kitle ve hedef
+    var targeting = { geo_locations: { countries: ["TR"] }, age_min: ageMin, age_max: ageMax, targeting_automation: { advantage_audience: 0 } };
+    if (spec.gender !== "all") targeting.genders = [2];
+    var adset = { name: baseName, campaign_id: camp.id, status: "ACTIVE", billing_event: "IMPRESSIONS", targeting: JSON.stringify(targeting) };
+    if (goal === "sales") { adset.optimization_goal = "OFFSITE_CONVERSIONS"; adset.promoted_object = JSON.stringify({ pixel_id: pixelId, custom_event_type: "PURCHASE" }); }
+    if (goal === "traffic") { adset.optimization_goal = "LINK_CLICKS"; adset.destination_type = "WEBSITE"; }
+    if (goal === "whatsapp") { adset.optimization_goal = "CONVERSATIONS"; adset.destination_type = "WHATSAPP"; adset.promoted_object = JSON.stringify({ page_id: pageId }); }
+    if (goal === "igdm") { adset.optimization_goal = "CONVERSATIONS"; adset.destination_type = "INSTAGRAM_DIRECT"; adset.promoted_object = JSON.stringify({ page_id: pageId }); }
+    if (goal === "reach") { adset.optimization_goal = "REACH"; }
+    if (days > 0) adset.end_time = new Date(Date.now() + days * 86400000).toISOString();
+    var as = metaApi_(act + "/adsets", adset, "post");
+    created.adsetId = as.id;
+
+    // 4) Reklam
+    var ad = metaApi_(act + "/ads", { name: baseName, adset_id: as.id, creative: JSON.stringify({ creative_id: creative.id }), status: "ACTIVE" }, "post");
+    created.adId = ad.id;
+  } catch (err) {
+    // Yarım kalan kampanyayı temizle (kampanya silinince reklam seti ve reklam da silinir)
+    if (created.campaignId) { try { metaApi_(created.campaignId, {}, "delete"); } catch (e) {} }
+    throw err;
+  }
+
+  // Önizlemeler (Instagram akış, Reels ve Facebook akış)
+  var previews = [];
+  ["INSTAGRAM_STANDARD", "INSTAGRAM_REELS", "MOBILE_FEED_STANDARD"].forEach(function (fmt) {
+    try {
+      var pv = metaApi_(created.creativeId + "/previews", { ad_format: fmt });
+      if (pv.data && pv.data[0] && pv.data[0].body) previews.push({ format: fmt, html: pv.data[0].body });
+    } catch (e) { /* bu yerleşim için önizleme yoksa atla */ }
+  });
+
+  metaClearCache_();
+  metaLog_("Reklam oluşturuldu (duraklatılmış)", baseName, "", budget + " TL/gün" + (days ? ", " + days + " gün" : ""));
+  return { result: "ok", campaignId: created.campaignId, name: baseName, previews: previews };
 }
