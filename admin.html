@@ -364,7 +364,7 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
   <div id="adFormMsg"></div>
   <div id="adSetup" class="setup-line">Sayfa bilgileri yükleniyor…</div>
   <div id="adForm">
-   <div class="seg"><button type="button" id="kindProduct" class="on" onclick="setAdKind('product')">🛍️ Ürün Reklamı</button><button type="button" id="kindIg" onclick="setAdKind('igpost')">📸 Instagram Gönderisi / Reels</button></div>
+   <div class="seg"><button type="button" id="kindProduct" class="on" onclick="setAdKind('product')">🛍️ Ürün Reklamı</button><button type="button" id="kindIg" onclick="setAdKind('igpost')">📸 Instagram Gönderileri / Reels</button><button type="button" id="kindCat" onclick="setAdKind('catalog')">🛒 Katalog Reklamı</button></div>
 
    <div id="adProductBox">
     <div class="field"><label>Ürün</label><select id="ad_product" onchange="adProductChanged()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"></select></div>
@@ -377,12 +377,29 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
    </div>
 
    <div id="adIgBox" class="hidden">
-    <div class="field"><label>Öne çıkarılacak gönderi</label><div class="iggrid" id="ad_iggrid"><div class="empty">Yükleniyor…</div></div>
+    <div class="field"><label>Gönderiler <span style="text-transform:none;font-weight:500">(1 gönderi = olduğu gibi öne çıkarılır · 2–10 gönderi = tek kaydırmalı reklamda birleşir)</span></label><div class="iggrid" id="ad_iggrid"><div class="empty">Yükleniyor…</div></div>
      <button type="button" class="btn-ghost hidden" id="igMoreBtn" style="margin-top:8px;padding:7px 12px;border-radius:7px;font-size:12px" onclick="loadIgMedia(true)">Daha fazla göster</button></div>
-    <p class="help" style="margin:-4px 0 12px">Telifli müzik veya efekt içeren gönderiler Meta tarafından reklama çevrilmeyebilir.</p>
+    <p class="help" style="margin:-4px 0 12px">Telifli müzik veya efekt içeren gönderiler Meta tarafından reklama çevrilmeyebilir. Reels seçilirse videolar Meta'ya yüklenir, oluşturma 1–2 dakika sürebilir.</p>
+    <div id="adIgMultiBox" class="hidden">
+     <div class="field"><label>Reklam Metni</label><textarea id="ad_igtext" rows="4"></textarea></div>
+     <div class="field"><label>Kart Başlığı</label><input id="ad_igheadline" value="Yeni Sezon · Kapıda Ödeme"></div>
+    </div>
    </div>
 
-   <div class="field"><label>Reklamın Amacı</label><div class="goal-list" id="ad_goals"></div></div>
+   <div id="adCatBox" class="hidden">
+    <div class="grid2">
+     <div class="field"><label>Katalog</label><select id="ad_catalog" onchange="renderSets()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"><option>Yükleniyor…</option></select></div>
+     <div class="field"><label>Ürün Grubu</label><select id="ad_set" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"></select></div>
+    </div>
+    <div class="field"><label>Kime Gösterilsin?</label><div class="goal-list">
+     <label class="goal on" id="aud_r"><input type="radio" name="adaud" value="retarget" checked onchange="setAud('retarget')"><div><b>Siteyi gezip satın almayanlar</b><span>Sitede ürüne bakan veya sepete ekleyen ama almayan kişilere, baktıkları ürünleri tekrar gösterir. En yüksek dönüşümlü reklam türü; sitede Pixel verisi gerekir.</span></div></label>
+     <label class="goal" id="aud_b"><input type="radio" name="adaud" value="broad" onchange="setAud('broad')"><div><b>Yeni müşteriler</b><span>Meta, katalogdan her kişiye ilgilenebileceği ürünleri seçerek gösterir.</span></div></label>
+    </div></div>
+    <div class="field" id="ad_rdaysBox"><label>Son kaç gündeki ziyaretçiler?</label><select id="ad_rdays" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"><option value="7">7 gün</option><option value="14" selected>14 gün</option><option value="30">30 gün</option></select></div>
+    <div class="field"><label>Reklam Metni <span style="text-transform:none;font-weight:500">(ürün adı ve fiyatı her kartta otomatik görünür)</span></label><textarea id="ad_cattext" rows="3">Beğendiğin ürünler seni bekliyor ✨ Ücretsiz kargo · Kapıda ödeme 🚚</textarea></div>
+   </div>
+
+   <div class="field" id="ad_goalsBox"><label>Reklamın Amacı</label><div class="goal-list" id="ad_goals"></div></div>
    <div class="field" id="ad_linkBox"><label>Gidilecek Sayfa</label><select id="ad_link" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"></select></div>
 
    <div class="grid2">
@@ -390,7 +407,7 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
     <div class="field"><label>Süre</label><select id="ad_days" onchange="adSummary()" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px">
      <option value="3">3 gün</option><option value="5">5 gün</option><option value="7" selected>7 gün</option><option value="14">14 gün</option><option value="30">30 gün</option><option value="0">Ben durdurana kadar</option></select></div>
    </div>
-   <div class="grid2">
+   <div class="grid2" id="ad_audBox">
     <div class="field"><label>Kitle</label><select id="ad_gender" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;font-size:13.5px"><option value="female">Kadınlar</option><option value="all">Herkes</option></select></div>
     <div class="field"><label>Yaş Aralığı</label><div style="display:flex;gap:8px;align-items:center"><input id="ad_ageMin" type="number" min="18" max="65" value="20" style="width:80px"> – <input id="ad_ageMax" type="number" min="18" max="65" value="55" style="width:80px"></div></div>
    </div>
@@ -1026,7 +1043,7 @@ function deleteBlog(i){
 }
 
 // ---------- Yeni Reklam ----------
-var adKind = "product", adGoal = "traffic", adSel = [], adIgSel = null, adIgItems = [], adIgNext = "", adNewCampaignId = null, adSetupData = null;
+var adKind = "product", adGoal = "traffic", adSel = [], adIgSel = [], adAud = "retarget", adCatalogs = null, adIgItems = [], adIgNext = "", adNewCampaignId = null, adSetupData = null;
 var SITE = "https://www.gulsumaydin.com.tr";
 var AD_GOALS = {
  product: [["traffic","Ürün sayfasına ziyaretçi","Ürünü görmek isteyenleri sitedeki ürün sayfasına getirir. Başlangıç için önerilir."],
@@ -1034,8 +1051,13 @@ var AD_GOALS = {
            ["whatsapp","WhatsApp'tan mesaj","Reklama tıklayan kişi doğrudan WhatsApp sohbeti başlatır. WhatsApp hattının Facebook sayfasına bağlı olması gerekir."]],
  igpost: [["reach","Daha çok kişiye göster","Gönderiyi yeni kişilere ulaştırır; takipçi ve etkileşim kazanmak için."],
           ["traffic","Siteye ziyaretçi","Gönderinin altına 'Daha fazla bilgi' düğmesi eklenir, siteye yönlendirir."],
-          ["igdm","Instagram DM'den mesaj","Gönderinin altına 'Mesaj gönder' düğmesi eklenir, müşteri DM'den yazar."]]
+          ["igdm","Instagram DM'den mesaj","Gönderinin altına 'Mesaj gönder' düğmesi eklenir, müşteri DM'den yazar."]],
+ igmulti: [["traffic","Siteye ziyaretçi","Kaydırmalı reklamdaki her karttan siteye yönlendirir."],
+          ["sales","Sitede satış","Satın alma ihtimali yüksek kişilere gösterir (Pixel gerekir)."],
+          ["whatsapp","WhatsApp'tan mesaj","Kartlara tıklayan kişi WhatsApp sohbeti başlatır."]]
 };
+function igKind(){ return adIgSel.length>1 ? "igmulti" : "igpost"; }
+function goalKey(){ return adKind==="igpost" ? igKind() : adKind; }
 function aEl(id){ return document.getElementById(id); }
 function adMsg(type,text){ aEl("adFormMsg").innerHTML = text? '<div class="msg '+type+'">'+esc(text)+'</div>' : ""; }
 function splitL(s){ return String(s||"").split("|").map(function(x){return x.trim();}).filter(Boolean); }
@@ -1049,7 +1071,7 @@ function productImages(p){
 function trPrice(n){ n=Number(String(n||"").replace(/[^0-9.,]/g,"").replace(",",".")); return n? n.toLocaleString("tr-TR")+" TL" : ""; }
 
 function openNewAd(){
- adNewCampaignId=null; adMsg("","");
+ adNewCampaignId=null; adMsg("",""); adIgSel=[];
  aEl("adForm").classList.remove("hidden"); aEl("adDone").classList.add("hidden");
  aEl("ad_product").innerHTML = products.map(function(p,i){ return '<option value="'+i+'">'+esc(p.name)+' ('+esc(p.id)+')</option>'; }).join("");
  aEl("ad_link").innerHTML = '<option value="'+SITE+'/">Ana sayfa</option>'+products.map(function(p){ return '<option value="'+SITE+'/?urun='+encodeURIComponent(p.id)+'">'+esc(p.name)+'</option>'; }).join("");
@@ -1068,27 +1090,51 @@ function loadAdSetup(){
   aEl("adSetup").innerHTML = 'Yayınlanacak sayfa: <select id="ad_page" onchange="saveAdSetup()">'+res.pages.map(function(p){ return '<option value="'+esc(p.id)+'"'+(p.id===res.pageId?' selected':'')+'>'+esc(p.name)+(p.igUsername?' · @'+esc(p.igUsername):' · (Instagram bağlı değil)')+'</option>'; }).join("")+'</select>'+
    (res.pixels.length? ' Pixel: <select id="ad_pixel" onchange="saveAdSetup()">'+res.pixels.map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===res.pixelId?' selected':'')+'>'+esc(x.name||x.id)+'</option>'; }).join("")+'</select>' : '');
   if(adKind==="igpost") loadIgMedia(false);
+  if(adKind==="catalog") loadCatalogs();
  }).catch(function(){ aEl("adSetup").textContent = "Bağlantı hatası."; });
 }
 function saveAdSetup(){
  var pg=aEl("ad_page"), px=aEl("ad_pixel");
  apiPost({action:"metaSaveAdSetup", pageId:pg?pg.value:"", pixelId:px?px.value:""}).then(function(res){
-  if(res.result!=="ok") adMsg("err",res.message||"Kaydedilemedi"); else { adIgItems=[]; adIgSel=null; if(adKind==="igpost") loadIgMedia(false); }
+  if(res.result!=="ok") adMsg("err",res.message||"Kaydedilemedi"); else { adIgItems=[]; adIgSel=[]; if(adKind==="igpost") loadIgMedia(false); }
  });
 }
 function setAdKind(k){
- adKind=k; aEl("kindProduct").classList.toggle("on",k==="product"); aEl("kindIg").classList.toggle("on",k==="igpost");
- aEl("adProductBox").classList.toggle("hidden",k!=="product"); aEl("adIgBox").classList.toggle("hidden",k!=="igpost");
- adGoal = k==="product" ? "traffic" : "reach";
+ adKind=k; aEl("kindProduct").classList.toggle("on",k==="product"); aEl("kindIg").classList.toggle("on",k==="igpost"); aEl("kindCat").classList.toggle("on",k==="catalog");
+ aEl("adProductBox").classList.toggle("hidden",k!=="product"); aEl("adIgBox").classList.toggle("hidden",k!=="igpost"); aEl("adCatBox").classList.toggle("hidden",k!=="catalog");
+ aEl("ad_goalsBox").classList.toggle("hidden",k==="catalog");
+ adGoal = k==="product" ? "traffic" : (k==="igpost" ? (adIgSel.length>1?"traffic":"reach") : "catalog");
  renderGoals();
  if(k==="igpost" && !adIgItems.length && adSetupData) loadIgMedia(false);
+ if(k==="catalog" && !adCatalogs && adSetupData) loadCatalogs();
+}
+function setAud(a){ adAud=a; aEl("aud_r").classList.toggle("on",a==="retarget"); aEl("aud_b").classList.toggle("on",a==="broad"); renderGoals(); }
+function loadCatalogs(){
+ aEl("ad_catalog").innerHTML='<option>Yükleniyor…</option>';
+ apiPost({action:"metaCatalogs"}).then(function(res){
+  if(res.result!=="ok"){ aEl("ad_catalog").innerHTML='<option value="">—</option>'; adMsg("err",res.message||"Katalog alınamadı"); return; }
+  adCatalogs=res.catalogs;
+  aEl("ad_catalog").innerHTML = res.catalogs.map(function(c,i){ return '<option value="'+i+'">'+esc(c.name)+' ('+c.count+' ürün)</option>'; }).join("");
+  renderSets();
+ }).catch(function(){ adMsg("err","Bağlantı hatası."); });
+}
+function renderSets(){
+ var c = adCatalogs && adCatalogs[Number(aEl("ad_catalog").value)];
+ aEl("ad_set").innerHTML = c && c.sets.length ? c.sets.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+(x.count?' ('+x.count+')':'')+'</option>'; }).join("") : '<option value="">Ürün grubu yok</option>';
+ adSummary();
 }
 function renderGoals(){
- aEl("ad_goals").innerHTML = AD_GOALS[adKind].map(function(g){
+ var gk = goalKey();
+ if(adKind==="igpost" && AD_GOALS[gk].map(function(g){return g[0];}).indexOf(adGoal)<0) adGoal = AD_GOALS[gk][0][0];
+ aEl("adIgMultiBox").classList.toggle("hidden", !(adKind==="igpost" && gk==="igmulti"));
+ aEl("ad_audBox").classList.toggle("hidden", adKind==="catalog" && adAud==="retarget");
+ aEl("ad_rdaysBox").classList.toggle("hidden", !(adKind==="catalog" && adAud==="retarget"));
+ if(adKind==="catalog"){ aEl("ad_linkBox").classList.add("hidden"); adSummary(); return; }
+ aEl("ad_goals").innerHTML = AD_GOALS[gk].map(function(g){
   return '<label class="goal'+(g[0]===adGoal?' on':'')+'"><input type="radio" name="adgoal" value="'+g[0]+'"'+(g[0]===adGoal?' checked':'')+' onchange="adGoal=this.value;renderGoals()"><div><b>'+g[1]+'</b><span>'+g[2]+'</span></div></label>';
  }).join("");
- // Ürün reklamında bağlantı ürün sayfasıdır; Instagram'da yalnızca site trafiğinde sorulur
- aEl("ad_linkBox").classList.toggle("hidden", !(adKind==="igpost" && adGoal==="traffic"));
+ // Ürün reklamında bağlantı ürün sayfasıdır; Instagram'da siteye yönlendiren hedeflerde sorulur
+ aEl("ad_linkBox").classList.toggle("hidden", !(adKind==="igpost" && (adGoal==="traffic" || adGoal==="sales")));
  adSummary();
 }
 function adProductChanged(){
@@ -1130,16 +1176,25 @@ function loadIgMedia(more){
 function renderIg(){
  aEl("ad_iggrid").innerHTML = adIgItems.map(function(m,i){
   var d = m.date? new Date(m.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}) : "";
-  return '<div class="igitem'+(adIgSel===i?' on':'')+'" onclick="adIgSel='+i+';renderIg();adSummary()" title="'+esc(m.caption.slice(0,120))+'">'+
+  var k = adIgSel.indexOf(i);
+  return '<div class="igitem'+(k>-1?' on':'')+'" onclick="toggleIg('+i+')" title="'+esc(m.caption.slice(0,120))+'">'+(k>-1?'<span class="no" style="position:absolute;top:5px;right:5px;background:var(--gold);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px">'+(k+1)+'</span>':'')+
    (m.thumb?'<img src="'+esc(m.thumb)+'" alt="" loading="lazy">':'')+'<span class="t">'+(m.type==="REELS"?"Reels":m.type==="CAROUSEL_ALBUM"?"Albüm":m.type==="VIDEO"?"Video":"Foto")+'</span>'+
    '<div class="m">'+d+' · ♥ '+m.likes+'</div></div>';
  }).join("") || '<div class="empty">Gönderi bulunamadı.</div>';
 }
+function toggleIg(i){
+ var k=adIgSel.indexOf(i);
+ if(k>-1) adIgSel.splice(k,1); else if(adIgSel.length<10) adIgSel.push(i); else { adMsg("err","En fazla 10 gönderi seçebilirsin."); return; }
+ if(adIgSel.length===2 && !aEl("ad_igtext").value) aEl("ad_igtext").value = "✨ Yeni sezon ürünlerimiz Gülsüm Aydın Butik'te!\n🚚 Ücretsiz kargo · 💵 Kapıda ödeme\n👉 Kaydır, beğendiğini seç!";
+ renderIg(); renderGoals();
+}
 function adSummary(){
  var b = Number(aEl("ad_budget").value)||0, d = Number(aEl("ad_days").value)||0;
- var g = (AD_GOALS[adKind].filter(function(x){return x[0]===adGoal;})[0]||[])[1]||"";
+ var g = adKind==="catalog" ? (adAud==="retarget" ? "Siteyi gezenlere baktıkları ürünler" : "Katalogdan yeni kişilere ürünler")
+  : ((AD_GOALS[goalKey()].filter(function(x){return x[0]===adGoal;})[0]||[])[1]||"");
  var what = adKind==="product" ? (adSel.length>1? adSel.length+" fotoğraflı kaydırmalı reklam" : adSel.length? "Tek görselli reklam" : "Fotoğraf seçilmedi")
-  : (adIgSel!==null? "Seçili Instagram "+(adIgItems[adIgSel].type==="REELS"?"Reels'i":"gönderisi") : "Gönderi seçilmedi");
+  : adKind==="catalog" ? "Katalog reklamı (ürünleri Meta seçer)"
+  : (adIgSel.length>1 ? adIgSel.length+" gönderiden kaydırmalı reklam" : adIgSel.length ? "Seçili Instagram "+(adIgItems[adIgSel[0]].type==="REELS"?"Reels'i":"gönderisi")+" öne çıkarılır" : "Gönderi seçilmedi");
  aEl("ad_sum").innerHTML = '<b>'+esc(what)+'</b> · Amaç: '+esc(g)+'<br>Günlük '+trPrice(b)+(d? ' × '+d+' gün = en fazla <b>'+trPrice(b*d)+'</b>' : ' · durdurana kadar (aylık en fazla yaklaşık <b>'+trPrice(b*30)+'</b>)')+
   '<br><span style="color:var(--ink2)">Facebook ve Instagram\'da (akış, hikâye, Reels) gösterilir. Türkiye geneli.</span>';
 }
@@ -1154,11 +1209,22 @@ function createAd(){
   spec.name = p.name; spec.images = adSel.slice(); spec.primaryText = aEl("ad_text").value.trim();
   spec.headline = aEl("ad_headline").value.trim(); spec.description = aEl("ad_desc").value.trim();
   spec.link = SITE+"/?urun="+encodeURIComponent(p.id)+"&utm_source=meta&utm_medium=paid&utm_campaign=panel";
+ } else if(adKind==="catalog"){
+  var c = adCatalogs && adCatalogs[Number(aEl("ad_catalog").value)];
+  if(!c || !aEl("ad_set").value){ adMsg("err","Katalog ve ürün grubu seçin."); return; }
+  spec.kind="catalog"; spec.catalogId=c.id; spec.productSetId=aEl("ad_set").value; spec.audience=adAud; spec.retargetDays=Number(aEl("ad_rdays").value);
+  spec.primaryText=aEl("ad_cattext").value.trim(); spec.name="Katalog "+(adAud==="retarget"?"yeniden hedefleme":"yeni müşteri");
  } else {
-  if(adIgSel===null){ adMsg("err","Öne çıkarmak istediğin gönderiyi seç."); return; }
-  var m = adIgItems[adIgSel];
-  spec.mediaId = m.id; spec.name = "Instagram "+(m.type==="REELS"?"Reels":"gönderi")+" "+(m.caption||"").replace(/\s+/g," ").slice(0,30);
+  if(!adIgSel.length){ adMsg("err","Reklama çevirmek istediğin gönderiyi seç."); return; }
   spec.link = aEl("ad_link").value + (aEl("ad_link").value.indexOf("?")>-1?"&":"?") + "utm_source=meta&utm_medium=paid&utm_campaign=panel";
+  if(adIgSel.length===1){
+   var m = adIgItems[adIgSel[0]];
+   spec.mediaId = m.id; spec.name = "Instagram "+(m.type==="REELS"?"Reels":"gönderi")+" "+(m.caption||"").replace(/\s+/g," ").slice(0,30);
+  } else {
+   spec.kind="igmulti"; spec.mediaIds=adIgSel.map(function(i){ return adIgItems[i].id; });
+   spec.primaryText=aEl("ad_igtext").value.trim(); spec.headline=aEl("ad_igheadline").value.trim();
+   spec.name="Instagram "+adIgSel.length+" gönderi kaydırmalı";
+  }
  }
  if(!(spec.dailyBudget>=1)){ adMsg("err","Günlük bütçe girin."); return; }
  if(spec.ageMin>spec.ageMax){ adMsg("err","Yaş aralığını kontrol edin."); return; }

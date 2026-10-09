@@ -61,6 +61,7 @@ function doPost(e) {
     case "metaSaveAdSetup":
     case "metaIgMedia":
     case "metaCreateAd":
+    case "metaCatalogs":
       return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
@@ -543,6 +544,7 @@ function handleMetaAction_(body) {
       case "metaSaveAdSetup": return metaSaveAdSetup_(body.pageId, body.pixelId);
       case "metaIgMedia": return metaIgMedia_(body.after);
       case "metaCreateAd": return metaCreateAd_(body.spec || {});
+      case "metaCatalogs": return metaCatalogs_();
     }
     return { result: "error", message: "Bilinmeyen işlem." };
   } catch (err) {
@@ -928,9 +930,9 @@ function metaCreateAd_(spec) {
   var pageId = props.getProperty(META_PAGE_PROP), igId = props.getProperty(META_IG_PROP) || "";
   if (!pageId) return { result: "error", message: "Önce reklamın yayınlanacağı Facebook sayfasını seçin." };
   var act = "act_" + cfg.account;
-  var kind = spec.kind === "igpost" ? "igpost" : "product";
-  var goal = String(spec.goal || "traffic");
-  var allowed = kind === "igpost" ? ["reach", "traffic", "igdm"] : ["sales", "traffic", "whatsapp"];
+  var kind = ["igpost", "igmulti", "catalog"].indexOf(spec.kind) > -1 ? spec.kind : "product";
+  var goal = kind === "catalog" ? "catalog" : String(spec.goal || "traffic");
+  var allowed = { igpost: ["reach", "traffic", "igdm"], product: ["sales", "traffic", "whatsapp"], igmulti: ["sales", "traffic", "whatsapp"], catalog: ["catalog"] }[kind];
   if (allowed.indexOf(goal) < 0) return { result: "error", message: "Bu reklam türü için geçersiz hedef." };
 
   var budget = Number(spec.dailyBudget);
@@ -942,6 +944,8 @@ function metaCreateAd_(spec) {
   var link = String(spec.link || SITE_URL + "/").trim();
   if (!/^https:\/\//i.test(link)) return { result: "error", message: "Bağlantı https:// ile başlamalı." };
   var pixelId = props.getProperty(META_PIXEL_PROP) || String(getAllSettings().metaPixelId || "").replace(/\D/g, "");
+  if (kind === "catalog" && !(/^\d+$/.test(String(spec.catalogId || "")) && /^\d+$/.test(String(spec.productSetId || ""))))
+    return { result: "error", message: "Katalog ve ürün grubu seçin." };
   if (goal === "sales" && !pixelId) return { result: "error", message: "Satış hedefi için Meta Pixel gerekli. Ayarlar sekmesinden Pixel ID girin ya da 'Siteye trafik' hedefini seçin." };
   if (goal === "igdm" && !igId) return { result: "error", message: "Instagram mesaj hedefi için sayfaya bağlı Instagram hesabı gerekli." };
 
@@ -960,6 +964,30 @@ function metaCreateAd_(spec) {
       creativeParams.source_instagram_media_id = String(spec.mediaId);
       if (goal === "traffic") creativeParams.call_to_action = JSON.stringify({ type: "LEARN_MORE", value: { link: link } });
       if (goal === "igdm") creativeParams.call_to_action = JSON.stringify({ type: "MESSAGE_PAGE", value: { app_destination: "INSTAGRAM_DIRECT" } });
+    } else if (kind === "catalog") {
+      var tpl = {
+        message: String(spec.primaryText || "").slice(0, 2000),
+        name: "{{product.name}}",
+        description: "{{product.current_price strip_zeros}} · Kapıda ödeme",
+        link: SITE_URL + "/",
+        call_to_action: { type: "SHOP_NOW" },
+        multi_share_end_card: false
+      };
+      var cstory = { page_id: pageId, template_data: tpl };
+      if (igId) cstory.instagram_user_id = igId;
+      creativeParams.object_story_spec = JSON.stringify(cstory);
+      creativeParams.product_set_id = String(spec.productSetId);
+    } else if (kind === "igmulti") {
+      var ids = (spec.mediaIds || []).filter(function (x) { return /^\d+$/.test(String(x)); }).slice(0, 10);
+      if (ids.length < 2) throw new Error("Kaydırmalı reklam için en az 2 gönderi seçin.");
+      var mLink = goal === "whatsapp" ? "https://api.whatsapp.com/send" : link;
+      var mCta = goal === "whatsapp" ? { type: "WHATSAPP_MESSAGE", value: { app_destination: "WHATSAPP" } } : { type: "SHOP_NOW", value: { link: link } };
+      var mHead = String(spec.headline || "").slice(0, 120);
+      var cards = ids.map(function (id) { return metaIgMediaToCard_(act, id, mLink, mHead, mCta); });
+      var mStory = { page_id: pageId, link_data: { message: String(spec.primaryText || "").slice(0, 2000), link: mLink, call_to_action: mCta,
+        child_attachments: cards, multi_share_optimized: true, multi_share_end_card: false } };
+      if (igId) mStory.instagram_user_id = igId;
+      creativeParams.object_story_spec = JSON.stringify(mStory);
     } else {
       var images = (spec.images || []).filter(function (u) { return /^https:\/\//i.test(u) && !/\.(mp4|mov|webm)(\?|$)/i.test(u); }).slice(0, 10);
       if (!images.length) throw new Error("En az bir ürün fotoğrafı seçin.");
@@ -991,11 +1019,13 @@ function metaCreateAd_(spec) {
     created.creativeId = creative.id;
 
     // 2) Kampanya — kampanya bütçesiyle, DURAKLATILMIŞ
-    var objective = { sales: "OUTCOME_SALES", traffic: "OUTCOME_TRAFFIC", whatsapp: "OUTCOME_ENGAGEMENT", igdm: "OUTCOME_ENGAGEMENT", reach: "OUTCOME_AWARENESS" }[goal];
-    var camp = metaApi_(act + "/campaigns", {
+    var objective = { sales: "OUTCOME_SALES", catalog: "OUTCOME_SALES", traffic: "OUTCOME_TRAFFIC", whatsapp: "OUTCOME_ENGAGEMENT", igdm: "OUTCOME_ENGAGEMENT", reach: "OUTCOME_AWARENESS" }[goal];
+    var campParams = {
       name: baseName, objective: objective, status: "PAUSED", buying_type: "AUCTION",
       special_ad_categories: "[]", daily_budget: String(Math.round(budget * 100)), bid_strategy: "LOWEST_COST_WITHOUT_CAP"
-    }, "post");
+    };
+    if (kind === "catalog") campParams.promoted_object = JSON.stringify({ product_catalog_id: String(spec.catalogId) });
+    var camp = metaApi_(act + "/campaigns", campParams, "post");
     created.campaignId = camp.id;
 
     // 3) Reklam seti — kitle ve hedef
@@ -1007,6 +1037,23 @@ function metaCreateAd_(spec) {
     if (goal === "whatsapp") { adset.optimization_goal = "CONVERSATIONS"; adset.destination_type = "WHATSAPP"; adset.promoted_object = JSON.stringify({ page_id: pageId }); }
     if (goal === "igdm") { adset.optimization_goal = "CONVERSATIONS"; adset.destination_type = "INSTAGRAM_DIRECT"; adset.promoted_object = JSON.stringify({ page_id: pageId }); }
     if (goal === "reach") { adset.optimization_goal = "REACH"; }
+    if (goal === "catalog") {
+      adset.optimization_goal = "OFFSITE_CONVERSIONS";
+      adset.promoted_object = JSON.stringify({ product_set_id: String(spec.productSetId), custom_event_type: "PURCHASE" });
+      var purchaseExcl = [{ retention_seconds: 3 * 86400, rule: { event: { eq: "Purchase" } } }];
+      var ct;
+      if (spec.audience === "retarget") {
+        var rs = Math.max(3, Math.min(30, parseInt(spec.retargetDays, 10) || 14)) * 86400;
+        ct = { geo_locations: { countries: ["TR"] }, targeting_automation: { advantage_audience: 0 },
+          product_audience_specs: [{ product_set_id: String(spec.productSetId),
+            inclusions: [{ retention_seconds: rs, rule: { event: { eq: "ViewContent" } } }, { retention_seconds: rs, rule: { event: { eq: "AddToCart" } } }],
+            exclusions: purchaseExcl }] };
+      } else {
+        ct = targeting;
+        ct.excluded_product_audience_specs = [{ product_set_id: String(spec.productSetId), inclusions: purchaseExcl }];
+      }
+      adset.targeting = JSON.stringify(ct);
+    }
     if (days > 0) adset.end_time = new Date(Date.now() + days * 86400000).toISOString();
     var as = metaApi_(act + "/adsets", adset, "post");
     created.adsetId = as.id;
@@ -1032,4 +1079,56 @@ function metaCreateAd_(spec) {
   metaClearCache_();
   metaLog_("Reklam oluşturuldu (duraklatılmış)", baseName, "", budget + " TL/gün" + (days ? ", " + days + " gün" : ""));
   return { result: "ok", campaignId: created.campaignId, name: baseName, previews: previews };
+}
+
+// Instagram gönderisinin görselini/videosunu Meta reklam kütüphanesine yükleyip kaydırmalı reklam kartına çevirir
+function metaIgMediaToCard_(act, mediaId, link, headline, cta) {
+  var m = metaApi_(String(mediaId), { fields: "media_type,media_url,thumbnail_url,children{media_type,media_url,thumbnail_url}" });
+  if (m.media_type === "CAROUSEL_ALBUM" && m.children && m.children.data && m.children.data.length) m = m.children.data[0];
+  var card = { link: link, call_to_action: cta };
+  if (headline) card.name = headline;
+  if (m.media_type === "VIDEO") {
+    if (!m.media_url) throw new Error("Instagram videosunun dosyasına erişilemedi.");
+    var vid = metaApi_(act + "/advideos", { file_url: m.media_url }, "post").id;
+    metaWaitVideo_(vid);
+    card.video_id = vid;
+    card.image_hash = metaUploadImage_(act, m.thumbnail_url);
+  } else {
+    if (!m.media_url) throw new Error("Instagram görseline erişilemedi.");
+    card.image_hash = metaUploadImage_(act, m.media_url);
+  }
+  return card;
+}
+
+// Yüklenen videonun Meta tarafında işlenmesini bekler (en fazla ~2 dakika)
+function metaWaitVideo_(videoId) {
+  for (var i = 0; i < 24; i++) {
+    var st = metaApi_(String(videoId), { fields: "status" }).status || {};
+    if (st.video_status === "ready") return;
+    if (st.video_status === "error") throw new Error("Video Meta tarafından işlenemedi.");
+    Utilities.sleep(5000);
+  }
+  throw new Error("Video işlenmesi uzun sürdü; birkaç dakika sonra tekrar deneyin.");
+}
+
+// İşletmenin ürün katalogları ve ürün grupları
+function metaCatalogs_() {
+  var cfg = metaConfig_();
+  if (!cfg) return { result: "error", message: "Meta bağlantısı henüz kurulmadı." };
+  var acc = metaApi_("act_" + cfg.account, { fields: "business{id,name}" });
+  if (!acc.business) return { result: "error", message: "Reklam hesabı bir işletme portföyüne bağlı değil." };
+  var cats = [];
+  ["owned_product_catalogs", "client_product_catalogs"].forEach(function (edge) {
+    try {
+      (metaApi_(acc.business.id + "/" + edge, { fields: "id,name,product_count", limit: 25 }).data || []).forEach(function (c) {
+        if (!cats.some(function (x) { return x.id === c.id; })) cats.push({ id: c.id, name: c.name, count: c.product_count || 0 });
+      });
+    } catch (e) { /* bu tür katalog yoksa atla */ }
+  });
+  cats.forEach(function (c) {
+    try { c.sets = (metaApi_(c.id + "/product_sets", { fields: "id,name,product_count", limit: 50 }).data || []).map(function (x) { return { id: x.id, name: x.name, count: x.product_count || 0 }; }); }
+    catch (e) { c.sets = []; }
+  });
+  if (!cats.length) return { result: "error", message: "Katalog bulunamadı. Sistem kullanıcısına İşletme Ayarları > Varlık ata > Kataloglar'dan kataloğunu ata." };
+  return { result: "ok", catalogs: cats };
 }
