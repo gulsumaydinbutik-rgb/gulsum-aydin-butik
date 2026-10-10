@@ -33,7 +33,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git add -A blog sitemap.xml robots.txt
+          git add -A blog urun sitemap.xml robots.txt
           if git diff --cached --quiet; then
             echo "Değişiklik yok."
             exit 0

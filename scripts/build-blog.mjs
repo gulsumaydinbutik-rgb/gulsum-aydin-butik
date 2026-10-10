@@ -113,10 +113,20 @@ const pixelId = String(settings.metaPixelId || "").replace(/\D/g, "");
 const products = {};
 for (const p of csvObjects(productCsv)) {
   if (!p.id) continue;
-  const img = split(p.images).find((u) => !isVideo(u));
-  const vid = split(p.images).find(isVideo);
-  products[p.id] = { id: p.id, name: p.name, price: parsePrice(p.price), oldPrice: p.oldPrice ? parsePrice(p.oldPrice) : 0, category: p.category || "", image: img ? abs(img) : "", video: !img && vid ? abs(vid) : "" };
+  const all = split(p.images);
+  const photos = all.filter((u) => !isVideo(u)).map(abs);
+  const vid = all.find(isVideo);
+  const idSlug = slugify(p.id) || "urun";
+  products[p.id] = {
+    id: p.id, name: p.name, price: parsePrice(p.price), oldPrice: p.oldPrice ? parsePrice(p.oldPrice) : 0, category: p.category || "",
+    image: photos[0] || "", photos, video: !photos.length && vid ? abs(vid) : "",
+    slug: `${slugify(p.name).slice(0, 50).replace(/-+$/, "")}-${idSlug}`.replace(/^-/, ""),
+    shortDescription: p.shortDescription || "", description: p.description || "", fabric: p.fabric || "", fit: p.fit || "",
+    measurements: p.measurements || "", modelInfo: p.modelInfo || "", colors: split(p.colors), sizes: split(p.sizes),
+  };
 }
+const productUrl = (p) => `${SITE}/urun/${p.slug}/`;
+const idToSlug = Object.fromEntries(Object.values(products).map((p) => [p.id.toLowerCase(), p.slug]));
 
 const allRows = csvObjects(blogCsv);
 if (!allRows.length || !("slug" in allRows[0])) throw new Error("Blog sekmesi okunamadı veya başlıklar eksik; mevcut sayfalar korunuyor.");
@@ -217,7 +227,7 @@ const LEGAL = [
 const ORG = { "@type": "Organization", name: BRAND, url: SITE + "/", logo: { "@type": "ImageObject", url: SITE + "/icon-512.png" } };
 
 function productCard(p) {
-  return `<a class="pc" href="/?urun=${encodeURIComponent(p.id)}"><div class="im">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" width="300" height="400">` : p.video ? `<video src="${esc(p.video)}#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover" aria-label="${esc(p.name)}"></video>` : ""}</div><div class="in"><div class="nm">${esc(p.name)}</div><div class="pr">${money(p.price)}${p.oldPrice > p.price ? `<s>${money(p.oldPrice)}</s>` : ""}</div></div></a>`;
+  return `<a class="pc" href="/urun/${p.slug}/"><div class="im">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" width="300" height="400">` : p.video ? `<video src="${esc(p.video)}#t=0.1" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover" aria-label="${esc(p.name)}"></video>` : ""}</div><div class="in"><div class="nm">${esc(p.name)}</div><div class="pr">${money(p.price)}${p.oldPrice > p.price ? `<s>${money(p.oldPrice)}</s>` : ""}</div></div></a>`;
 }
 function postCard(p) {
   return `<a class="pc bc" href="/blog/${p.slug}/"><div class="im">${p.coverImage ? `<img src="${esc(abs(p.coverImage))}" alt="${esc(p.title)}" loading="lazy" width="400" height="300" style="object-position:top">` : ""}</div><div class="in"><div class="nm">${esc(p.title)}</div>${p.excerpt ? `<div class="ex">${esc(p.excerpt)}</div>` : ""}<div class="dt">${trDate(p.date)}</div></div></a>`;
@@ -231,6 +241,8 @@ const oldSlugs = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manife
 for (const post of posts) {
   const url = `${SITE}/blog/${post.slug}/`;
   let html = sanitize(post.content);
+  // Yazıdaki ürün bağlantılarını (/?urun=p9) ürünün kendi sayfasına çevir (Google için doğrudan, taranabilir bağlantı)
+  html = html.replace(/href="\/\?urun=([^"&#]+)"/g, (m, id) => { const sl = idToSlug[decodeURIComponent(id).toLowerCase()]; return sl ? `href="/urun/${sl}/"` : m; });
   // Başlıklara kimlik ekle (içindekiler listesi ve Google "doğrudan bağlantı" için)
   const toc = []; const used = {};
   html = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (m, inner) => {
@@ -292,6 +304,62 @@ for (const s of oldSlugs) {
   if (!posts.some((p) => p.slug === s) && /^[a-z0-9-]+$/.test(s)) fs.rmSync(path.join(OUT, s), { recursive: true, force: true });
 }
 
+// ---------- ürün sayfaları (Google Görseller / Alışveriş / Lens için taranabilir, statik) ----------
+const PCSS = `
+.pd{display:grid;gap:22px}@media(min-width:800px){.pd{grid-template-columns:1.1fr 1fr;gap:34px;align-items:start}}
+.pd-gal{display:grid;gap:10px}.pd-main{border-radius:14px;overflow:hidden;background:var(--bg2);aspect-ratio:3/4}.pd-main img{width:100%;height:100%;object-fit:cover}
+.pd-th{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.pd-th img{border-radius:10px;aspect-ratio:3/4;object-fit:cover;width:100%;background:var(--bg2)}
+.pd h1{font-size:clamp(24px,4vw,32px)}.pd-pr{font-size:26px;font-weight:700;margin:6px 0 4px}.pd-pr s{font-size:16px;color:var(--ink2);font-weight:500;margin-left:10px}
+.pd-note{font-size:13px;color:var(--ink2);margin:0 0 18px}
+.pd-spec{width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px}.pd-spec th{text-align:left;width:34%;color:var(--ink2);font-weight:600;padding:9px 0;border-bottom:1px solid var(--line)}.pd-spec td{padding:9px 0;border-bottom:1px solid var(--line)}
+.pd-desc p{margin:0 0 12px}.pd-btns{margin:18px 0 6px}.pd-btns .btn{margin:4px 8px 4px 0}
+`;
+fs.rmSync(path.join(ROOT, "urun"), { recursive: true, force: true });
+const plist = Object.values(products);
+for (const p of plist) {
+  const url = productUrl(p);
+  const imgs = p.photos;
+  const desc = stripTags(p.shortDescription || p.description || p.name).slice(0, 155);
+  const text = (p.description || p.shortDescription || "").split(/\n+/).map((x) => x.trim()).filter(Boolean);
+  const specs = [["Kumaş", p.fabric], ["Kalıp", p.fit], ["Ölçüler", p.measurements], ["Model bilgisi", p.modelInfo], ["Renkler", p.colors.join(", ")], ["Bedenler", p.sizes.join(", ")], ["Kategori", p.category]].filter(([, v]) => v && v !== "—");
+  const jsonld = [
+    { "@context": "https://schema.org", "@type": "Product", name: p.name, description: stripTags([p.shortDescription, p.description].filter(Boolean).join(" ")).slice(0, 4900) || p.name,
+      image: imgs.length ? imgs : undefined, sku: p.id, mpn: p.id, brand: { "@type": "Brand", name: BRAND }, category: p.category || undefined,
+      material: p.fabric || undefined, color: p.colors.length ? p.colors.join(", ") : undefined, audience: { "@type": "PeopleAudience", suggestedGender: "female" },
+      offers: { "@type": "Offer", url, priceCurrency: "TRY", price: p.price.toFixed(2), priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
+        availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition", seller: { "@type": "Organization", name: BRAND },
+        shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "TRY" }, shippingDestination: { "@type": "DefinedRegion", addressCountry: "TR" } },
+        hasMerchantReturnPolicy: { "@type": "MerchantReturnPolicy", applicableCountry: "TR", returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow", merchantReturnDays: 14, returnMethod: "https://schema.org/ReturnByMail", returnFees: "https://schema.org/FreeReturn" } } },
+    { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: SITE + "/" },
+      ...(p.category ? [{ "@type": "ListItem", position: 2, name: p.category, item: `${SITE}/?kategori=${encodeURIComponent(p.category)}` }] : []),
+      { "@type": "ListItem", position: p.category ? 3 : 2, name: p.name, item: url }] },
+  ];
+  const others = plist.filter((x) => x.id !== p.id && x.category === p.category).concat(plist.filter((x) => x.id !== p.id && x.category !== p.category)).slice(0, 6);
+  const body = `<style>${PCSS.trim()}</style><main class="wrap wide">
+<nav class="crumb" aria-label="Sayfa yolu"><a href="/">Ana Sayfa</a> › ${p.category ? `<a href="/?kategori=${encodeURIComponent(p.category)}">${esc(p.category)}</a> › ` : ""}${esc(p.name)}</nav>
+<article class="pd">
+<div class="pd-gal">
+${imgs.length ? `<div class="pd-main"><img src="${esc(imgs[0])}" alt="${esc(p.name)}" width="800" height="1066" fetchpriority="high"></div>` : p.video ? `<div class="pd-main"><video src="${esc(p.video)}#t=0.1" controls muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover" aria-label="${esc(p.name)}"></video></div>` : ""}
+${imgs.length > 1 ? `<div class="pd-th">${imgs.slice(1).map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="${esc(p.name)} - görsel ${i + 2}" loading="lazy" width="300" height="400"></a>`).join("")}</div>` : ""}
+</div>
+<div>
+<h1>${esc(p.name)}</h1>
+<div class="pd-pr">${money(p.price)}${p.oldPrice > p.price ? `<s>${money(p.oldPrice)}</s>` : ""}</div>
+<p class="pd-note">Ücretsiz kargo · Kapıda ödeme · 14 gün içinde cayma hakkı</p>
+<div class="pd-btns"><a class="btn btn-g" href="/?urun=${encodeURIComponent(p.id)}">Renk / Beden Seç ve Sepete Ekle</a>
+<a class="btn btn-w" href="https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Merhaba, \"" + p.name + "\" hakkında bilgi almak istiyorum.")}" target="_blank" rel="noopener">WhatsApp'tan Sor</a></div>
+${specs.length ? `<table class="pd-spec">${specs.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table>` : ""}
+<div class="pd-desc content">${text.map((t) => `<p>${esc(t)}</p>`).join("")}</div>
+</div>
+</article>
+${others.length ? `<section class="sec"><h2>Bunlar da Hoşunuza Gidebilir</h2><div class="grid">${others.map(productCard).join("")}</div></section>` : ""}
+</main>`;
+  const dir = path.join(ROOT, "urun", p.slug);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, "index.html"), page({ title: `${p.name} | ${BRAND}`, description: desc, canonical: url, image: imgs[0] || "", ogType: "product", jsonld, body }));
+}
+
 // ---------- blog ana sayfası ----------
 fs.writeFileSync(path.join(OUT, "index.html"), page({
   title: `Blog — Tesettür Kombin ve Kumaş Rehberi | ${BRAND}`,
@@ -314,13 +382,13 @@ const urls = [
   { loc: `${SITE}/blog/`, lastmod: posts.reduce((m, p) => (p.updated > m ? p.updated : m), "") || undefined, pri: "0.8" },
   ...posts.map((p) => ({ loc: `${SITE}/blog/${p.slug}/`, lastmod: p.updated, pri: "0.7" })),
   ...[...new Set(Object.values(products).map((p) => p.category).filter(Boolean))].map((c) => ({ loc: `${SITE}/?kategori=${encodeURIComponent(c)}`, pri: "0.6" })),
-  ...Object.keys(products).map((id) => ({ loc: `${SITE}/?urun=${encodeURIComponent(id)}`, pri: "0.6" })),
+  ...plist.map((p) => ({ loc: productUrl(p), pri: "0.9", images: p.photos })),
 ];
 fs.writeFileSync(path.join(ROOT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `<url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pri}</priority></url>`).join("\n")}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${urls.map((u) => `<url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pri}</priority>${(u.images || []).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>`).join("\n")}
 </urlset>
 `);
 fs.writeFileSync(path.join(ROOT, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /admin.html\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
-console.log(`${posts.length} yazı, ${Object.keys(products).length} ürün → blog sayfaları ve sitemap üretildi.`);
+console.log(`${posts.length} yazı, ${Object.keys(products).length} ürün → blog, ürün sayfaları ve sitemap üretildi.`);
