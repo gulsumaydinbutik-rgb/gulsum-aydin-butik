@@ -130,6 +130,7 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
 .pchips{display:flex;flex-wrap:wrap;gap:6px;max-height:130px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff;}
 .pchip{font-size:11.5px;padding:5px 9px;border-radius:14px;border:1px solid var(--line);background:#fff;font-weight:500;}
 .pchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.upl{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}.upl-btn{display:inline-block;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;text-transform:none!important;letter-spacing:0!important;margin:0!important;color:var(--ink)!important}.upl-msg{font-size:12.5px;color:var(--ink2)}.upl-msg.err{color:#b3261e}.upl-msg.ok{color:#2e7d32}
 .cover-row{display:flex;gap:10px;align-items:center;} .cover-row img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:var(--bg2);flex-shrink:0;}
 @media (max-width:760px){.seo-grid{grid-template-columns:1fr;} .seo-side{position:static;}}
 /* Yeni reklam */
@@ -491,7 +492,8 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
     <div class="field"><label>Google Açıklaması (meta description) <span class="counter" id="c_metaDescription"></span></label><textarea id="b_metaDescription" rows="2" oninput="seoCheck()"></textarea></div>
     <div class="gprev"><div class="u">gulsumaydin.com.tr › blog › <span id="gp_slug"></span></div><div class="t" id="gp_title"></div><div class="d" id="gp_desc"></div></div>
     <div class="field"><label>Kısa Özet (blog listesinde görünür)</label><textarea id="b_excerpt" rows="2"></textarea></div>
-    <div class="field"><label>Kapak Görseli (link)</label><div class="cover-row"><img id="b_coverPrev" alt=""><input id="b_coverImage" oninput="blogCoverPrev();seoCheck()" placeholder="https://www.gulsumaydin.com.tr/assets/urunler/p16-1.jpg"></div></div>
+    <div class="field"><label>Kapak Görseli (link)</label><div class="cover-row"><img id="b_coverPrev" alt=""><input id="b_coverImage" oninput="blogCoverPrev();seoCheck()" placeholder="https://www.gulsumaydin.com.tr/assets/urunler/p16-1.jpg"></div>
+    <div class="upl"><label class="btn-ghost upl-btn">📷 Görsel Yükle<input type="file" accept="image/*" hidden onchange="uploadPick(this,'b_coverImage',false)"></label><span class="upl-msg" id="upl_b_coverImage"></span></div></div>
     <div class="field"><label>İçerik</label>
      <div class="ed-tools">
       <button type="button" onclick="edCmd('formatBlock','h2')">Ara Başlık</button>
@@ -540,7 +542,8 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
   <div class="field"><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
   <div class="field"><label>Renkler (| ile ayırın)</label><input id="f_colors"></div>
   <div class="field"><label>Bedenler (| ile ayırın)</label><input id="f_sizes"></div>
-  <div class="field"><label>Görsel Linkleri (| ile ayırın)</label><input id="f_images"></div>
+  <div class="field"><label>Görseller <span style="text-transform:none;font-weight:500">(link yapıştırın ya da bilgisayar/telefondan yükleyin; linkleri | ile ayırın)</span></label><input id="f_images">
+   <div class="upl"><label class="btn-ghost upl-btn">📷 Görsel Yükle<input type="file" accept="image/*" multiple hidden onchange="uploadPick(this,'f_images',true)"></label><span class="upl-msg" id="upl_f_images"></span></div></div>
   <div class="field"><label>Kısa Açıklama</label><input id="f_shortDescription"></div>
   <div class="field"><label>Ürün Açıklaması</label><textarea id="f_description" rows="3"></textarea></div>
   <div class="grid2">
@@ -1418,6 +1421,44 @@ function saveProduct(){
   if(res.result==="ok"){ closeForm(); loadProducts(); }
   else { document.getElementById("formMsg").innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
  }).catch(function(){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
+}
+
+// ---- Bilgisayar / telefondan görsel yükleme (küçültüp GitHub'a gönderir; link alanına ekler) ----
+function resizeToJpegB64(file, maxSide){
+ return new Promise(function(resolve, reject){
+  var url = URL.createObjectURL(file), img = new Image();
+  img.onload = function(){
+   var w = img.naturalWidth, h = img.naturalHeight, sc = Math.min(1, maxSide/Math.max(w,h));
+   var c = document.createElement("canvas"); c.width = Math.round(w*sc); c.height = Math.round(h*sc);
+   var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+   URL.revokeObjectURL(url);
+   resolve(c.toDataURL("image/jpeg", 0.86).split(",")[1]);
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("Görsel okunamadı ("+file.name+")")); };
+  img.src = url;
+ });
+}
+async function uploadPick(inp, targetId, multi){
+ var files = Array.prototype.slice.call(inp.files || []); inp.value = "";
+ if(!files.length) return;
+ var msg = document.getElementById("upl_"+targetId), target = document.getElementById(targetId);
+ var pid = (document.getElementById("f_id")||{}).value || "";
+ var done = 0, fail = 0, urls = [];
+ for(var i=0;i<files.length;i++){
+  msg.className = "upl-msg"; msg.textContent = "Yükleniyor "+(i+1)+"/"+files.length+"…";
+  try{
+   var b64 = await resizeToJpegB64(files[i], 1600);
+   var res = await apiPost({action:"uploadImage", name:files[i].name, data:b64, productId: multi ? pid : "blog"});
+   if(res.result==="ok"){ urls.push(res.url); done++; }
+   else { fail++; msg.className="upl-msg err"; msg.textContent = res.message || "Yükleme başarısız."; if(res.code==="no_token") break; }
+  }catch(e){ fail++; msg.className="upl-msg err"; msg.textContent = e.message || "Yükleme hatası."; }
+ }
+ if(urls.length){
+  if(multi){ var cur = target.value.trim(); target.value = (cur ? cur.replace(/\|\s*$/, "") + "|" : "") + urls.join("|"); }
+  else { target.value = urls[0]; }
+  target.dispatchEvent(new Event("input"));
+  if(!fail){ msg.className = "upl-msg ok"; msg.textContent = "✓ "+done+" görsel eklendi. (Sitede görünmesi ~1-2 dk sürebilir; Kaydet'e basmayı unutmayın.)"; }
+ }
 }
 function deleteProduct(id){
  if(!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;

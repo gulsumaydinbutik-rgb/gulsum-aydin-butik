@@ -51,6 +51,7 @@ function doPost(e) {
     case "listBlog": return jsonResponse({ result: "ok", data: getAllBlog_() });
     case "upsertBlog": return jsonResponse(upsertBlog_(body.post));
     case "deleteBlog": return jsonResponse(deleteBlog_(body.slug));
+    case "uploadImage": return jsonResponse(uploadImage_(body.name, body.data, body.productId));
     case "metaStatus":
     case "metaSaveConfig":
     case "metaDisconnect":
@@ -65,6 +66,38 @@ function doPost(e) {
       return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
+}
+
+// ---------- Görsel yükleme (panelden → GitHub → sitenin /assets/urunler/ klasörü) ----------
+// Script Properties: GITHUB_TOKEN (zorunlu, "Contents: Read and write" yetkili token),
+// GITHUB_REPO (isteğe bağlı, varsayılan aşağıdaki), GITHUB_BRANCH (isteğe bağlı, varsayılan main)
+var GITHUB_DEFAULT_REPO = "gulsumaydinbutik-rgb/gulsum-aydin-butik";
+function uploadImage_(name, b64, productId) {
+  var props = PropertiesService.getScriptProperties();
+  var token = props.getProperty("GITHUB_TOKEN");
+  if (!token) return { result: "error", code: "no_token", message: "GitHub bağlantısı kurulmamış (Script Properties'e GITHUB_TOKEN eklenmeli)." };
+  var repo = props.getProperty("GITHUB_REPO") || GITHUB_DEFAULT_REPO;
+  var branch = props.getProperty("GITHUB_BRANCH") || "main";
+  b64 = String(b64 || "").replace(/^data:[^,]*,/, "");
+  if (!b64) return { result: "error", message: "Görsel verisi boş." };
+  if (b64.length > 6 * 1024 * 1024) return { result: "error", message: "Görsel çok büyük (en fazla ~4 MB)." };
+  var ext = (String(name || "").match(/\.(jpe?g|png|webp)$/i) || [null, "jpg"])[1].toLowerCase().replace("jpeg", "jpg");
+  var base = String(productId || name || "gorsel").toLowerCase()
+    .replace(/[çÇ]/g, "c").replace(/[ğĞ]/g, "g").replace(/[ıİ]/g, "i").replace(/[öÖ]/g, "o").replace(/[şŞ]/g, "s").replace(/[üÜ]/g, "u")
+    .replace(/\.[a-z0-9]+$/i, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "gorsel";
+  var file = base + "-" + Utilities.formatDate(new Date(), "Europe/Istanbul", "yyMMddHHmmss") + Math.floor(Math.random() * 90 + 10) + "." + ext;
+  var path = "assets/urunler/" + file;
+  var res = UrlFetchApp.fetch("https://api.github.com/repos/" + repo + "/contents/" + path, {
+    method: "put", muteHttpExceptions: true, contentType: "application/json",
+    headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "gulsum-aydin-admin" },
+    payload: JSON.stringify({ message: "Panelden görsel yüklendi: " + file, content: b64, branch: branch })
+  });
+  var code = res.getResponseCode();
+  if (code === 201 || code === 200) return { result: "ok", url: SITE_URL + "/" + path };
+  var msg = ""; try { msg = JSON.parse(res.getContentText()).message || ""; } catch (e) {}
+  if (code === 401) return { result: "error", message: "GitHub token geçersiz veya süresi dolmuş. Yeni token oluşturup GITHUB_TOKEN'ı güncelleyin." };
+  if (code === 403 || code === 404) return { result: "error", message: "GitHub izin hatası (" + code + "): token bu depoya 'Contents: Read and write' yetkisiyle erişebilmeli. " + msg };
+  return { result: "error", message: "GitHub yüklemesi başarısız (" + code + "). " + msg };
 }
 
 // ---------- Sipariş işlemleri ----------
