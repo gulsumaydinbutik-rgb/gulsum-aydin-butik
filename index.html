@@ -497,10 +497,10 @@ function loadProductsFromSheet(){
    var colors=splitList(p.colors); if(!colors.length) colors=["Standart"];
    var sizes=splitList(p.sizes); if(!sizes.length) sizes=["Standart"];
    
-   var variants=[];
+   var variants=[]; var stk=parseStock(p.stock);
    colors.forEach(function(c){
     sizes.forEach(function(sz){
-     variants.push({color:c, size:sz, stock:10});
+     variants.push({color:c, size:sz, stock:stockFor(stk,c,sz), tracked:!!stk});
     });
    });
 
@@ -561,6 +561,28 @@ function parsePrice(str){
  return isNaN(n)?0:n;
 }
 function findProduct(id){ for(var i=0;i<PRODUCTS.length;i++){ if(PRODUCTS[i].id===id) return PRODUCTS[i]; } return null; }
+// stock sütunu: boş = takip yok; "5" = her varyant 5; "Siyah|S:3;Siyah|M:0;Bej|*:2" = varyant bazlı
+function parseStock(str){
+ str=String(str==null?"":str).trim(); if(!str) return null;
+ if(/^\d+$/.test(str)) return {all:parseInt(str,10), map:{}};
+ var map={};
+ str.split(";").forEach(function(part){
+  var i=part.lastIndexOf(":"); if(i<0) return;
+  var k=part.slice(0,i).trim().toLowerCase(), n=parseInt(part.slice(i+1),10);
+  if(k) map[k]=isNaN(n)?0:Math.max(0,n);
+ });
+ return {all:null, map:map};
+}
+function stockFor(stk,color,size){
+ if(!stk) return 99;
+ if(stk.all!==null) return stk.all;
+ var c=String(color).toLowerCase(), z=String(size).toLowerCase();
+ var m=stk.map;
+ if(m[c+"|"+z]!==undefined) return m[c+"|"+z];
+ if(m[c+"|*"]!==undefined) return m[c+"|*"];
+ if(m["*|"+z]!==undefined) return m["*|"+z];
+ return 0;
+}
 function findVariant(p,color,size){ for(var i=0;i<p.variants.length;i++){ var v=p.variants[i]; if(v.color===color&&v.size===size) return v; } return null; }
 function productBaseName(p){
  var name=p.name, colors=p.colors.slice().sort(function(a,b){return b.length-a.length;});
@@ -907,7 +929,7 @@ function viewProduct(){
  var hasColor2 = p.colors2 && p.colors2.length>0;
  var color=state.pdColor||p.colors[0];
  var color2=hasColor2? (state.pdColor2||p.colors2[0]) : null;
- var size=state.pdSize||p.sizes[0];
+ var size=state.pdSize||(p.sizes.filter(function(z){var v=findVariant(p,color,z);return v&&v.stock>0;})[0]||p.sizes[0]);
  var variant = findVariant(p,color,size);
  var disc = p.oldPrice? Math.round((1-p.price/p.oldPrice)*100):0;
  var dispName = productDisplayName(p,color,color2);
@@ -924,10 +946,11 @@ function viewProduct(){
  '<div class="pd-price">'+money(p.price)+(p.oldPrice?' <span class="old-price">'+money(p.oldPrice)+'</span> <span class="disc">%'+disc+'</span>':'')+'</div>'+
  (p.bulkPrice2? '<div class="bulk-badge">🎁 2 Adet Al, Toplam '+money(p.bulkPrice2)+' Öde</div>' : '')+campBadges(p)+
  '<p style="color:var(--ink2);font-size:13px;margin-top:8px">'+esc(p.shortDescription)+'</p>'+
- '<div class="stock-line in">✓ Stokta Var</div>'+
+ (!variant||variant.stock<1? '<div class="stock-line out">✕ Bu seçenek tükendi</div>' : (variant.tracked&&variant.stock<=3? '<div class="stock-line out">🔥 Son '+variant.stock+' adet</div>' : '<div class="stock-line in">✓ Stokta Var</div>'))+
  '<div class="opt-label">'+(hasColor2?((p.color1Label||"Sweat")+" Rengi"):'Renk')+': '+esc(color)+'</div>'+
  '<div class="opt-row">'+p.colors.map(function(c){
-  return '<button class="opt-pill'+(c===color?' selected':'')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
+  var cOut=p.sizes.every(function(sz){var v=findVariant(p,c,sz);return !v||v.stock<1;});
+  return '<button class="opt-pill'+(c===color?' selected':'')+(cOut?' disabled':'')+'" data-color="'+esc(c)+'">'+esc(c)+'</button>';
  }).join('')+'</div>'+
  (hasColor2? (
   '<div class="opt-label">'+(p.color2Label||"Pantolon")+' Rengi: '+esc(color2)+'</div>'+
@@ -937,7 +960,8 @@ function viewProduct(){
  ) : '')+
  '<div class="opt-label">Beden: '+esc(size)+'</div>'+
  '<div class="opt-row">'+p.sizes.map(function(s){
-  return '<button class="opt-pill'+(s===size?' selected':'')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
+  var sv=findVariant(p,color,s), sOut=!sv||sv.stock<1;
+  return '<button class="opt-pill'+(s===size?' selected':'')+(sOut?' disabled':'')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
  }).join('')+'</div>'+
  '<div class="opt-label">Adet</div>'+
  '<div class="qty-row"><button class="qty-btn" data-qty="-1">−</button><span class="qty-val">'+state.pdQty+'</span><button class="qty-btn" data-qty="1">+</button></div>'+
@@ -1145,7 +1169,7 @@ document.addEventListener("click", function(e){
  var addBtn = e.target.closest('[data-action="addcart"]');
  if(addBtn){
   var p=findProduct(state.productId);
-  if(p){ addToCart(p, state.pdColor||p.colors[0], state.pdSize||p.sizes[0], state.pdQty, (p.colors2&&p.colors2.length)?(state.pdColor2||p.colors2[0]):null); }
+  if(p){ addToCart(p, state.pdColor||p.colors[0], state.pdSize||(p.sizes.filter(function(z){var v=findVariant(p,state.pdColor||p.colors[0],z);return v&&v.stock>0;})[0]||p.sizes[0]), state.pdQty, (p.colors2&&p.colors2.length)?(state.pdColor2||p.colors2[0]):null); }
   return;
  }
  var cqtyBtn = e.target.closest("[data-cqty]");

@@ -122,9 +122,16 @@ for (const p of csvObjects(productCsv)) {
     image: photos[0] || "", photos, video: !photos.length && vid ? abs(vid) : "",
     slug: `${slugify(p.name).slice(0, 50).replace(/-+$/, "")}-${idSlug}`.replace(/^-/, ""),
     shortDescription: p.shortDescription || "", description: p.description || "", fabric: p.fabric || "", fit: p.fit || "",
-    measurements: p.measurements || "", modelInfo: p.modelInfo || "", colors: split(p.colors), sizes: split(p.sizes),
+    measurements: p.measurements || "", modelInfo: p.modelInfo || "", colors: split(p.colors), sizes: split(p.sizes), stock: String(p.stock || "").trim(),
   };
 }
+// stock sütunu: boş = takip yok; "5" = her varyant; "Siyah|S:3;Bej|*:2" = varyant bazlı
+const inStock = (p) => {
+  const s = (p.stock || "").trim();
+  if (!s) return true;
+  if (/^\d+$/.test(s)) return parseInt(s, 10) > 0;
+  return s.split(";").some((x) => parseInt(x.slice(x.lastIndexOf(":") + 1), 10) > 0);
+};
 const productUrl = (p) => `${SITE}/urun/${p.slug}/`;
 const idToSlug = Object.fromEntries(Object.values(products).map((p) => [p.id.toLowerCase(), p.slug]));
 
@@ -327,7 +334,7 @@ for (const p of plist) {
       image: imgs.length ? imgs : undefined, sku: p.id, mpn: p.id, brand: { "@type": "Brand", name: BRAND }, category: p.category || undefined,
       material: p.fabric || undefined, color: p.colors.length ? p.colors.join(", ") : undefined, audience: { "@type": "PeopleAudience", suggestedGender: "female" },
       offers: { "@type": "Offer", url, priceCurrency: "TRY", price: p.price.toFixed(2), priceValidUntil: `${new Date().getFullYear() + 1}-12-31`,
-        availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition", seller: { "@type": "Organization", name: BRAND },
+        availability: inStock(p) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", itemCondition: "https://schema.org/NewCondition", seller: { "@type": "Organization", name: BRAND },
         shippingDetails: { "@type": "OfferShippingDetails", shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "TRY" }, shippingDestination: { "@type": "DefinedRegion", addressCountry: "TR" } },
         hasMerchantReturnPolicy: { "@type": "MerchantReturnPolicy", applicableCountry: "TR", returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow", merchantReturnDays: 14, returnMethod: "https://schema.org/ReturnByMail", returnFees: "https://schema.org/FreeReturn" } } },
     { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [

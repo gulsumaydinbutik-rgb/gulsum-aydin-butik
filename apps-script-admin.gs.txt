@@ -151,6 +151,7 @@ function getProductsSheet() {
 
 function getAllProducts() {
   var sheet = getProductsSheet();
+  ensureColumn_(sheet, "stock");
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   return data.slice(1)
@@ -162,9 +163,27 @@ function getAllProducts() {
     });
 }
 
+// stock sütunu: boş = takip yok; "5" = her varyant; "Siyah|S:3;Bej|*:2" = varyant bazlı
+function stockAvailable_(str) {
+  str = String(str == null ? "" : str).trim();
+  if (!str) return true;
+  if (/^\d+$/.test(str)) return parseInt(str, 10) > 0;
+  return str.split(";").some(function (x) { return parseInt(x.slice(x.lastIndexOf(":") + 1), 10) > 0; });
+}
+
+function ensureColumn_(sheet, name) {
+  var lastCol = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var idx = headers.indexOf(name);
+  if (idx > -1) return idx;
+  sheet.getRange(1, lastCol + 1).setValue(name);
+  return lastCol;
+}
+
 function upsertProduct(product) {
   if (!product || !product.id) return { result: "error", message: "Ürün ID zorunlu." };
   var sheet = getProductsSheet();
+  ensureColumn_(sheet, "stock");
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var idCol = headers.indexOf("id");
@@ -324,7 +343,7 @@ function feedItem_(p, camps) {
     description: desc,
     link: SITE_URL + "/?urun=" + encodeURIComponent(id),
     image_link: absUrl_(imgs[0]),
-    availability: "in stock",
+    availability: stockAvailable_(p.stock) ? "in stock" : "out of stock",
     price: (onSale ? old : price).toFixed(2) + " TRY",
     sale_price: onSale ? price.toFixed(2) + " TRY" : "",
     brand: FEED_BRAND,

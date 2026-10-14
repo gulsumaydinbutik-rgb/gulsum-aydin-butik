@@ -566,6 +566,10 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
   <div class="field"><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
   <div class="field"><label>Renkler (| ile ayırın)</label><input id="f_colors"></div>
   <div class="field"><label>Bedenler (| ile ayırın)</label><input id="f_sizes"></div>
+  <div class="field"><label>Stok (renk × beden) <span style="font-weight:400;color:#888">— kapalıysa stok takip edilmez</span></label>
+   <input id="f_stock" type="hidden">
+   <div id="stockGrid" style="overflow:auto"></div>
+   <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" onclick="stockRender(true)">Stok tablosunu aç / renk-bedene göre yenile</button><button type="button" class="btn" onclick="stockClear()">Stok takibini kapat</button></div></div>
   <div class="field"><label>Görseller <span style="text-transform:none;font-weight:500">(link yapıştırın ya da bilgisayar/telefondan yükleyin; linkleri | ile ayırın)</span></label><input id="f_images">
    <div class="upl"><label class="btn-ghost upl-btn">📷 Görsel Yükle<input type="file" accept="image/*" multiple hidden onchange="uploadPick(this,'f_images',true)"></label><span class="upl-msg" id="upl_f_images"></span></div></div>
   <div class="field"><label>Kısa Açıklama</label><input id="f_shortDescription"></div>
@@ -1417,7 +1421,7 @@ function metaDisconnect(){
  });
 }
 
-var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","shortDescription","description","fabric","fit"];
+var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","stock","shortDescription","description","fabric","fit"];
 function openForm(index){
  var p = index!==null ? products[index] : null;
  document.getElementById("modalTitle").textContent = p ? "Ürünü Düzenle" : "Yeni Ürün";
@@ -1426,8 +1430,38 @@ function openForm(index){
  document.getElementById("f_isNew").checked = p ? (String(p.isNew).toLowerCase()==="true"||p.isNew==="1") : false;
  document.getElementById("f_isBestSeller").checked = p ? (String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") : false;
  document.getElementById("formMsg").innerHTML="";
+ stockRender(false);
  document.getElementById("modalBg").classList.remove("hidden");
 }
+function stockList(v){ return String(v||"").split("|").map(function(x){return x.trim();}).filter(Boolean); }
+function stockParse(str){
+ str=String(str||"").trim(); var m={};
+ if(!str) return {m:m,all:null,on:false};
+ if(/^\d+$/.test(str)) return {m:m,all:parseInt(str,10),on:true};
+ str.split(";").forEach(function(part){ var i=part.lastIndexOf(":"); if(i>0) m[part.slice(0,i).trim().toLowerCase()]=part.slice(i+1).trim(); });
+ return {m:m,all:null,on:true};
+}
+function stockRender(force){
+ var box=document.getElementById("stockGrid");
+ var colors=stockList(document.getElementById("f_colors").value), sizes=stockList(document.getElementById("f_sizes").value);
+ if(!colors.length) colors=["Standart"]; if(!sizes.length) sizes=["Standart"];
+ var cur=stockParse(document.getElementById("f_stock").value);
+ if(!cur.on && !force){ box.innerHTML='<div style="font-size:12px;color:#888">Stok takibi kapalı (ürün her zaman stokta görünür).</div>'; return; }
+ var h='<table style="border-collapse:collapse;font-size:13px"><tr><th></th>'+sizes.map(function(z){return '<th style="padding:4px 8px">'+z+'</th>';}).join('')+'</tr>';
+ colors.forEach(function(c){
+  h+='<tr><td style="padding:4px 8px;font-weight:600">'+c+'</td>'+sizes.map(function(z){
+   var k=c.toLowerCase()+"|"+z.toLowerCase();
+   var v=!cur.on?5:(cur.all!==null?cur.all:(cur.m[k]!==undefined?cur.m[k]:0));
+   return '<td style="padding:2px"><input type="number" min="0" class="stk" data-c="'+c+'" data-z="'+z+'" value="'+v+'" style="width:60px;padding:6px" oninput="stockSync()"></td>';
+  }).join('')+'</tr>';
+ });
+ box.innerHTML=h+'</table>'; stockSync();
+}
+function stockSync(){
+ var parts=[]; document.querySelectorAll("#stockGrid .stk").forEach(function(i){ parts.push(i.getAttribute("data-c")+"|"+i.getAttribute("data-z")+":"+(parseInt(i.value,10)||0)); });
+ document.getElementById("f_stock").value=parts.join(";");
+}
+function stockClear(){ document.getElementById("f_stock").value=""; stockRender(false); }
 function closeForm(){ document.getElementById("modalBg").classList.add("hidden"); }
 
 function saveProduct(){
