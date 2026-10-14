@@ -954,11 +954,17 @@ function igPageToken_() {
     pageId = st && st.pageId;
   }
   if (!pageId) throw new Error("Bağlı Facebook sayfası bulunamadı. Reklamlar sekmesinden sayfa seçimini yapın.");
-  var pages = metaApi_("me/accounts", { fields: "id,access_token,instagram_business_account{id,username}", limit: 50 }).data || [];
-  var page = pages.filter(function (p) { return p.id === pageId; })[0];
+  var page = null;
+  try { page = metaApi_(pageId, { fields: "access_token,instagram_business_account{id,username}" }); page.id = pageId; }
+  catch (e1) {
+    try {
+      var pages = igFetchRetry_("me/accounts", [{ fields: "id,access_token", limit: 25 }, { fields: "id,access_token", limit: 5 }], null).data || [];
+      page = pages.filter(function (p) { return p.id === pageId; })[0];
+    } catch (e2) { throw new Error("[sayfa anahtarı] " + (e1 && e1.message ? e1.message : e1)); }
+  }
   if (!page || !page.access_token) throw new Error("Sayfa için erişim anahtarı alınamadı. Sistem kullanıcısına sayfayı 'Mesajları yönet' yetkisiyle atayın.");
   var ig = page.instagram_business_account || {};
-  return { pageId: pageId, token: page.access_token, igId: ig.id || "", igUsername: ig.username || "" };
+  return { pageId: pageId, token: page.access_token, igId: ig.id || PropertiesService.getScriptProperties().getProperty(META_IG_PROP) || "", igUsername: ig.username || "" };
 }
 
 function igError_(err) {
@@ -999,10 +1005,13 @@ function igInbox_(after) {
     var variants = [
       { platform: "instagram", fields: F, limit: 10 },
       { platform: "instagram", fields: F, limit: 5 },
-      { platform: "instagram", fields: "id,updated_time,participants", limit: 5 }
+      { platform: "instagram", fields: "id,updated_time,participants", limit: 5 },
+      { platform: "instagram", fields: "id,updated_time", limit: 3 }
     ];
     if (after) variants.forEach(function (v) { v.after = after; });
-    var res = igFetchRetry_(pg.pageId + "/conversations", variants, pg.token);
+    var res;
+    try { res = igFetchRetry_(pg.pageId + "/conversations", variants, pg.token); }
+    catch (e) { throw new Error("[konuşma listesi] " + (e && e.message ? e.message : e)); }
     var labels = igLabels_();
     var items = (res.data || []).map(function (c) {
       var others = ((c.participants || {}).data || []).filter(function (p) { return String(p.id) !== String(pg.igId); });
@@ -1024,7 +1033,9 @@ function igThread_(id) {
   try {
     var pg = igPageToken_();
     var TF = function (n, extra) { return { fields: "id,messages.limit(" + n + "){id,message,from,created_time" + extra + "}" }; };
-    var res = igFetchRetry_(String(id), [TF(20, ",attachments,shares"), TF(10, ",attachments"), TF(10, "")], pg.token);
+    var res;
+    try { res = igFetchRetry_(String(id), [TF(20, ",attachments,shares"), TF(10, ",attachments"), TF(5, "")], pg.token); }
+    catch (e) { throw new Error("[konuşma içeriği] " + (e && e.message ? e.message : e)); }
     var msgs = ((res.messages || {}).data || []).map(function (m) {
       var atts = ((m.attachments || {}).data || []).map(function (a) {
         return { type: a.mime_type || "", name: a.name || "", url: (a.image_data && a.image_data.url) || (a.video_data && a.video_data.url) || a.file_url || "" };
