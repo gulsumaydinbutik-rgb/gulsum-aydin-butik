@@ -63,6 +63,9 @@ function doPost(e) {
     case "metaIgMedia":
     case "metaCreateAd":
     case "metaCatalogs":
+    case "igInbox":
+    case "igThread":
+    case "igSetLabel":
       return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
   }
@@ -578,6 +581,9 @@ function handleMetaAction_(body) {
       case "metaIgMedia": return metaIgMedia_(body.after);
       case "metaCreateAd": return metaCreateAd_(body.spec || {});
       case "metaCatalogs": return metaCatalogs_();
+      case "igInbox": return igInbox_(body.after, body.refresh);
+      case "igThread": return igThread_(body.id);
+      case "igSetLabel": return igSetLabel_(body.id, body.label, body.note, body.name);
     }
     return { result: "error", message: "Bilinmeyen işlem." };
   } catch (err) {
@@ -928,6 +934,109 @@ function metaSaveAdSetup_(pageId, pixelId) {
   if (page.instagram_business_account) props.setProperty(META_IG_PROP, page.instagram_business_account.id); else props.deleteProperty(META_IG_PROP);
   if (pixelId) props.setProperty(META_PIXEL_PROP, String(pixelId).replace(/\D/g, ""));
   return { result: "ok" };
+}
+
+
+// ============================================================
+// Instagram mesajları (DM) — Meta'nın Instagram mesajlaşma API'si
+// Sayfa erişim anahtarı sistem kullanıcısı anahtarından türetilir.
+// Anahtarda instagram_manage_messages + pages_messaging + pages_show_list izinleri olmalı
+// ve Instagram'da Ayarlar > Mesajlar > Bağlı araçlar > "Mesajlara erişime izin ver" açık olmalı.
+// Etiketler (Sipariş verildi vb.) Instagram'dan okunamaz; panelde "MesajEtiketleri" sekmesinde tutulur.
+// ============================================================
+var IG_LABEL_SHEET = "MesajEtiketleri";
+var IG_LABELS = ["", "Yeni", "Sipariş verildi", "Bekliyor", "İptal"];
+
+function igPageToken_() {
+  var pageId = PropertiesService.getScriptProperties().getProperty(META_PAGE_PROP);
+  if (!pageId) {
+    var st = metaAdSetup_();
+    pageId = st && st.pageId;
+  }
+  if (!pageId) throw new Error("Bağlı Facebook sayfası bulunamadı. Reklamlar sekmesinden sayfa seçimini yapın.");
+  var pages = metaApi_("me/accounts", { fields: "id,access_token,instagram_business_account{id,username}", limit: 50 }).data || [];
+  var page = pages.filter(function (p) { return p.id === pageId; })[0];
+  if (!page || !page.access_token) throw new Error("Sayfa için erişim anahtarı alınamadı. Sistem kullanıcısına sayfayı 'Mesajları yönet' yetkisiyle atayın.");
+  var ig = page.instagram_business_account || {};
+  return { pageId: pageId, token: page.access_token, igId: ig.id || "", igUsername: ig.username || "" };
+}
+
+function igError_(err) {
+  var m = String((err && err.message) || err);
+  if (/\(#?(10|200|230|3)\)|permission|izin|instagram_manage_messages|pages_messaging/i.test(m))
+    return "Instagram mesaj izni eksik. Sistem kullanıcısı anahtarını oluştururken instagram_manage_messages ve pages_messaging izinlerini de işaretleyip yeni anahtarı Reklamlar sekmesinden girin; ayrıca Instagram'da Ayarlar > Mesajlar ve hikaye yanıtları > Bağlı araçlar > 'Mesajlara erişime izin ver' açık olmalı. (Ayrıntı: " + m + ")";
+  return m;
+}
+
+function igLabels_() {
+  var map = {};
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(IG_LABEL_SHEET);
+  if (!sh) return map;
+  var data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0]) map[String(data[i][0])] = { label: String(data[i][2] || ""), note: String(data[i][3] || ""), name: String(data[i][1] || "") };
+  }
+  return map;
+}
+
+function igInbox_(after) {
+  try {
+    var pg = igPageToken_();
+    var params = { platform: "instagram", fields: "id,updated_time,participants,messages.limit(1){message,from,created_time,attachments}", limit: 25 };
+    if (after) params.after = after;
+    var res = metaApi_(pg.pageId + "/conversations", params, "get", pg.token);
+    var labels = igLabels_();
+    var items = (res.data || []).map(function (c) {
+      var others = ((c.participants || {}).data || []).filter(function (p) { return String(p.id) !== String(pg.igId); });
+      var who = others[0] || {};
+      var last = ((c.messages || {}).data || [])[0] || {};
+      var l = labels[c.id] || {};
+      return {
+        id: c.id, name: who.username || who.name || "Kullanıcı", updated: c.updated_time,
+        last: last.message || (last.attachments ? "[Medya / paylaşım]" : ""), lastFromMe: !!(last.from && String(last.from.id) === String(pg.igId)),
+        label: l.label || "", note: l.note || ""
+      };
+    });
+    return { result: "ok", account: pg.igUsername, items: items, next: res.paging && res.paging.next && res.paging.cursors ? res.paging.cursors.after : "" };
+  } catch (e) { return { result: "error", message: igError_(e) }; }
+}
+
+function igThread_(id) {
+  if (!id) return { result: "error", message: "Konuşma kimliği gerekli." };
+  try {
+    var pg = igPageToken_();
+    var res = metaApi_(String(id), { fields: "id,participants,messages.limit(20){id,message,from,created_time,attachments,shares}" }, "get", pg.token);
+    var msgs = ((res.messages || {}).data || []).map(function (m) {
+      var atts = ((m.attachments || {}).data || []).map(function (a) {
+        return { type: a.mime_type || "", name: a.name || "", url: (a.image_data && a.image_data.url) || (a.video_data && a.video_data.url) || a.file_url || "" };
+      });
+      var shared = ((m.shares || {}).data || []).map(function (x) { return x.link || ""; }).filter(String);
+      return { id: m.id, text: m.message || "", time: m.created_time, mine: !!(m.from && String(m.from.id) === String(pg.igId)), attachments: atts, shares: shared };
+    }).reverse();
+    var l = igLabels_()[String(id)] || {};
+    return { result: "ok", id: id, messages: msgs, label: l.label || "", note: l.note || "", limited: msgs.length >= 20 };
+  } catch (e) { return { result: "error", message: igError_(e) }; }
+}
+
+function igSetLabel_(id, label, note, name) {
+  id = String(id || "").trim();
+  if (!id) return { result: "error", message: "Konuşma kimliği gerekli." };
+  label = String(label || "");
+  if (IG_LABELS.indexOf(label) < 0) return { result: "error", message: "Geçersiz etiket." };
+  note = String(note || "").slice(0, 500);
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return { result: "error", message: "Başka bir güncelleme sürüyor, tekrar deneyin." };
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName(IG_LABEL_SHEET);
+    if (!sh) { sh = ss.insertSheet(IG_LABEL_SHEET); sh.appendRow(["conversationId", "kullanici", "etiket", "not", "guncelleme"]); sh.getRange(1, 1, sh.getMaxRows(), 1).setNumberFormat("@"); }
+    var data = sh.getDataRange().getValues(), row = -1;
+    for (var i = 1; i < data.length; i++) { if (String(data[i][0]) === id) { row = i + 1; break; } }
+    var vals = [id, String(name || (row > 0 ? data[row - 1][1] : "")).slice(0, 80), label, note, new Date()];
+    if (row > 0) sh.getRange(row, 1, 1, 5).setValues([vals]);
+    else { var t = Math.max(sh.getLastRow() + 1, 2); sh.getRange(t, 1).setNumberFormat("@"); sh.getRange(t, 1, 1, 5).setValues([vals]); }
+    return { result: "ok" };
+  } finally { lock.releaseLock(); }
 }
 
 function metaIgMedia_(after) {
