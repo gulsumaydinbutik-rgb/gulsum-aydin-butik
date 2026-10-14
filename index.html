@@ -344,6 +344,30 @@ function loadSettingsFromSheet(){
  }).catch(function(){ return false; });
 }
 
+// Trafik kaynağı (ilk temas, 30 gün): utm / fbclid / gclid / yönlendiren site
+function captureSource(){
+ try{
+  var old=JSON.parse(localStorage.getItem("ga_src")||"null");
+  if(old && Date.now()-old.t<30*864e5) return;
+  var q=new URLSearchParams(location.search), ref="";
+  try{ ref=document.referrer?new URL(document.referrer).hostname.replace(/^www\./,""):""; }catch(e){}
+  if(ref && ref.indexOf("gulsumaydin.com.tr")>-1) ref="";
+  var us=q.get("utm_source")||"", um=q.get("utm_medium")||"", label="Doğrudan";
+  if(q.get("fbclid")||/facebook|instagram|meta|fb|ig/i.test(us)) label=(/story|reel|bio/i.test(us+um)?"Instagram":"Meta (Instagram/Facebook)")+(um&&/cpc|paid|ad/i.test(um)?" Reklam":"");
+  else if(q.get("gclid")||/google/i.test(us)&&/cpc|paid|ad/i.test(um)) label="Google Reklam";
+  else if(us) label=us+(um?" / "+um:"");
+  else if(/instagram\.com|l\.instagram/.test(ref)) label="Instagram";
+  else if(/facebook\.com|fb\.com/.test(ref)) label="Facebook";
+  else if(/google\./.test(ref)) label="Google Arama";
+  else if(/bing\.|yandex\./.test(ref)) label="Arama Motoru ("+ref+")";
+  else if(/tiktok/.test(ref)) label="TikTok";
+  else if(ref) label="Site: "+ref;
+  localStorage.setItem("ga_src",JSON.stringify({t:Date.now(),label:label,campaign:q.get("utm_campaign")||"",content:q.get("utm_content")||""}));
+ }catch(e){}
+}
+captureSource();
+function sourceInfo(){ try{ return JSON.parse(localStorage.getItem("ga_src")||"null")||{}; }catch(e){ return {}; } }
+
 function sendOrderToSheet(order){
  if(!ORDER_SHEET_ENDPOINT || ORDER_SHEET_ENDPOINT.indexOf("PASTE_")>-1) return;
  fetch(ORDER_SHEET_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify(order)}).catch(function(){});
@@ -1216,7 +1240,8 @@ document.addEventListener("submit", function(e){
   city:f.city, district:f.district, neighborhood:f.neighborhood, address:f.address,
   note:(function(){ var d=cartCampaignDiscount(); var n=f.note||""; return d.amount>0 ? (n?n+" | ":"")+"Kampanya: "+d.name+" (−"+d.amount+" TL)" : n; })(),
   items:state.cart.slice(), subtotal:cartSubtotal(), shipping:SHIPPING_FEE, total:cartSubtotal()+SHIPPING_FEE,
-  paymentMethod:"Kapıda Ödeme", status:"Yeni Sipariş"
+  paymentMethod:"Kapıda Ödeme", status:"Yeni Sipariş",
+  source:sourceInfo().label||"Doğrudan", campaign:[sourceInfo().campaign,sourceInfo().content].filter(Boolean).join(" / ")
  };
  state.lastOrder=order; saveLS("ga_last_order",order);
  sendOrderToSheet(order);

@@ -47,7 +47,7 @@ function doPost(e) {
     case "upsertCampaign": return jsonResponse(withFeedRefresh_(upsertCampaign(body.campaign)));
     case "deleteCampaign": return jsonResponse(withFeedRefresh_(deleteCampaign(body.id)));
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
-    case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status));
+    case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status, body.cargo, body.tracking));
     case "listBlog": return jsonResponse({ result: "ok", data: getAllBlog_() });
     case "upsertBlog": return jsonResponse(upsertBlog_(body.post));
     case "deleteBlog": return jsonResponse(deleteBlog_(body.slug));
@@ -113,6 +113,7 @@ function getOrdersSheet() {
 function getAllOrders() {
   var sheet = getOrdersSheet();
   if (!sheet) return [];
+  ensureOrderCols_(sheet);
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var orders = data.slice(1)
@@ -126,21 +127,88 @@ function getAllOrders() {
   return orders;
 }
 
-function updateOrderStatus(orderId, status) {
+var ORDER_EXTRA_COLS = ["Kaynak", "Kampanya (UTM)", "Ürün Kodları", "Kargo Firması", "Takip No", "Stok Düşüldü"];
+var STOCK_DEC_STATUSES = ["Onaylandı", "Hazırlanıyor", "Kargoya Verildi", "Teslim Edildi"];
+var STOCK_RESTORE_STATUSES = ["İptal", "İade"];
+
+function ensureOrderCols_(sheet) {
+  var have = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  ORDER_EXTRA_COLS.forEach(function (h) {
+    if (have.indexOf(h) === -1) { sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h); have.push(h); }
+  });
+  return have;
+}
+
+// Sipariş durumunu günceller; kargo/takip no kaydeder; stoğu bir kez düşer, iptal/iadede geri ekler
+function updateOrderStatus(orderId, status, cargo, tracking) {
   if (!orderId || !status) return { result: "error", message: "Sipariş no ve durum zorunlu." };
   var sheet = getOrdersSheet();
   if (!sheet) return { result: "error", message: "Siparişler sekmesi bulunamadı." };
+  var headers = ensureOrderCols_(sheet);
   var data = sheet.getDataRange().getValues();
-  var headers = data[0];
   var idCol = headers.indexOf("Sipariş No");
   var statusCol = headers.indexOf("Durum");
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][idCol]) === String(orderId)) {
-      sheet.getRange(i + 1, statusCol + 1).setValue(status);
-      return { result: "ok" };
+    if (String(data[i][idCol]) !== String(orderId)) continue;
+    var row = i + 1, note = "";
+    sheet.getRange(row, statusCol + 1).setValue(status);
+    if (cargo !== undefined && cargo !== null) sheet.getRange(row, headers.indexOf("Kargo Firması") + 1).setValue(String(cargo));
+    if (tracking !== undefined && tracking !== null) sheet.getRange(row, headers.indexOf("Takip No") + 1).setValue("'" + String(tracking));
+    var flagCol = headers.indexOf("Stok Düşüldü") + 1;
+    var flag = String(sheet.getRange(row, flagCol).getValue());
+    var codes = String(data[i][headers.indexOf("Ürün Kodları")] || "");
+    if (STOCK_DEC_STATUSES.indexOf(status) > -1 && flag !== "1") {
+      if (codes) { var r1 = applyStock_(codes, -1); sheet.getRange(row, flagCol).setValue("1"); note = r1; }
+      else note = "Bu eski siparişte ürün kodu yok, stok düşülmedi.";
+    } else if (STOCK_RESTORE_STATUSES.indexOf(status) > -1 && flag === "1") {
+      var r2 = applyStock_(codes, 1); sheet.getRange(row, flagCol).setValue(""); note = r2;
     }
+    return { result: "ok", stockNote: note };
   }
   return { result: "error", message: "Sipariş bulunamadı." };
+}
+
+// codes: "ürünId|renk|beden|adet;..."  sign: -1 düş, +1 geri ekle. Stok takibi kapalı ürünlere dokunmaz.
+function applyStock_(codes, sign) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sheet = getProductsSheet();
+    ensureColumn_(sheet, "stock");
+    var data = sheet.getDataRange().getValues();
+    var h = data[0], idC = h.indexOf("id"), stC = h.indexOf("stock"), coC = h.indexOf("colors"), szC = h.indexOf("sizes");
+    var changed = 0;
+    String(codes).split(";").forEach(function (code) {
+      var parts = code.split("|"); if (parts.length < 4) return;
+      var pid = parts[0], color = parts[1], size = parts[2], qty = parseInt(parts[3], 10) || 0;
+      for (var r = 1; r < data.length; r++) {
+        if (String(data[r][idC]) !== pid) continue;
+        var str = String(data[r][stC] || "").trim();
+        if (!str) return; // takip yok
+        var map = {}, order = [];
+        if (/^\d+$/.test(str)) {
+          var n = parseInt(str, 10);
+          splitList_(data[r][coC] || "Standart").concat([]).forEach(function (c) {
+            splitList_(data[r][szC] || "Standart").forEach(function (z) { map[c + "|" + z] = n; order.push(c + "|" + z); });
+          });
+        } else {
+          str.split(";").forEach(function (part) {
+            var k = part.lastIndexOf(":"); if (k < 1) return;
+            map[part.slice(0, k)] = parseInt(part.slice(k + 1), 10) || 0; order.push(part.slice(0, k));
+          });
+        }
+        var key = null, want = (color + "|" + size).toLowerCase();
+        order.forEach(function (k) { if (k.toLowerCase() === want) key = k; });
+        if (key === null) return;
+        map[key] = Math.max(0, map[key] + sign * qty);
+        var out = order.map(function (k) { return k + ":" + map[k]; }).join(";");
+        sheet.getRange(r + 1, stC + 1).setValue(out);
+        data[r][stC] = out; changed++;
+        return;
+      }
+    });
+    return changed ? "Stok " + (sign < 0 ? "düşüldü" : "geri eklendi") + " (" + changed + " kalem)." : "";
+  } finally { lock.releaseLock(); }
 }
 
 // ---------- Ürün işlemleri ----------
