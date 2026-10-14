@@ -979,12 +979,30 @@ function igLabels_() {
   return map;
 }
 
+// Meta "çok fazla veri istendi" (reduce the amount of data) derse daha küçük isteklerle yeniden dener
+function igFetchRetry_(path, variants, token) {
+  var lastErr;
+  for (var i = 0; i < variants.length; i++) {
+    try { return metaApi_(path, variants[i], "get", token); }
+    catch (e) {
+      lastErr = e;
+      if (!/reduce the amount of data|too much data|çok fazla veri/i.test(String(e && e.message))) throw e;
+    }
+  }
+  throw lastErr;
+}
+
 function igInbox_(after) {
   try {
     var pg = igPageToken_();
-    var params = { platform: "instagram", fields: "id,updated_time,participants,messages.limit(1){message,from,created_time,attachments}", limit: 25 };
-    if (after) params.after = after;
-    var res = metaApi_(pg.pageId + "/conversations", params, "get", pg.token);
+    var F = "id,updated_time,participants,messages.limit(1){message,from,created_time}";
+    var variants = [
+      { platform: "instagram", fields: F, limit: 10 },
+      { platform: "instagram", fields: F, limit: 5 },
+      { platform: "instagram", fields: "id,updated_time,participants", limit: 5 }
+    ];
+    if (after) variants.forEach(function (v) { v.after = after; });
+    var res = igFetchRetry_(pg.pageId + "/conversations", variants, pg.token);
     var labels = igLabels_();
     var items = (res.data || []).map(function (c) {
       var others = ((c.participants || {}).data || []).filter(function (p) { return String(p.id) !== String(pg.igId); });
@@ -993,7 +1011,7 @@ function igInbox_(after) {
       var l = labels[c.id] || {};
       return {
         id: c.id, name: who.username || who.name || "Kullanıcı", updated: c.updated_time,
-        last: last.message || (last.attachments ? "[Medya / paylaşım]" : ""), lastFromMe: !!(last.from && String(last.from.id) === String(pg.igId)),
+        last: last.message || (last.created_time ? "[Medya / paylaşım]" : ""), lastFromMe: !!(last.from && String(last.from.id) === String(pg.igId)),
         label: l.label || "", note: l.note || ""
       };
     });
@@ -1005,7 +1023,8 @@ function igThread_(id) {
   if (!id) return { result: "error", message: "Konuşma kimliği gerekli." };
   try {
     var pg = igPageToken_();
-    var res = metaApi_(String(id), { fields: "id,participants,messages.limit(20){id,message,from,created_time,attachments,shares}" }, "get", pg.token);
+    var TF = function (n, extra) { return { fields: "id,messages.limit(" + n + "){id,message,from,created_time" + extra + "}" }; };
+    var res = igFetchRetry_(String(id), [TF(20, ",attachments,shares"), TF(10, ",attachments"), TF(10, "")], pg.token);
     var msgs = ((res.messages || {}).data || []).map(function (m) {
       var atts = ((m.attachments || {}).data || []).map(function (a) {
         return { type: a.mime_type || "", name: a.name || "", url: (a.image_data && a.image_data.url) || (a.video_data && a.video_data.url) || a.file_url || "" };
@@ -1014,7 +1033,7 @@ function igThread_(id) {
       return { id: m.id, text: m.message || "", time: m.created_time, mine: !!(m.from && String(m.from.id) === String(pg.igId)), attachments: atts, shares: shared };
     }).reverse();
     var l = igLabels_()[String(id)] || {};
-    return { result: "ok", id: id, messages: msgs, label: l.label || "", note: l.note || "", limited: msgs.length >= 20 };
+    return { result: "ok", id: id, messages: msgs, label: l.label || "", note: l.note || "", limited: msgs.length >= 10 };
   } catch (e) { return { result: "error", message: igError_(e) }; }
 }
 
