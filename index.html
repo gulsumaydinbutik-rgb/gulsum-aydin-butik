@@ -680,13 +680,19 @@ function trackPage(){
  px("track","PageView");
  if(state.view==="product"){
   var p=findProduct(state.productId);
+  if(p) gaEv("view_item",{currency:"TRY", value:p.price, items:[{item_id:p.id,item_name:p.name,price:p.price}]});
   if(p) px("track","ViewContent",{content_ids:[p.id], content_type:"product", content_name:p.name, value:p.price, currency:"TRY"});
  } else if(state.view==="checkout"){
   var d=cartPixelData(state.cart); d.value=cartSubtotal();
+  gaEv("begin_checkout",{currency:"TRY", value:cartSubtotal(), items:gaItems(state.cart)});
   px("track","InitiateCheckout",d);
  }
 }
+// GA4 e-ticaret olayları (gaId girilmişse çalışır)
+function gaEv(name,params){ try{ if(window.gtag) window.gtag("event",name,params); }catch(e){} }
+function gaItems(list){ return (list||[]).map(function(i){ return {item_id:i.productId||i.id, item_name:i.name, item_variant:[i.color,i.size].filter(Boolean).join(" / "), price:i.price, quantity:i.qty||1}; }); }
 function trackPurchase(order){
+ gaEv("purchase",{transaction_id:order.orderId, value:order.total, currency:"TRY", shipping:order.shipping, items:gaItems(order.items)});
  var d=cartPixelData(order.items); d.value=order.total;
  px("track","Purchase",d,{eventID:order.orderId});
 }
@@ -756,6 +762,7 @@ function addToCart(p,color,size,qty,color2){
   state.cart.push({key:key,productId:p.id,name:productDisplayName(p,color,color2),image:colorImages(p,color)[0],color:color,color2:color2||null,size:size,price:p.price,qty:qty});
  }
  saveLS("ga_cart",state.cart);
+ gaEv("add_to_cart",{currency:"TRY", value:p.price*qty, items:[{item_id:p.id,item_name:p.name,item_variant:color+" / "+size,price:p.price,quantity:qty}]});
  px("track","AddToCart",{content_ids:[p.id], content_type:"product", content_name:p.name, value:p.price*qty, currency:"TRY", contents:[{id:p.id, quantity:qty}]});
  showToast("Ürün sepete eklendi",true);
  render();
@@ -1266,9 +1273,9 @@ function applySettings(){
   s1.src = "https://www.googletagmanager.com/gtag/js?id=" + SETTINGS.gaId;
   document.head.appendChild(s1);
   window.dataLayer = window.dataLayer || [];
-  function gtag(){ window.dataLayer.push(arguments); }
-  gtag("js", new Date());
-  gtag("config", SETTINGS.gaId);
+  window.gtag = function(){ window.dataLayer.push(arguments); };
+  window.gtag("js", new Date());
+  window.gtag("config", SETTINGS.gaId);
  }
 }
 
