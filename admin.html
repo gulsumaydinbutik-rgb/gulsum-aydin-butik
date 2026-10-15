@@ -280,6 +280,7 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
  .pagehead h1{font-size:23px;}
  .card{overflow-x:auto;}
 }
+@media (max-width:760px){.mo-item{grid-template-columns:1fr 1fr!important}.mo-item .mi-p{grid-column:1/-1}}
 @media print{.sidebar{display:none!important}}
 </style>
 </head>
@@ -342,7 +343,7 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
   </div>
 
   <div id="tab-orders" class="hidden">
-   <div class="pagehead"><div><h1>Siparişler</h1><p id="orderCount"></p></div></div>
+   <div class="pagehead"><div><h1>Siparişler</h1><p id="orderCount"></p></div><button class="btn btn-gold" onclick="openManualOrder()">+ Sipariş ekle</button></div>
    <div id="ordersMsg"></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px">
     <input id="orderSearch" placeholder="Ara: ad, telefon, sipariş no…" oninput="renderOrders()" style="flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:8px">
@@ -546,6 +547,30 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
  </div>
 </div>
 
+
+<div id="moBg" class="modal-bg hidden"><div class="modal wide" style="max-width:760px">
+ <h2>Sipariş ekle</h2>
+ <p style="margin:-8px 0 16px;color:var(--ink2);font-size:13px">Instagram, WhatsApp, pazaryeri veya mağazadan aldığınız siparişi buraya girin. Stok otomatik düşer.</p>
+ <div class="grid2">
+  <div class="field"><label>Sipariş kaynağı</label><select id="mo_source"><option>Instagram DM</option><option>WhatsApp</option><option>Trendyol</option><option>Hepsiburada</option><option>Çiçeksepeti</option><option>Mağaza / yüz yüze</option><option>Telefon</option><option>Diğer</option></select></div>
+  <div class="field"><label>Ödeme</label><select id="mo_pay"><option>Kapıda Ödeme</option><option>Havale / EFT</option><option>Kredi Kartı</option><option>Nakit</option><option>Pazaryeri ödemesi</option></select></div>
+  <div class="field"><label>Ad soyad</label><input id="mo_name"></div>
+  <div class="field"><label>Telefon</label><input id="mo_phone" inputmode="tel" placeholder="05xx xxx xx xx"></div>
+  <div class="field"><label>İl</label><input id="mo_city"></div>
+  <div class="field"><label>İlçe</label><input id="mo_district"></div>
+ </div>
+ <div class="field"><label>Mahalle ve açık adres</label><textarea id="mo_address" rows="2"></textarea></div>
+ <div class="field"><label>Ürünler</label><div id="mo_items"></div>
+  <button type="button" class="btn btn-ghost" style="margin-top:8px" onclick="moAddItem()">+ Ürün ekle</button></div>
+ <div class="grid2">
+  <div class="field"><label>Kargo ücreti (TL)</label><input id="mo_ship" type="number" min="0" value="0" oninput="moTotal()"></div>
+  <div class="field"><label>Durum</label><select id="mo_status"><option>Onaylandı</option><option>Yeni Sipariş</option><option>Hazırlanıyor</option><option>Kargoya Verildi</option><option>Teslim Edildi</option></select></div>
+ </div>
+ <div class="field"><label>Not</label><input id="mo_note" placeholder="İsteğe bağlı"></div>
+ <div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 14px"><span style="color:var(--ink2);font-size:13px">Toplam</span><b id="mo_total" style="font-family:var(--font-serif);font-size:22px">0 TL</b></div>
+ <div id="moMsg"></div>
+ <div class="modal-actions"><button class="btn btn-ghost" onclick="closeManualOrder()">Vazgeç</button><button class="btn btn-gold" id="moSave" onclick="saveManualOrder()">Siparişi kaydet</button></div>
+</div></div>
 <div id="invoiceModalBg" class="modal-bg hidden">
  <div class="modal" style="max-width:640px">
   <div id="invoiceBody" class="inv-print"></div>
@@ -1008,6 +1033,51 @@ function phoneStats(ph){
  orders.forEach(function(o){ if(phoneKey(o["Telefon"])===k){ n++; if(o["Durum"]==="İptal"||o["Durum"]==="İade") bad++; } });
  return {n:n,bad:bad};
 }
+
+// ---- Elle sipariş ekleme ----
+function moOpts(list,sel){ return list.map(function(x){return '<option'+(x===sel?' selected':'')+'>'+esc(x)+'</option>';}).join(""); }
+function moAddItem(){
+ var wrap=document.getElementById("mo_items"), div=document.createElement("div");
+ div.className="mo-item"; div.style.cssText="display:grid;grid-template-columns:2fr 1fr 1fr .7fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center";
+ div.innerHTML='<select class="mi-p" onchange="moPick(this)"><option value="">Ürün seç…</option>'+products.map(function(p,i){return '<option value="'+i+'">'+esc(p.name)+'</option>';}).join("")+'</select>'+
+  '<select class="mi-c"></select><select class="mi-s"></select><input class="mi-q" type="number" min="1" value="1" oninput="moTotal()"><input class="mi-pr" type="number" min="0" placeholder="Fiyat" oninput="moTotal()"><button type="button" class="btn btn-ghost" style="padding:8px 10px" onclick="this.parentNode.remove();moTotal()">Sil</button>';
+ wrap.appendChild(div);
+}
+function moPick(sel){
+ var row=sel.parentNode, p=products[sel.value];
+ if(!p){ return; }
+ row.querySelector(".mi-c").innerHTML=moOpts(stockList(p.colors).length?stockList(p.colors):["Standart"]);
+ row.querySelector(".mi-s").innerHTML=moOpts(stockList(p.sizes).length?stockList(p.sizes):["Standart"]);
+ row.querySelector(".mi-pr").value=String(p.price||"").replace(/[^\d.,]/g,"").replace(/\./g,"").replace(",",".");
+ moTotal();
+}
+function moItems(){
+ var out=[]; document.querySelectorAll("#mo_items .mo-item").forEach(function(r){
+  var p=products[r.querySelector(".mi-p").value]; if(!p) return;
+  out.push({productId:p.id,name:p.name,color:r.querySelector(".mi-c").value,size:r.querySelector(".mi-s").value,qty:parseInt(r.querySelector(".mi-q").value,10)||1,price:Number(r.querySelector(".mi-pr").value)||0});
+ }); return out;
+}
+function moTotal(){
+ var t=moItems().reduce(function(a,i){return a+i.qty*i.price;},0)+(Number(document.getElementById("mo_ship").value)||0);
+ document.getElementById("mo_total").textContent=trMoney(t);
+}
+function openManualOrder(){
+ ["mo_name","mo_phone","mo_city","mo_district","mo_address","mo_note"].forEach(function(id){document.getElementById(id).value="";});
+ document.getElementById("mo_ship").value="0"; document.getElementById("mo_items").innerHTML=""; document.getElementById("moMsg").innerHTML="";
+ moAddItem(); moTotal(); document.getElementById("moBg").classList.remove("hidden");
+}
+function closeManualOrder(){ document.getElementById("moBg").classList.add("hidden"); }
+function saveManualOrder(){
+ var items=moItems(), name=document.getElementById("mo_name").value.trim(), msg=document.getElementById("moMsg");
+ if(!name){ msg.innerHTML='<div class="msg err">Ad soyad yazın.</div>'; return; }
+ if(!items.length){ msg.innerHTML='<div class="msg err">En az bir ürün seçin.</div>'; return; }
+ var btn=document.getElementById("moSave"); btn.disabled=true; btn.textContent="Kaydediliyor...";
+ apiPost({action:"addOrder",order:{customerName:name,customerPhone:document.getElementById("mo_phone").value.trim(),city:document.getElementById("mo_city").value.trim(),district:document.getElementById("mo_district").value.trim(),address:document.getElementById("mo_address").value.trim(),note:document.getElementById("mo_note").value.trim(),source:document.getElementById("mo_source").value,paymentMethod:document.getElementById("mo_pay").value,status:document.getElementById("mo_status").value,shipping:Number(document.getElementById("mo_ship").value)||0,items:items}}).then(function(res){
+  if(res.result==="ok"){ closeManualOrder(); document.getElementById("ordersMsg").innerHTML='<div class="msg ok">Sipariş eklendi: '+esc(res.orderId)+'. '+esc(res.stockNote||"")+'</div>'; loadOrders(); loadProducts(); }
+  else { msg.innerHTML='<div class="msg err">'+esc(res.message||"Hata oluştu")+'</div>'; }
+ }).catch(function(){ msg.innerHTML='<div class="msg err">Bağlantı hatası</div>'; }).then(function(){ btn.disabled=false; btn.textContent="Siparişi kaydet"; });
+}
+
 function renderOrders(){
  var body = document.getElementById("ordersBody");
  var fsel = document.getElementById("orderFilter");

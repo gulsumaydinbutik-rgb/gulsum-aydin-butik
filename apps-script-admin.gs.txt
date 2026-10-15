@@ -47,6 +47,7 @@ function doPost(e) {
     case "upsertCampaign": return jsonResponse(withFeedRefresh_(upsertCampaign(body.campaign)));
     case "deleteCampaign": return jsonResponse(withFeedRefresh_(deleteCampaign(body.id)));
     case "updateSettings": return jsonResponse(updateSettings(body.settings));
+    case "addOrder": return jsonResponse(addOrder_(body.order));
     case "updateOrderStatus": return jsonResponse(updateOrderStatus(body.orderId, body.status, body.cargo, body.tracking));
     case "listBlog": return jsonResponse({ result: "ok", data: getAllBlog_() });
     case "upsertBlog": return jsonResponse(upsertBlog_(body.post));
@@ -166,6 +167,55 @@ function updateOrderStatus(orderId, status, cargo, tracking) {
     return { result: "ok", stockNote: note };
   }
   return { result: "error", message: "Sipariş bulunamadı." };
+}
+
+
+// Panelden elle sipariş ekleme (Instagram, WhatsApp, pazaryeri, mağaza vb.)
+function addOrder_(o) {
+  if (!o || !o.customerName || !o.items || !o.items.length) return { result: "error", message: "Müşteri adı ve en az bir ürün zorunlu." };
+  var sheet = getOrdersSheet();
+  if (!sheet) return { result: "error", message: "Siparişler sekmesi bulunamadı." };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var headers = ensureOrderCols_(sheet);
+    var data = sheet.getDataRange().getValues();
+    var idCol = headers.indexOf("Sipariş No");
+    var day = Utilities.formatDate(new Date(), "Europe/Istanbul", "yyyyMMdd");
+    var n = 0;
+    for (var i = 1; i < data.length; i++) { if (String(data[i][idCol]).indexOf("GM-" + day) === 0) n++; }
+    var orderId = "GM-" + day + "-" + ("00" + (n + 1)).slice(-3);
+    var sub = 0, texts = [], codes = [];
+    o.items.forEach(function (it) {
+      var q = Math.max(1, parseInt(it.qty, 10) || 1), pr = Number(it.price) || 0;
+      sub += q * pr;
+      texts.push(String(it.name) + " (" + it.color + "/" + it.size + ") x" + q);
+      codes.push([it.productId, it.color, it.size, q].join("|"));
+    });
+    var ship = Number(o.shipping) || 0, status = String(o.status || "Onaylandı");
+    var vals = {
+      "Tarih": new Date(), "Sipariş No": orderId, "Ad Soyad": safeCell_(o.customerName),
+      "Telefon": "'" + String(o.customerPhone || ""), "E-posta": safeCell_(o.customerEmail),
+      "İl": safeCell_(o.city), "İlçe": safeCell_(o.district), "Mahalle": safeCell_(o.neighborhood),
+      "Adres": safeCell_(o.address), "Not": safeCell_(o.note), "Ürünler": safeCell_(texts.join(", ")),
+      "Ara Toplam": sub, "Kargo": ship, "Toplam": sub + ship, "Ödeme": safeCell_(o.paymentMethod || "Kapıda Ödeme"),
+      "Durum": status, "Kaynak": safeCell_(o.source || "Elle eklendi"), "Kampanya (UTM)": "",
+      "Ürün Kodları": codes.join(";"), "Kargo Firması": "", "Takip No": "", "Stok Düşüldü": ""
+    };
+    sheet.appendRow(headers.map(function (h) { return vals[h] !== undefined ? vals[h] : ""; }));
+    var note = "";
+    if (STOCK_DEC_STATUSES.indexOf(status) > -1) {
+      note = applyStock_(codes.join(";"), -1);
+      sheet.getRange(sheet.getLastRow(), headers.indexOf("Stok Düşüldü") + 1).setValue("1");
+    }
+    return { result: "ok", orderId: orderId, stockNote: note };
+  } finally { lock.releaseLock(); }
+}
+
+function safeCell_(v) {
+  if (v == null) return "";
+  var s = String(v);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 
 // codes: "ürünId|renk|beden|adet;..."  sign: -1 düş, +1 geri ekle. Stok takibi kapalı ürünlere dokunmaz.
