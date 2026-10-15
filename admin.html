@@ -829,7 +829,7 @@ function loadSummary(){
    kpi("Teyit bekliyor",pend.length,"yeni sipariş")+kpi("Hazırlanacak",prep.length,"kargoya verilecek")+kpi("Kargoda",ship.length,"teslim bekliyor");
   function rowOrder(o,btn){ var i=orders.indexOf(o); return '<div class="sum-row"><div><b>'+esc(o["Ad Soyad"])+'</b> <span class="sub">'+esc(o["Sipariş No"])+'</span><div class="sub">'+esc(o["Ürünler"])+' · '+esc(o["Toplam"])+' TL</div></div>'+btn(i)+'</div>'; }
   document.getElementById("sumPending").innerHTML = pend.length ? pend.slice(0,8).map(function(o){ return rowOrder(o,function(i){ return '<button class="btn btn-gold" onclick="switchTab(\'orders\');renderOrders();openOrderDetail('+i+')">Teyit et</button>'; }); }).join("") : '<div class="sum-empty">Teyit bekleyen sipariş yok.</div>';
-  document.getElementById("sumShipping").innerHTML = ship.length ? ship.slice(0,6).map(function(o){ return rowOrder(o,function(i){ return '<span class="sub">'+esc(o["Kargo Firması"]||"")+' '+esc(String(o["Takip No"]||"").replace(/^\'/,""))+'</span>'; }); }).join("") : '<div class="sum-empty">Kargoda sipariş yok.</div>';
+  document.getElementById("sumShipping").innerHTML = ship.length ? ship.slice(0,6).map(function(o){ return rowOrder(o,function(i){ return trackNo(o)? '<a class="sub" href="'+esc(trackUrl(o))+'" target="_blank" rel="noopener" style="color:var(--gold-d);font-weight:600">Kargom nerede</a>' : '<span class="sub">Takip no yok</span>'; }); }).join("") : '<div class="sum-empty">Kargoda sipariş yok.</div>';
   var src={}; orders.forEach(function(o){ var t=new Date(o["Tarih"]).getTime(); if(isNaN(t)||t<mo) return; var k=o["Kaynak"]||"Bilinmiyor"; src[k]=(src[k]||0)+1; });
   var ks=Object.keys(src).sort(function(a,b){return src[b]-src[a];}), mx=ks.length?src[ks[0]]:1;
   document.getElementById("sumSources").innerHTML = ks.length ? ks.map(function(k){ return '<div class="srcbar"><span class="n">'+esc(k)+'</span><span class="b"><i style="width:'+Math.round(src[k]/mx*100)+'%"></i></span><span class="c">'+src[k]+'</span></div>'; }).join("") : '<div class="sum-empty">Henüz kaynak verisi yok. Yeni siparişlerle dolacak.</div>';
@@ -1093,7 +1093,7 @@ function renderOrders(){
   }).join("");
   var ps = phoneStats(o["Telefon"]);
   var warn = ps.n>1 ? '<div style="font-size:11px;color:'+(ps.bad?'var(--danger)':'#b8860b')+';font-weight:600">'+(ps.bad?'⚠ ':'')+'Aynı numaradan '+ps.n+' sipariş'+(ps.bad?' ('+ps.bad+' iptal/iade)':'')+'</div>' : '';
-  var trk = o["Takip No"] ? '<div style="font-size:11px;color:var(--ink2)">📦 '+esc(o["Kargo Firması"]||"")+' '+esc(String(o["Takip No"]).replace(/^'/,""))+'</div>' : '';
+  var trk = trackNo(o) ? '<div style="font-size:11.5px;margin-top:4px"><a href="'+esc(trackUrl(o))+'" target="_blank" rel="noopener" style="color:var(--gold-d);font-weight:600">Kargom nerede: '+esc(trackNo(o))+'</a></div>' : '';
   return '<tr><td style="font-size:12px;color:var(--ink2);white-space:nowrap">'+esc(fmtDate(o["Tarih"]))+'</td>'+
    '<td class="pid" style="white-space:nowrap">'+esc(o["Sipariş No"])+'</td>'+
    '<td><div class="pname">'+esc(o["Ad Soyad"])+'</div><div class="pid">'+esc(o["Telefon"])+'</div>'+warn+'</td>'+
@@ -1107,10 +1107,10 @@ function renderOrders(){
 function changeOrderStatus(i, sel){
  var o = orders[i], st = sel.value, cargo, tracking;
  if(st==="Kargoya Verildi"){
-  cargo = prompt("Kargo firması (örn. Yurtiçi, MNG, Aras, PTT):", o["Kargo Firması"]||"");
-  if(cargo===null){ sel.value=o["Durum"]; return; }
-  tracking = prompt("Takip numarası (boş bırakabilirsiniz):", String(o["Takip No"]||"").replace(/^'/,""));
+  cargo = "PTT";
+  tracking = prompt("PTT takip numarasını yazın (müşteriye WhatsApp ve e-postada bağlantı olarak gider):", String(o["Takip No"]||"").replace(/^'/,""));
   if(tracking===null){ sel.value=o["Durum"]; return; }
+  tracking = tracking.replace(/\s+/g,"");
  }
  if(st==="İptal"||st==="İade"){ if(!confirm(st+" olarak işaretlensin mi? (Stok geri eklenir)")){ sel.value=o["Durum"]; return; } }
  updateOrderStatus(o["Sipariş No"], st, cargo, tracking);
@@ -1150,7 +1150,7 @@ function openOrderDetail(i){
    '<div><div class="inv-label">Ödeme Yöntemi</div><div class="inv-val">'+esc(o["Ödeme"])+'</div></div>'+
    '<div><div class="inv-label">Durum</div><div class="inv-val">'+esc(o["Durum"])+'</div></div>'+
   '</div>'+
-  (o["Takip No"]?'<div class="inv-note"><div class="inv-label">Kargo</div><div class="inv-val">'+esc(o["Kargo Firması"]||"")+' · '+esc(String(o["Takip No"]).replace(/^'/,""))+'</div></div>':'')+
+  (trackNo(o)?'<div class="inv-note"><div class="inv-label">Kargo</div><div class="inv-val">PTT · '+esc(trackNo(o))+' · <a href="'+esc(trackUrl(o))+'" target="_blank" rel="noopener" style="color:var(--gold-d);font-weight:600">Kargom nerede</a></div></div>':'')+
   (o["Kaynak"]?'<div class="inv-note"><div class="inv-label">Sipariş Kaynağı</div><div class="inv-val">'+esc(o["Kaynak"])+(o["Kampanya (UTM)"]?' · '+esc(o["Kampanya (UTM)"]):'')+'</div></div>':'')+
   '<div class="no-print" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">'+
    '<button class="btn btn-gold" onclick="waTemplate('+i+',\'teyit\')">Teyit mesajı</button>'+
@@ -1171,16 +1171,20 @@ function updateOrderStatus(orderId, status, cargo, tracking){
  });
 }
 // WhatsApp mesaj şablonları (sipariş detayından)
+var PTT_TRACK = "https://gonderitakip.ptt.gov.tr/Track/Verify?q=";
+function trackNo(o){ return String(o["Takip No"]||"").replace(/^'/,"").trim(); }
+function trackUrl(o){ var n=trackNo(o); return n? PTT_TRACK+encodeURIComponent(n) : ""; }
 function waNum(ph){ var k=phoneKey(ph); return k.length===10 ? "90"+k : ""; }
 function waTemplate(i, kind){
  var o=orders[i], ad=String(o["Ad Soyad"]||"").split(" ")[0], no=o["Sipariş No"], tp=o["Toplam"];
  var T={
   teyit:"Merhaba "+ad+" Hanım, Gülsüm Aydın Butik'ten yazıyorum. "+no+" numaralı siparişiniz için ("+o["Ürünler"]+") toplam "+tp+" TL, kapıda ödeme olarak teyit almak istiyorum. Teslimat adresiniz: "+o["Adres"]+" "+o["Mahalle"]+" / "+o["İlçe"]+" / "+o["İl"]+". Doğruysa 'onay' yazmanız yeterli, hemen hazırlayıp kargoya vereceğiz.",
   hazir:"Merhaba "+ad+" Hanım, "+no+" numaralı siparişiniz hazırlanıyor, çok yakında kargoya vereceğiz",
-  kargo:"Merhaba "+ad+" Hanım, "+no+" numaralı siparişiniz kargoya verildi Kargo firması: "+(o["Kargo Firması"]||"-")+(o["Takip No"]?" · Takip no: "+String(o["Takip No"]).replace(/^'/,""):"")+". Teslimatta ödemeyi kargo görevlisine yapabilirsiniz. İyi günlerde kullanın",
+  kargo:"Merhaba "+ad+" Hanım, "+no+" numaralı siparişiniz kargoya verildi. PTT Kargo ile yola çıktı."+(trackNo(o)?" Takip numaranız: "+trackNo(o)+". Kargonuzu buradan takip edebilirsiniz: "+trackUrl(o):" Takip numarası ulaşınca size ileteceğiz.")+" Teslimatta ödemeyi kargo görevlisine yapabilirsiniz. İyi günlerde kullanın.",
   yorum:"Merhaba "+ad+" Hanım, siparişiniz size ulaştı mı? Ürünleri beğendiyseniz fotoğrafla yorumunuzu paylaşmanız bizi çok mutlu eder, Instagram'da etiketlerseniz hikayemizde paylaşırız Bir sorun varsa 14 gün içinde değişim/iade için buradan yazabilirsiniz."
  };
  var n=waNum(o["Telefon"]); if(!n){ alert("Telefon numarası geçersiz."); return; }
+ if(kind==="kargo" && !trackNo(o) && !confirm("Bu siparişe henüz takip numarası girilmemiş. Mesaj linksiz gidecek, devam edilsin mi?")) return;
  window.open("https://wa.me/"+n+"?text="+encodeURIComponent(T[kind]),"_blank");
 }
 // ---------- Blog ----------

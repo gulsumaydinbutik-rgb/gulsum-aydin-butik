@@ -128,6 +128,34 @@ function getAllOrders() {
   return orders;
 }
 
+var SHOP_NAME_ = "Gülsüm Aydın Butik";
+var SITE_BASE_ = "https://www.gulsumaydin.com.tr";
+var PTT_TRACK_URL_ = "https://gonderitakip.ptt.gov.tr/Track/Verify?q=";
+var SHOP_REPLY_ = "gulsumaydinbutik@gmail.com";
+
+// "Kargoya Verildi" olunca e-postası olan müşteriye takip bağlantılı bilgi gönderir (hata siparişi etkilemez)
+function sendShipEmail_(orderId, name, email, tracking) {
+  email = String(email || "").trim();
+  if (!/^[^\s@<>",;]+@[^\s@<>",;]+\.[^\s@<>",;]{2,}$/.test(email) || !tracking) return "";
+  try {
+    if (MailApp.getRemainingDailyQuota() < 5) return "";
+    var link = PTT_TRACK_URL_ + encodeURIComponent(tracking);
+    var page = SITE_BASE_ + "/siparis-takip/?no=" + encodeURIComponent(orderId);
+    MailApp.sendEmail({
+      to: email, replyTo: SHOP_REPLY_, name: SHOP_NAME_,
+      subject: "Siparişiniz kargoya verildi – " + orderId + " | " + SHOP_NAME_,
+      body: "Merhaba " + name + ",\n\n" + orderId + " numaralı siparişiniz PTT Kargo ile yola çıktı.\nTakip numarası: " + tracking + "\nKargo takibi: " + link + "\nSipariş durumu: " + page + "\n\nÖdemenizi teslimatta kargo görevlisine yapabilirsiniz. İyi günlerde kullanın.\n" + SHOP_NAME_,
+      htmlBody: '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;color:#1E1B18;font-size:14px;line-height:1.55">' +
+        '<h2 style="font-family:Georgia,serif;margin:0 0 6px">' + SHOP_NAME_ + '</h2>' +
+        '<p>Merhaba ' + String(name).replace(/[<>&]/g, "") + ', <b>' + orderId + '</b> numaralı siparişiniz PTT Kargo ile yola çıktı.</p>' +
+        '<div style="background:#F8F2E9;border-radius:10px;padding:14px 16px;margin:14px 0"><div style="font-size:12px;color:#7A7166">Takip numarası</div><div style="font-size:18px;font-weight:bold">' + String(tracking).replace(/[<>&]/g, "") + '</div></div>' +
+        '<p><a href="' + link + '" style="display:inline-block;background:#1E1B18;color:#fff;text-decoration:none;padding:11px 18px;border-radius:9px;font-weight:bold">Kargomu takip et</a></p>' +
+        '<p style="color:#6B6259">Ödemenizi teslimatta kargo görevlisine yapabilirsiniz.</p></div>'
+    });
+    return " Müşteriye kargo e-postası gönderildi.";
+  } catch (err) { return " (Kargo e-postası gönderilemedi.)"; }
+}
+
 var ORDER_EXTRA_COLS = ["Kaynak", "Kampanya (UTM)", "Ürün Kodları", "Kargo Firması", "Takip No", "Stok Düşüldü"];
 var STOCK_DEC_STATUSES = ["Onaylandı", "Hazırlanıyor", "Kargoya Verildi", "Teslim Edildi"];
 var STOCK_RESTORE_STATUSES = ["İptal", "İade"];
@@ -152,6 +180,7 @@ function updateOrderStatus(orderId, status, cargo, tracking) {
   for (var i = 1; i < data.length; i++) {
     if (String(data[i][idCol]) !== String(orderId)) continue;
     var row = i + 1, note = "";
+    var prevStatus = String(data[i][statusCol]);
     sheet.getRange(row, statusCol + 1).setValue(status);
     if (cargo !== undefined && cargo !== null) sheet.getRange(row, headers.indexOf("Kargo Firması") + 1).setValue(String(cargo));
     if (tracking !== undefined && tracking !== null) sheet.getRange(row, headers.indexOf("Takip No") + 1).setValue("'" + String(tracking));
@@ -163,6 +192,10 @@ function updateOrderStatus(orderId, status, cargo, tracking) {
       else note = "Bu eski siparişte ürün kodu yok, stok düşülmedi.";
     } else if (STOCK_RESTORE_STATUSES.indexOf(status) > -1 && flag === "1") {
       var r2 = applyStock_(codes, 1); sheet.getRange(row, flagCol).setValue(""); note = r2;
+    }
+    if (status === "Kargoya Verildi" && prevStatus !== "Kargoya Verildi") {
+      var trk = (tracking !== undefined && tracking !== null) ? String(tracking) : String(data[i][headers.indexOf("Takip No")] || "").replace(/^'/, "");
+      note += sendShipEmail_(orderId, data[i][headers.indexOf("Ad Soyad")], data[i][headers.indexOf("E-posta")], trk);
     }
     return { result: "ok", stockNote: note };
   }

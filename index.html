@@ -1087,13 +1087,14 @@ function viewSuccess(){
  '<div class="sum-row"><span>Ödeme Yöntemi</span><span>Kapıda Ödeme</span></div>'+
  '<div class="sum-row total"><span>Toplam</span><span>'+money(o.total)+'</span></div></div>'+
  '<div style="padding:6px 16px"><a class="btn-main" style="display:block;text-align:center;background:#25D366;color:#fff" href="'+waLink("Merhaba, "+o.orderId+" numaralı siparişim hakkında bilgi almak istiyorum.")+'" target="_blank">WhatsApp\'tan Sipariş Bilgisi Al</a></div>'+
- '<div style="padding:12px 16px 24px"><button class="btn-main" style="width:100%;background:var(--bg2);color:var(--ink)" data-goto="home">Alışverişe Devam Et</button></div></div>';
+ '<div style="padding:6px 16px"><a class="btn-main" style="display:block;text-align:center;background:var(--ink);color:#fff" href="/siparis-takip/?no='+encodeURIComponent(o.orderId)+'">Siparişimi Takip Et</a></div>'+
+'<div style="padding:12px 16px 24px"><button class="btn-main" style="width:100%;background:var(--bg2);color:var(--ink)" data-goto="home">Alışverişe Devam Et</button></div></div>';
 }
 
 function viewAccount(){
  return header("Hesabım")+
  '<div class="page-narrow"><div class="section"><p style="color:var(--ink2);font-size:13px">Misafir olarak alışveriş yapıyorsunuz.</p></div>'+
- '<div><div class="acc-item" data-goto="cart"><span>Siparişlerim'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></div>'+
+ '<div><a class="acc-item" href="/siparis-takip/'+(state.lastOrder?'?no='+encodeURIComponent(state.lastOrder.orderId):'')+'"><span>Sipariş Takip'+(state.lastOrder?' ('+state.lastOrder.orderId+')':'')+'</span><span>›</span></a>'+
  '<div class="acc-item" data-goto="favorites"><span>Favorilerim ('+state.favorites.length+')</span><span>›</span></div>'+
  '<a class="acc-item" href="'+waLink("Merhaba, destek almak istiyorum.")+'" target="_blank"><span>WhatsApp Destek</span><span>›</span></a>'+
  '<a class="acc-item" href="https://instagram.com/'+IG_HANDLE+'" target="_blank"><span style="display:flex;align-items:center;gap:8px">'+igIcon('igAcc',18)+' Instagram</span><span>›</span></a>'+
@@ -1106,7 +1107,7 @@ function legalLink(slug,label){ return '<a href="?sayfa='+slug+'" data-goto="leg
 function siteFooter(){
  var order = window.LEGAL_ORDER || [];
  return '<div class="site-footer"><div class="sf-brand">Gülsüm Aydın Butik</div>'+
-  '<div class="sf-links"><a href="/blog/">Blog</a>'+order.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div>'+
+  '<div class="sf-links"><a href="/siparis-takip/">Sipariş Takip</a><a href="/blog/">Blog</a>'+order.map(function(o){ return legalLink(o[0],o[1]); }).join('')+'</div>'+
   '<div class="sf-copy">© '+new Date().getFullYear()+' Gülsüm Aydın Butik · Tüm hakları saklıdır.<br>Kapıda ödeme · 14 gün içinde cayma hakkı</div></div>';
 }
 function viewLegal(){
