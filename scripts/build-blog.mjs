@@ -31,11 +31,22 @@ const arg = (k) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || "").spl
 async function load(kind) {
   const local = arg(kind);
   if (local) return fs.readFileSync(local, "utf8");
-  const res = await fetch(URLS[kind], { redirect: "follow" });
-  if (!res.ok) throw new Error(`${kind} indirilemedi: HTTP ${res.status}`);
-  const text = await res.text();
-  if (/^\s*<!DOCTYPE html/i.test(text)) throw new Error(`${kind}: tablo herkese açık değil (HTML döndü)`);
-  return text;
+  // Google geçici hata verirse (429/5xx, bağlantı kopması) 4 kez, artan beklemeyle yeniden dene
+  let lastErr;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const res = await fetch(URLS[kind], { redirect: "follow", signal: AbortSignal.timeout(30000) });
+      if (!res.ok) throw new Error(`${kind} indirilemedi: HTTP ${res.status}`);
+      const text = await res.text();
+      if (/^\s*<!DOCTYPE html/i.test(text)) throw new Error(`${kind}: tablo herkese açık değil (HTML döndü)`);
+      return text;
+    } catch (e) {
+      lastErr = e;
+      console.error(`[${kind}] deneme ${attempt}/4 başarısız: ${e.message}`);
+      if (attempt < 4) await new Promise((r) => setTimeout(r, attempt * 5000));
+    }
+  }
+  throw lastErr;
 }
 
 function parseCSV(text) {
