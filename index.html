@@ -94,6 +94,9 @@ img{max-width:100%;display:block;}
 .cat-chip{flex:0 0 auto;padding:9px 16px;border-radius:20px;background:var(--bg2);font-size:13px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
 .cat-chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.see-all-wrap{display:flex;justify-content:center;margin-top:18px;}
+.see-all-btn{appearance:none;border:1.5px solid currentColor;background:transparent;color:inherit;font:inherit;font-weight:600;letter-spacing:.3px;padding:13px 28px;border-radius:999px;cursor:pointer;width:100%;max-width:360px;}
+.see-all-btn:hover{background:rgba(0,0,0,.05);}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;}
 .card .imgwrap{aspect-ratio:3/4;background:var(--bg2);position:relative;overflow:hidden;}
 .card .imgwrap.cat-ph{display:flex;align-items:center;justify-content:center;}
@@ -884,9 +887,9 @@ function viewHome(){
  trustBadges()+
  '<div class="section"><div class="cats">'+activeCategories().map(function(c){return '<button class="cat-chip" data-cat="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div></div>'+
  (PRODUCTS.length? 
-  sectionBlock("Tüm Ürünler",PRODUCTS)+
-  sectionBlock("Yeni Gelenler",news)+
-  sectionBlock("Çok Satanlar",bests) : skeletonGrid())+
+  sectionBlock("Yeni Gelenler",news.length?news:PRODUCTS,news.length?"Yeni Gelenler":"Tüm Ürünler")+
+  sectionBlock("Çok Satanlar",bests,null)+
+  sectionBlock("Tüm Ürünler",homeAllList(news),"Tüm Ürünler",true) : skeletonGrid())+
  blogSection()+
  '<div class="social"><a href="'+waLink("Merhaba, ürünler hakkında bilgi almak istiyorum.")+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+WA_ICON_SM+' WhatsApp\'tan Bilgi Al</a>'+
  '<a href="https://instagram.com/'+IG_HANDLE+'" target="_blank" style="display:flex;align-items:center;gap:6px">'+igIcon('igHome')+' @'+IG_HANDLE+'</a></div>';
@@ -908,10 +911,29 @@ function blogSection(){
     '<div class="btxt">'+(b.tag?'<div class="btag">'+esc(b.tag)+'</div>':'')+'<div class="bt">'+esc(b.title)+'</div></div></a>';
   }).join('')+'</div></div>';
 }
-function sectionBlock(title,list){
+// Anasayfadaki "Tüm Ürünler" önizlemesi: tablodaki "sira" ile öne çıkarılanlar önce,
+// Yeni Gelenler'de zaten gösterilen ürünler sona atılır (tekrar görünmesin diye)
+function homeAllList(news){
+ var shownNew={}; expandVariants(news).slice(0,HOME_LIMIT).forEach(function(e){ shownNew[e.product.id]=1; });
+ return PRODUCTS.slice().sort(function(a,b){
+  var an=shownNew[a.id]?1:0, bn=shownNew[b.id]?1:0;
+  if(an!==bn) return an-bn;
+  if(a.sira!==b.sira) return a.sira-b.sira;
+  return b.ord-a.ord;
+ });
+}
+// Anasayfada her bölümde en fazla HOME_LIMIT kart gösterilir; devamı "Tümünü Gör" ile kategori sayfasında
+var HOME_LIMIT = 8;
+function sectionBlock(title,list,cat,bigBtn){
  if(!list.length) return '';
- return '<div class="section"><div class="section-head"><h2>'+title+'</h2><button class="link" data-goto="categories">Tümünü Gör</button></div>'+
- '<div class="grid">'+renderCards(list)+'</div></div>';
+ var cards = expandVariants(list);
+ var shown = cards.slice(0,HOME_LIMIT).map(function(e){ return productCard(e.product, e.color); }).join('');
+ var more = cards.length > HOME_LIMIT;
+ var target = cat? 'data-cat="'+esc(cat)+'"' : 'data-goto="categories"';
+ return '<div class="section"><div class="section-head"><h2>'+title+'</h2>'+(more||!cat?'<button class="link" '+target+'>Tümünü Gör</button>':'')+'</div>'+
+ '<div class="grid">'+shown+'</div>'+
+ (more && bigBtn? '<div class="see-all-wrap"><button class="see-all-btn" '+target+'>Tüm Ürünleri Gör ('+cards.length+')</button></div>' : '')+
+ '</div>';
 }
 
 function viewCategories(){
