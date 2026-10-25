@@ -334,7 +334,10 @@ function ensureColumn_(sheet, name) {
 function upsertProduct(product) {
   if (!product || !product.id) return { result: "error", message: "Ürün ID zorunlu." };
   var sheet = getProductsSheet();
-  ensureColumn_(sheet, "stock");
+  // Formdan gelen alanların sütunu yoksa eklenir (sessizce kaybolmasın)
+  ["stock", "colorImages", "colors2", "color1Label", "color2Label", "measurements", "modelInfo"].forEach(function (c) {
+    if (product[c] !== undefined) ensureColumn_(sheet, c);
+  });
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var idCol = headers.indexOf("id");

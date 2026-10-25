@@ -281,6 +281,56 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
  .card{overflow-x:auto;}
 }
 @media (max-width:760px){.mo-item{grid-template-columns:1fr 1fr!important}.mo-item .mi-p{grid-column:1/-1}}
+/* ===== Ürün formu ===== */
+.pf-modal{max-width:860px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 56px);}
+.pf-modal{overflow-y:auto;}
+.pf-head{display:flex;justify-content:space-between;align-items:center;padding:20px 26px 6px;position:sticky;top:0;background:#fff;z-index:3;}
+.pf-head h2{margin:0;font-size:22px;} .pf-x{background:none;font-size:18px;color:var(--ink2);padding:6px 8px;border-radius:8px;} .pf-x:hover{background:var(--bg);}
+#formMsg{padding:0 26px;} 
+.pf-sec{padding:18px 26px;border-top:1px solid var(--line);} .pf-sec:first-of-type{border-top:none;}
+.pf-sec h3{margin:0 0 12px;font-size:15px;} .pf-count{font-weight:500;color:var(--ink2);}
+.pf-opt{font-weight:400;color:var(--ink2);font-size:11.5px;margin-left:4px;}
+.pf-help{margin:-4px 0 12px;color:var(--ink2);font-size:12.5px;line-height:1.5;}
+.pf-note{font-size:12.5px;color:var(--ink2);margin:6px 0;min-height:0;} .pf-note.err{color:var(--danger);} .pf-note.ok{color:var(--ok);}
+.pf-tags,.pf-track{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;}
+.pf-chk{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink);} .pf-chk small{color:var(--ink2);font-weight:400;}
+.pf-chk input{width:18px;height:18px;accent-color:var(--gold-d);}
+.pf-drop{border:2px dashed var(--line);border-radius:12px;padding:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#FDFBF7;transition:border-color .15s,background .15s;}
+.pf-drop.over{border-color:var(--gold);background:var(--bg2);}
+.pf-up{background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;text-transform:none;letter-spacing:0;margin:0;} .pf-up:hover{filter:brightness(1.15);}
+.pf-or{color:var(--ink2);font-size:12.5px;}
+.pf-linkrow{display:flex;gap:8px;margin-top:10px;} .pf-linkrow input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;min-width:0;}
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:12px;}
+.pf-grid.pf-small{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;}
+.pf-tile{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--bg2);border:2px solid transparent;padding:0;}
+.pf-tile img,.pf-tile video{width:100%;height:100%;object-fit:cover;display:block;}
+.pf-cover{position:absolute;top:6px;left:6px;background:var(--ink);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.pf-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;text-shadow:0 1px 6px rgba(0,0,0,.6);pointer-events:none;}
+.pf-tbar{position:absolute;left:0;right:0;bottom:0;display:flex;gap:2px;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.65));}
+.pf-tbar button{flex:1;background:rgba(255,255,255,.92);border-radius:6px;font-size:15px;line-height:1;padding:6px 0;color:var(--ink);} .pf-tbar button:disabled{opacity:.35;cursor:default;} .pf-tbar .d{color:var(--danger);}
+.pf-empty{grid-column:1/-1;text-align:center;color:var(--ink2);font-size:13px;padding:18px;border:1px dashed var(--line);border-radius:10px;}
+.pf-sel{cursor:pointer;} .pf-sel.on{border-color:var(--gold-d);} .pf-tick{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;background:var(--gold-d);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;}
+.pf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:4px;}
+.pf-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:5px 6px 5px 12px;font-size:13px;font-weight:600;}
+.pf-chip button{background:none;color:var(--ink2);width:20px;height:20px;border-radius:50%;font-size:11px;line-height:1;} .pf-chip button:hover{background:#fff;color:var(--danger);}
+#pfColorIn,#pfSizeIn,#pfColor2In{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;}
+.pf-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center;font-size:12px;color:var(--ink2);}
+.pf-quick button{background:#fff;border:1px solid var(--line);border-radius:16px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--ink2);} .pf-quick button:hover{border-color:var(--gold);color:var(--gold-d);}
+.pf-matwrap{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:10px;}
+.pf-mat{width:100%;border-collapse:collapse;} .pf-mat th,.pf-mat td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center;font-size:13px;vertical-align:middle;} .pf-mat tr:last-child td{border-bottom:none;}
+.pf-mat th:first-child,.pf-mat td:first-child{text-align:left;} .pf-cn{font-weight:700;white-space:nowrap;}
+.pf-mat input{width:62px;padding:8px 6px;border:1px solid var(--line);border-radius:8px;text-align:center;font-size:14px;}
+.pf-asg{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;white-space:nowrap;} .pf-asg.on,.pf-asg:hover{border-color:var(--gold);color:var(--gold-d);}
+.pf-dim{color:var(--ink2);font-size:12px;}
+.pf-pick{margin-top:12px;background:var(--bg2);border-radius:12px;padding:14px;font-size:13px;line-height:1.5;}
+.pf-more{margin-top:14px;} .pf-more summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--gold-d);padding:4px 0;} .pf-more[open] summary{margin-bottom:10px;}
+.pf-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 26px;display:flex;gap:10px;justify-content:flex-end;z-index:3;}
+.pf-foot .btn{min-width:120px;} .pf-foot .btn:disabled{opacity:.55;cursor:wait;}
+@media (max-width:760px){
+ .pf-modal{max-height:none;border-radius:0;} #modalBg{padding:0;} .pf-head,.pf-sec,.pf-foot,#formMsg{padding-left:16px;padding-right:16px;}
+ .pf-foot{padding-bottom:calc(14px + env(safe-area-inset-bottom));} .pf-foot .btn{flex:1;} .pf-linkrow{flex-direction:column;}
+ .pf-grid{grid-template-columns:repeat(3,1fr);}
+}
 @media print{.sidebar{display:none!important}}
 </style>
 </head>
@@ -670,37 +720,79 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
 </div>
 
 <div id="modalBg" class="modal-bg hidden">
- <div class="modal">
-  <h2 id="modalTitle">Yeni Ürün</h2>
+ <div class="modal pf-modal">
+  <div class="pf-head"><h2 id="modalTitle">Yeni Ürün</h2><button type="button" class="pf-x" onclick="closeForm()" aria-label="Kapat">✕</button></div>
   <div id="formMsg"></div>
-  <div class="field"><label>Ürün ID (benzersiz)</label><input id="f_id"></div>
-  <div class="field"><label>Ürün Adı</label><input id="f_name"></div>
-  <div class="grid2">
-   <div class="field"><label>Kategori</label><input id="f_category"></div>
-   <div class="field"><label>Fiyat (TL)</label><input id="f_price" type="number"></div>
-  </div>
-  <div class="field"><label>Eski Fiyat (opsiyonel)</label><input id="f_oldPrice" type="number"></div>
-  <div class="field"><label>Renkler (| ile ayırın)</label><input id="f_colors"></div>
-  <div class="field"><label>Bedenler (| ile ayırın)</label><input id="f_sizes"></div>
-  <div class="field"><label>Stok (renk × beden) <span style="font-weight:400;color:#888">— kapalıysa stok takip edilmez</span></label>
-   <input id="f_stock" type="hidden">
-   <div id="stockGrid" style="overflow:auto"></div>
-   <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" onclick="stockRender(true)">Stok tablosunu aç / renk-bedene göre yenile</button><button type="button" class="btn" onclick="stockClear()">Stok takibini kapat</button></div></div>
-  <div class="field"><label>Görseller <span style="text-transform:none;font-weight:500">(link yapıştırın ya da bilgisayar/telefondan yükleyin; linkleri | ile ayırın)</span></label><input id="f_images">
-   <div class="upl"><label class="btn-ghost upl-btn">📷 Görsel Yükle<input type="file" accept="image/*" multiple hidden onchange="uploadPick(this,'f_images',true)"></label><span class="upl-msg" id="upl_f_images"></span></div></div>
-  <div class="field"><label>Kısa Açıklama</label><input id="f_shortDescription"></div>
-  <div class="field"><label>Ürün Açıklaması</label><textarea id="f_description" rows="3"></textarea></div>
-  <div class="grid2">
-   <div class="field"><label>Kumaş</label><input id="f_fabric"></div>
-   <div class="field"><label>Kalıp</label><input id="f_fit"></div>
-  </div>
-  <div class="checks">
-   <label><input type="checkbox" id="f_isNew"> Yeni</label>
-   <label><input type="checkbox" id="f_isBestSeller"> Çok Satan</label>
-  </div>
-  <div class="modal-actions">
-   <button class="btn-main" onclick="saveProduct()">Kaydet</button>
-   <button class="btn-ghost" onclick="closeForm()">Vazgeç</button>
+
+  <section class="pf-sec">
+   <h3>Temel bilgiler</h3>
+   <div class="field"><label for="f_name">Ürün adı</label><input id="f_name" placeholder="Örn. Kadın Kalem Pantolon Lacivert"></div>
+   <div class="grid2">
+    <div class="field"><label for="f_category">Kategori</label><input id="f_category" list="catList" placeholder="Örn. Alt Giyim"><datalist id="catList"></datalist></div>
+    <div class="field"><label for="f_id">Ürün kodu <span class="pf-opt">otomatik</span></label><input id="f_id"></div>
+   </div>
+   <div class="grid2">
+    <div class="field"><label for="f_price">Satış fiyatı (TL)</label><input id="f_price" inputmode="decimal" oninput="pfDisc()"></div>
+    <div class="field"><label for="f_oldPrice">Eski fiyat (TL) <span class="pf-opt">indirim göstermek için</span></label><input id="f_oldPrice" inputmode="decimal" oninput="pfDisc()"></div>
+   </div>
+   <div id="pfDisc" class="pf-note"></div>
+   <div class="pf-tags">
+    <label class="pf-chk"><input type="checkbox" id="f_isNew"> <span>Yeni ürün etiketi</span></label>
+    <label class="pf-chk"><input type="checkbox" id="f_isBestSeller"> <span>Çok satan etiketi</span></label>
+   </div>
+  </section>
+
+  <section class="pf-sec">
+   <h3>Fotoğraflar <span class="pf-count" id="pfImgCount"></span></h3>
+   <p class="pf-help">İlk fotoğraf kapak olur. Bilgisayar veya telefondan birden çok fotoğraf seçebilir ya da link ekleyebilirsiniz.</p>
+   <div class="pf-drop" id="pfDrop">
+    <label class="pf-up"><input type="file" accept="image/*" multiple hidden onchange="pfPick(this)"><span>Fotoğraf yükle</span></label>
+    <span class="pf-or">veya sürükleyip bırakın</span>
+   </div>
+   <div class="pf-linkrow"><input id="pfLink" placeholder="Fotoğraf veya video linki yapıştırın" onkeydown="if(event.key==='Enter'){event.preventDefault();pfAddLink();}"><button type="button" class="btn btn-ghost" onclick="pfAddLink()">Link ekle</button></div>
+   <div id="pfUpMsg" class="pf-note"></div>
+   <div class="pf-grid" id="pfGrid"></div>
+  </section>
+
+  <section class="pf-sec">
+   <h3>Renk, beden ve stok</h3>
+   <div class="field"><label>Renkler</label>
+    <div class="pf-chips" id="pfColorChips"></div>
+    <input id="pfColorIn" placeholder="Renk yazıp Enter'a basın" onkeydown="pfChipKey(event,'colors')" onblur="pfChipCommit('colors')">
+    <div class="pf-quick" id="pfColorQuick"></div></div>
+   <div class="field"><label>Bedenler</label>
+    <div class="pf-chips" id="pfSizeChips"></div>
+    <input id="pfSizeIn" placeholder="Beden yazıp Enter'a basın" onkeydown="pfChipKey(event,'sizes')" onblur="pfChipCommit('sizes')">
+    <div class="pf-quick" id="pfSizeQuick"></div></div>
+   <label class="pf-chk pf-track"><input type="checkbox" id="pfTrack" onchange="pfSetTrack(this.checked)"> <span>Stok adedini takip et <small>(kapalıysa ürün hep stokta görünür)</small></span></label>
+   <div class="pf-matwrap"><table class="pf-mat" id="pfMat"></table></div>
+   <div id="pfColorPick"></div>
+   <details class="pf-more" id="pfSet"><summary>Takım ürünü mü? (ikinci parça rengi)</summary>
+    <div class="grid2">
+     <div class="field"><label for="f_color1Label">Birinci parça adı</label><input id="f_color1Label" placeholder="Örn. Sweat"></div>
+     <div class="field"><label for="f_color2Label">İkinci parça adı</label><input id="f_color2Label" placeholder="Örn. Pantolon"></div>
+    </div>
+    <div class="field"><label>İkinci parça renkleri</label>
+     <div class="pf-chips" id="pfColor2Chips"></div>
+     <input id="pfColor2In" placeholder="Renk yazıp Enter'a basın" onkeydown="pfChipKey(event,'colors2')" onblur="pfChipCommit('colors2')"></div>
+   </details>
+  </section>
+
+  <section class="pf-sec">
+   <h3>Açıklama ve detaylar</h3>
+   <div class="field"><label for="f_shortDescription">Kısa açıklama <span class="pf-opt">ürün sayfasının altında ve Google'da görünür</span></label><input id="f_shortDescription"></div>
+   <div class="field"><label for="f_description">Ürün açıklaması</label><textarea id="f_description" rows="4"></textarea></div>
+   <div class="grid2">
+    <div class="field"><label for="f_fabric">Kumaş</label><input id="f_fabric" placeholder="Örn. %95 Pamuk %5 Elastan"></div>
+    <div class="field"><label for="f_fit">Kalıp</label><input id="f_fit" placeholder="Örn. Rahat kesim"></div>
+   </div>
+   <div class="field"><label for="f_measurements">Ürün ölçüleri</label><textarea id="f_measurements" rows="2" placeholder="Örn. Boy 98 cm, bel 36 cm"></textarea></div>
+   <div class="field"><label for="f_modelInfo">Model bilgisi</label><input id="f_modelInfo" placeholder="Örn. Manken 1.72 boy, 38 beden giyiyor"></div>
+  </section>
+
+  <div class="pf-foot">
+   <button class="btn btn-ghost" onclick="closeForm()">Vazgeç</button>
+   <button class="btn btn-gold" id="pfSave" onclick="saveProduct()">Kaydet</button>
   </div>
  </div>
 </div>
@@ -1694,18 +1786,152 @@ function metaDisconnect(){
  });
 }
 
-var FIELDS = ["id","name","category","price","oldPrice","colors","sizes","images","stock","shortDescription","description","fabric","fit"];
+// ---------- Ürün formu ----------
+var pf = null;
+var PF_COLORS = ["Siyah","Beyaz","Bej","Krem","Lacivert","Haki","Gri","Antrasit","Bordo","Kahve","Taş","Mürdüm"];
+var PF_SIZE_SETS = [["36 - 46","36|38|40|42|44|46"],["S - XL","S|M|L|XL"],["Standart","Standart"]];
+function pfSplit(v){ return String(v==null?"":v).split("|").map(function(x){return x.trim();}).filter(Boolean); }
+function pfIsVideo(u){ return /\.(mp4|webm|mov)(\?|$)/i.test(u||""); }
+function pfParseColorImages(str){
+ var o={}; String(str||"").split(";").forEach(function(part){ var i=part.indexOf("="); if(i<1) return; var k=part.slice(0,i).trim(), u=pfSplit(part.slice(i+1)); if(k&&u.length) o[k]=u; });
+ return o;
+}
+function pfNextId(){
+ var mx=0; products.forEach(function(p){ var m=/^p(\d+)$/i.exec(String(p.id)); if(m) mx=Math.max(mx,parseInt(m[1],10)); });
+ return "p"+(mx+1);
+}
 function openForm(index){
- var p = index!==null ? products[index] : null;
- document.getElementById("modalTitle").textContent = p ? "Ürünü Düzenle" : "Yeni Ürün";
- FIELDS.forEach(function(k){ document.getElementById("f_"+k).value = p ? (p[k]||"") : ""; });
- document.getElementById("f_id").disabled = !!p;
+ var p = index!==null && index!==undefined ? products[index] : null;
+ var st = p ? stockParse(p.stock) : {on:false,m:{},all:null};
+ pf = { editing:!!p, orig:p, images:p?pfSplit(p.images):[], colors:p?pfSplit(p.colors):[], sizes:p?pfSplit(p.sizes):[], colors2:p?pfSplit(p.colors2):[],
+  colorImages:p?pfParseColorImages(p.colorImages):{}, track:st.on, stock:{}, openColor:null, busy:0 };
+ var colors=pf.colors.length?pf.colors:["Standart"], sizes=pf.sizes.length?pf.sizes:["Standart"];
+ colors.forEach(function(c){ sizes.forEach(function(z){
+  var k=c.toLowerCase()+"|"+z.toLowerCase();
+  pf.stock[c+"|"+z] = st.on ? (st.all!==null?st.all:(st.m[k]!==undefined?(parseInt(st.m[k],10)||0):0)) : 5;
+ }); });
+ document.getElementById("modalTitle").textContent = p ? "Ürünü düzenle" : "Yeni ürün";
+ var set=function(id,v){ document.getElementById(id).value=v==null?"":v; };
+ set("f_id",p?p.id:pfNextId()); document.getElementById("f_id").disabled=!!p;
+ ["name","category","price","oldPrice","shortDescription","description","fabric","fit","measurements","modelInfo","color1Label","color2Label"].forEach(function(k){ set("f_"+k,p?p[k]:""); });
  document.getElementById("f_isNew").checked = p ? (String(p.isNew).toLowerCase()==="true"||p.isNew==="1") : false;
  document.getElementById("f_isBestSeller").checked = p ? (String(p.isBestSeller).toLowerCase()==="true"||p.isBestSeller==="1") : false;
- document.getElementById("formMsg").innerHTML="";
- stockRender(false);
+ var cats={}; products.forEach(function(x){ if(x.category) cats[x.category]=1; });
+ document.getElementById("catList").innerHTML=Object.keys(cats).map(function(c){return '<option value="'+esc(c)+'">';}).join("");
+ document.getElementById("pfSet").open = !!(pf.colors2.length || (p&&(p.color1Label||p.color2Label)));
+ document.getElementById("pfTrack").checked = pf.track;
+ document.getElementById("formMsg").innerHTML=""; document.getElementById("pfUpMsg").textContent=""; document.getElementById("pfLink").value="";
+ pfDisc(); pfRender();
  document.getElementById("modalBg").classList.remove("hidden");
+ document.querySelector("#modalBg .modal").scrollTop=0;
 }
+function closeForm(){ document.getElementById("modalBg").classList.add("hidden"); }
+function pfDisc(){
+ var a=parseFloat(String(document.getElementById("f_price").value).replace(",",".")), b=parseFloat(String(document.getElementById("f_oldPrice").value).replace(",","."));
+ document.getElementById("pfDisc").textContent = (a>0&&b>a) ? "Sitede %"+Math.round((1-a/b)*100)+" indirim olarak görünecek." : "";
+}
+// --- fotoğraflar ---
+function pfPick(inp){ var f=Array.prototype.slice.call(inp.files||[]); inp.value=""; pfUpload(f); }
+function pfAddLink(){
+ var i=document.getElementById("pfLink"), v=i.value.trim(); if(!v) return;
+ if(!/^https?:\/\//i.test(v) && v.charAt(0)!=="/"){ document.getElementById("pfUpMsg").className="pf-note err"; document.getElementById("pfUpMsg").textContent="Link http:// veya https:// ile başlamalı."; return; }
+ pfSplit(v.replace(/[\s,]+/g,"|")).forEach(function(u){ pf.images.push(u); });
+ i.value=""; document.getElementById("pfUpMsg").textContent=""; pfRender();
+}
+async function pfUpload(files){
+ files=files.filter(function(f){ return /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic)$/i.test(f.name); });
+ if(!files.length) return;
+ var msg=document.getElementById("pfUpMsg"), ok=0, bad=0, pid=document.getElementById("f_id").value.trim()||"urun";
+ for(var i=0;i<files.length;i++){
+  msg.className="pf-note"; msg.textContent="Yükleniyor "+(i+1)+"/"+files.length+"…"; pf.busy++; document.getElementById("pfSave").disabled=true;
+  try{
+   var b64=await resizeToJpegB64(files[i],1600);
+   var res=await apiPost({action:"uploadImage",name:files[i].name,data:b64,productId:pid});
+   if(res.result==="ok"){ pf.images.push(res.url); ok++; pfRender(); }
+   else { bad++; msg.className="pf-note err"; msg.textContent=res.message||"Yükleme başarısız."; if(res.code==="no_token") { pf.busy--; break; } }
+  }catch(e){ bad++; msg.className="pf-note err"; msg.textContent=e.message||"Yükleme hatası."; }
+  pf.busy--;
+ }
+ document.getElementById("pfSave").disabled = pf.busy>0;
+ if(ok&&!bad){ msg.className="pf-note ok"; msg.textContent=ok+" fotoğraf eklendi. Kaydet'e basınca üründe görünür."; }
+}
+function pfMove(i,d){ var j=i+d; if(j<0||j>=pf.images.length) return; var t=pf.images[i]; pf.images[i]=pf.images[j]; pf.images[j]=t; pfRender(); }
+function pfDel(i){
+ var u=pf.images[i]; pf.images.splice(i,1);
+ Object.keys(pf.colorImages).forEach(function(c){ pf.colorImages[c]=pf.colorImages[c].filter(function(x){return x!==u;}); if(!pf.colorImages[c].length) delete pf.colorImages[c]; });
+ pfRender();
+}
+function pfTile(u,i){
+ var media = pfIsVideo(u) ? '<video src="'+esc(u)+'" muted preload="metadata"></video><span class="pf-play">▶</span>' : '<img src="'+esc(u)+'" loading="lazy" alt="">';
+ return '<div class="pf-tile">'+media+(i===0?'<span class="pf-cover">Kapak</span>':'')+
+  '<div class="pf-tbar"><button type="button" onclick="pfMove('+i+',-1)" aria-label="Öne al"'+(i===0?' disabled':'')+'>‹</button><button type="button" onclick="pfMove('+i+',1)" aria-label="Arkaya al"'+(i===pf.images.length-1?' disabled':'')+'>›</button><button type="button" class="d" onclick="pfDel('+i+')" aria-label="Sil">✕</button></div></div>';
+}
+// --- renk / beden ---
+function pfChipKey(e,kind){
+ if(e.key==="Enter"||e.key===","||e.key==="|"){ e.preventDefault(); pfChipCommit(kind); }
+ else if(e.key==="Backspace" && !e.target.value && pf[kind].length){ pf[kind].pop(); pfRender(); }
+}
+function pfChipCommit(kind){
+ var id = kind==="colors"?"pfColorIn":(kind==="sizes"?"pfSizeIn":"pfColor2In"), inp=document.getElementById(id);
+ var v=inp.value.replace(/[|,;=]/g," ").trim(); inp.value=""; if(!v) return;
+ pfAdd(kind,v);
+}
+function pfAdd(kind,v){
+ if(pf[kind].some(function(x){return x.toLowerCase()===v.toLowerCase();})){ return; }
+ pf[kind].push(v); pfEnsureStock(); pfRender();
+}
+function pfRemove(kind,i){
+ var v=pf[kind][i]; pf[kind].splice(i,1);
+ if(kind==="colors") delete pf.colorImages[v];
+ pfRender();
+}
+function pfSizes(set){ pf.sizes=pfSplit(set); pfEnsureStock(); pfRender(); }
+function pfEnsureStock(){
+ var colors=pf.colors.length?pf.colors:["Standart"], sizes=pf.sizes.length?pf.sizes:["Standart"];
+ colors.forEach(function(c){ sizes.forEach(function(z){ if(pf.stock[c+"|"+z]===undefined) pf.stock[c+"|"+z]=5; }); });
+}
+function pfSetTrack(on){ pf.track=on; pfRender(); }
+function pfStock(c,z,v){ pf.stock[c+"|"+z]=Math.max(0,parseInt(v,10)||0); }
+function pfChipsHtml(kind){
+ return pf[kind].map(function(v,i){ return '<span class="pf-chip">'+esc(v)+'<button type="button" onclick="pfRemove(\''+kind+'\','+i+')" aria-label="'+esc(v)+' sil">✕</button></span>'; }).join("");
+}
+function pfToggleColorPick(i){ var c=pf.colors[i]; pf.openColor = pf.openColor===c ? null : c; pfRender(); }
+function pfTogglePhoto(color,i){
+ var u=pf.images[i], a=pf.colorImages[color]||[], k=a.indexOf(u);
+ if(k>-1) a.splice(k,1); else a.push(u);
+ if(a.length) pf.colorImages[color]=a; else delete pf.colorImages[color];
+ pfRender();
+}
+function pfRender(){
+ var g=document.getElementById("pfGrid");
+ g.innerHTML = pf.images.length ? pf.images.map(pfTile).join("") : '<div class="pf-empty">Henüz fotoğraf yok.</div>';
+ document.getElementById("pfImgCount").textContent = pf.images.length ? "("+pf.images.length+")" : "";
+ document.getElementById("pfColorChips").innerHTML=pfChipsHtml("colors");
+ document.getElementById("pfSizeChips").innerHTML=pfChipsHtml("sizes");
+ document.getElementById("pfColor2Chips").innerHTML=pfChipsHtml("colors2");
+ document.getElementById("pfColorQuick").innerHTML=PF_COLORS.filter(function(c){return !pf.colors.some(function(x){return x.toLowerCase()===c.toLowerCase();});}).map(function(c){return '<button type="button" onclick="pfAdd(\'colors\',\''+c+'\')">+ '+c+'</button>';}).join("");
+ document.getElementById("pfSizeQuick").innerHTML='<span>Hazır beden takımı:</span>'+PF_SIZE_SETS.map(function(s){return '<button type="button" onclick="pfSizes(\''+s[1]+'\')">'+s[0]+'</button>';}).join("");
+ var colors=pf.colors.length?pf.colors:["Standart"], sizes=pf.sizes.length?pf.sizes:["Standart"];
+ var h='<thead><tr><th>Renk</th>'+(pf.track?sizes.map(function(z){return '<th>'+esc(z)+'</th>';}).join(""):'')+'<th>Fotoğraf</th></tr></thead><tbody>';
+ colors.forEach(function(c,ci){
+  var n=(pf.colorImages[c]||[]).length, real=pf.colors.length>0;
+  h+='<tr><td class="pf-cn">'+esc(c)+'</td>'+(pf.track?sizes.map(function(z){ return '<td><input type="number" min="0" value="'+(pf.stock[c+"|"+z]!==undefined?pf.stock[c+"|"+z]:0)+'" oninput="pfStock(\''+esc(c).replace(/'/g,"\\'")+'\',\''+esc(z).replace(/'/g,"\\'")+'\',this.value)" aria-label="'+esc(c)+' '+esc(z)+' stok"></td>'; }).join(""):'')+
+   '<td>'+(real&&pf.images.length?'<button type="button" class="pf-asg'+(pf.openColor===c?' on':'')+'" onclick="pfToggleColorPick('+ci+')">'+(n?n+' fotoğraf':'Fotoğraf ata')+'</button>':'<span class="pf-dim">—</span>')+'</td></tr>';
+ });
+ document.getElementById("pfMat").innerHTML=h+'</tbody>';
+ var cp=document.getElementById("pfColorPick");
+ if(pf.openColor && pf.colors.indexOf(pf.openColor)>-1){
+  var sel=pf.colorImages[pf.openColor]||[];
+  cp.innerHTML='<div class="pf-pick"><b>'+esc(pf.openColor)+'</b> rengi seçilince sitede gösterilecek fotoğrafları işaretleyin. <span class="pf-dim">Hiçbiri seçilmezse tüm fotoğraflar gösterilir.</span><div class="pf-grid pf-small">'+
+   pf.images.map(function(u,i){ var on=sel.indexOf(u)>-1; return '<button type="button" class="pf-tile pf-sel'+(on?' on':'')+'" onclick="pfTogglePhoto(\''+esc(pf.openColor).replace(/'/g,"\\'")+'\','+i+')" aria-pressed="'+on+'">'+(pfIsVideo(u)?'<video src="'+esc(u)+'" muted preload="metadata"></video>':'<img src="'+esc(u)+'" alt="">')+(on?'<span class="pf-tick">✓</span>':'')+'</button>'; }).join("")+'</div></div>';
+ } else cp.innerHTML="";
+}
+(function(){
+ var d=document.getElementById("pfDrop"); if(!d) return;
+ ["dragenter","dragover"].forEach(function(ev){ d.addEventListener(ev,function(e){ e.preventDefault(); d.classList.add("over"); }); });
+ ["dragleave","drop"].forEach(function(ev){ d.addEventListener(ev,function(e){ e.preventDefault(); d.classList.remove("over"); }); });
+ d.addEventListener("drop",function(e){ pfUpload(Array.prototype.slice.call(e.dataTransfer.files||[])); });
+})();
 function stockList(v){ return String(v||"").split("|").map(function(x){return x.trim();}).filter(Boolean); }
 function stockParse(str){
  str=String(str||"").trim(); var m={};
@@ -1714,45 +1940,34 @@ function stockParse(str){
  str.split(";").forEach(function(part){ var i=part.lastIndexOf(":"); if(i>0) m[part.slice(0,i).trim().toLowerCase()]=part.slice(i+1).trim(); });
  return {m:m,all:null,on:true};
 }
-function stockRender(force){
- var box=document.getElementById("stockGrid");
- var colors=stockList(document.getElementById("f_colors").value), sizes=stockList(document.getElementById("f_sizes").value);
- if(!colors.length) colors=["Standart"]; if(!sizes.length) sizes=["Standart"];
- var cur=stockParse(document.getElementById("f_stock").value);
- if(!cur.on && !force){ box.innerHTML='<div style="font-size:12px;color:#888">Stok takibi kapalı (ürün her zaman stokta görünür).</div>'; return; }
- var h='<table style="border-collapse:collapse;font-size:13px"><tr><th></th>'+sizes.map(function(z){return '<th style="padding:4px 8px">'+z+'</th>';}).join('')+'</tr>';
- colors.forEach(function(c){
-  h+='<tr><td style="padding:4px 8px;font-weight:600">'+c+'</td>'+sizes.map(function(z){
-   var k=c.toLowerCase()+"|"+z.toLowerCase();
-   var v=!cur.on?5:(cur.all!==null?cur.all:(cur.m[k]!==undefined?cur.m[k]:0));
-   return '<td style="padding:2px"><input type="number" min="0" class="stk" data-c="'+c+'" data-z="'+z+'" value="'+v+'" style="width:60px;padding:6px" oninput="stockSync()"></td>';
-  }).join('')+'</tr>';
- });
- box.innerHTML=h+'</table>'; stockSync();
-}
-function stockSync(){
- var parts=[]; document.querySelectorAll("#stockGrid .stk").forEach(function(i){ parts.push(i.getAttribute("data-c")+"|"+i.getAttribute("data-z")+":"+(parseInt(i.value,10)||0)); });
- document.getElementById("f_stock").value=parts.join(";");
-}
-function stockClear(){ document.getElementById("f_stock").value=""; stockRender(false); }
-function closeForm(){ document.getElementById("modalBg").classList.add("hidden"); }
-
 function saveProduct(){
- var product={};
- FIELDS.forEach(function(k){ product[k]=document.getElementById("f_"+k).value.trim(); });
- product.isNew = document.getElementById("f_isNew").checked ? "1":"0";
- product.isBestSeller = document.getElementById("f_isBestSeller").checked ? "1":"0";
- if(!product.id || !product.name){ document.getElementById("formMsg").innerHTML='<div class="msg err">Ürün ID ve adı zorunludur.</div>'; return; }
- // Formda olmayan sütunları (colors2, bulkPrice2, sira, ölçüler vb.) korumak için mevcut ürünle birleştir
- var existing = null;
- products.forEach(function(p){ if(String(p.id)===String(product.id)) existing = p; });
- var merged = {};
- if(existing){ Object.keys(existing).forEach(function(k){ merged[k] = existing[k]; }); }
- Object.keys(product).forEach(function(k){ merged[k] = product[k]; });
- apiPost({action:"upsertProduct", product:merged}).then(function(res){
+ var v=function(id){ return document.getElementById(id).value.trim(); }, msg=document.getElementById("formMsg");
+ var err=function(t){ msg.innerHTML='<div class="msg err">'+t+'</div>'; document.querySelector("#modalBg .modal").scrollTop=0; };
+ pfChipCommit("colors"); pfChipCommit("sizes"); pfChipCommit("colors2");
+ var price=v("f_price").replace(",","."), old=v("f_oldPrice").replace(",",".");
+ if(!v("f_name")) return err("Ürün adını yazın.");
+ if(!v("f_id")) return err("Ürün kodu boş olamaz.");
+ if(!(parseFloat(price)>0)) return err("Satış fiyatını yazın.");
+ if(old && !(parseFloat(old)>0)) return err("Eski fiyat geçersiz.");
+ if(!pf.images.length) return err("En az bir fotoğraf ekleyin.");
+ if(!pf.editing && products.some(function(p){return String(p.id)===v("f_id");})) return err("Bu ürün kodu zaten var, farklı bir kod yazın.");
+ var colors=pf.colors.length?pf.colors:["Standart"], sizes=pf.sizes.length?pf.sizes:["Standart"], stock="";
+ if(pf.track){ var parts=[]; colors.forEach(function(c){ sizes.forEach(function(z){ parts.push(c+"|"+z+":"+(pf.stock[c+"|"+z]||0)); }); }); stock=parts.join(";"); }
+ var ci=pf.colors.filter(function(c){return (pf.colorImages[c]||[]).length;}).map(function(c){return c+"="+pf.colorImages[c].join("|");}).join(";");
+ var product={ id:v("f_id"), name:v("f_name"), category:v("f_category"), price:price, oldPrice:old,
+  colors:pf.colors.join("|"), sizes:pf.sizes.join("|"), images:pf.images.join("|"), stock:stock, colorImages:ci,
+  colors2:pf.colors2.join("|"), color1Label:v("f_color1Label"), color2Label:v("f_color2Label"),
+  shortDescription:v("f_shortDescription"), description:v("f_description"), fabric:v("f_fabric"), fit:v("f_fit"),
+  measurements:v("f_measurements"), modelInfo:v("f_modelInfo"),
+  isNew:document.getElementById("f_isNew").checked?"1":"0", isBestSeller:document.getElementById("f_isBestSeller").checked?"1":"0" };
+ // Formda olmayan sütunları (bulkPrice2, sira vb.) korumak için mevcut ürünle birleştir
+ var merged={}; if(pf.orig){ Object.keys(pf.orig).forEach(function(k){ merged[k]=pf.orig[k]; }); }
+ Object.keys(product).forEach(function(k){ merged[k]=product[k]; });
+ var btn=document.getElementById("pfSave"); btn.disabled=true; btn.textContent="Kaydediliyor...";
+ apiPost({action:"upsertProduct",product:merged}).then(function(res){
   if(res.result==="ok"){ closeForm(); loadProducts(); }
-  else { document.getElementById("formMsg").innerHTML='<div class="msg err">'+(res.message||"Hata oluştu")+'</div>'; }
- }).catch(function(){ document.getElementById("formMsg").innerHTML='<div class="msg err">Bağlantı hatası</div>'; });
+  else err(esc(res.message||"Hata oluştu"));
+ }).catch(function(){ err("Bağlantı hatası, tekrar deneyin."); }).then(function(){ btn.disabled=pf&&pf.busy>0; btn.textContent="Kaydet"; });
 }
 
 // ---- Bilgisayar / telefondan görsel yükleme (küçültüp GitHub'a gönderir; link alanına ekler) ----
