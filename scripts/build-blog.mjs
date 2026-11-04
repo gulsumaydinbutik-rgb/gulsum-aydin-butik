@@ -399,7 +399,6 @@ const urls = [
   { loc: `${SITE}/`, pri: "1.0" },
   { loc: `${SITE}/blog/`, lastmod: posts.reduce((m, p) => (p.updated > m ? p.updated : m), "") || undefined, pri: "0.8" },
   ...posts.map((p) => ({ loc: `${SITE}/blog/${p.slug}/`, lastmod: p.updated, pri: "0.7" })),
-  ...[...new Set(Object.values(products).map((p) => p.category).filter(Boolean))].map((c) => ({ loc: `${SITE}/?kategori=${encodeURIComponent(c)}`, pri: "0.6" })),
   ...plist.map((p) => ({ loc: productUrl(p), pri: "0.9", images: p.photos })),
 ];
 fs.writeFileSync(path.join(ROOT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
