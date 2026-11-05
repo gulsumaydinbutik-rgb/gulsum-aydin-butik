@@ -163,7 +163,7 @@ img{max-width:100%;display:block;}
 .pd-related h3{font-size:15px;margin:18px 16px 10px}
 .desc-block{margin-top:20px;font-size:13px;line-height:1.7;color:var(--ink2);}
 .desc-block h4{color:var(--ink);font-size:13px;margin:14px 0 4px;}
-.sticky-cta{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;}
+.sticky-cta{position:sticky;bottom:calc(60px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;}
 .btn-main{flex:1;background:var(--ink);color:var(--bg);padding:14px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;}
 .btn-wa{background:#25D366;color:#fff;padding:14px;border-radius:12px;width:52px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .btn-wa svg{width:26px;height:26px;fill:#fff;}
@@ -1049,9 +1049,9 @@ function viewProduct(){
   (hasText(p.fit)?'<h4>Kalıp</h4>'+esc(p.fit):'')+
   (hasText(p.measurements)?'<h4>Ürün Ölçüleri</h4>'+esc(p.measurements):'')+
   (hasText(p.modelInfo)?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
- '</div></div></div>'+pdRelated(p)+
+ '</div></div></div>'+
  '<div class="sticky-cta"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
- '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum. "+productUrl(p))+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>';
+ '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum. "+productUrl(p))+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>'+pdRelated(p);
 }
 
 function viewFavorites(){
