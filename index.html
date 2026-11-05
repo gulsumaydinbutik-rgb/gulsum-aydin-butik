@@ -156,6 +156,11 @@ img{max-width:100%;display:block;}
 .qty-row{display:flex;align-items:center;gap:14px;margin-top:6px;}
 .qty-btn{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;font-size:17px;display:flex;align-items:center;justify-content:center;}
 .qty-val{font-size:15px;font-weight:700;min-width:20px;text-align:center;}
+.pd-trust{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.pd-trust div{background:var(--bg2);border-radius:10px;padding:9px 10px;font-size:12px;font-weight:600;color:var(--ink2);line-height:1.35}
+.pd-sizehelp{display:inline-block;margin-top:6px;font-size:12px;color:var(--gold-d);text-decoration:underline}
+.pd-related{padding:8px 0 90px}
+.pd-related h3{font-size:15px;margin:18px 16px 10px}
 .desc-block{margin-top:20px;font-size:13px;line-height:1.7;color:var(--ink2);}
 .desc-block h4{color:var(--ink);font-size:13px;margin:14px 0 4px;}
 .sticky-cta{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;}
@@ -977,6 +982,22 @@ function viewSearch(){
   (list.length? '<div class="grid">'+renderCards(list)+'</div>' : '<div class="empty-state"><div class="ico">🙁</div><p>Aradığınız ürünü bulamadık.</p></div>'))+'</div>';
 }
 
+function productUrl(p){ return "https://gulsumaydin.com.tr/?urun="+encodeURIComponent(p.id); }
+function pdTrust(){
+ return '<div class="pd-trust"><div>🚚 Ücretsiz kargo</div><div>💵 Kapıda ödeme</div><div>↩️ 14 gün içinde cayma hakkı</div><div>💬 WhatsApp destek</div></div>';
+}
+function pdRelated(p){
+ var ok=function(q){
+  if(q.id===p.id) return false;
+  if(String(q.images[0]||"").indexOf("burcumgiyim")>-1) return false;
+  return q.variants.reduce(function(a,v){return a+v.stock;},0)>0;
+ };
+ var same=PRODUCTS.filter(function(q){return ok(q)&&q.category===p.category;});
+ var other=PRODUCTS.filter(function(q){return ok(q)&&q.category!==p.category;});
+ var list=same.concat(other).slice(0,4);
+ if(!list.length) return '';
+ return '<div class="pd-related"><h3>Bunları da beğenebilirsin</h3><div class="section"><div class="grid">'+list.map(function(q){return productCard(q);}).join('')+'</div></div></div>';
+}
 function viewProduct(){
  var p=findProduct(state.productId);
  if(!p) return header("Ürün","home")+'<div class="empty-state"><div class="ico">❓</div><p>Ürün bulunamadı.</p></div>';
@@ -1017,19 +1038,20 @@ function viewProduct(){
   var sv=findVariant(p,color,s), sOut=!sv||sv.stock<1;
   return '<button class="opt-pill'+(s===size?' selected':'')+(sOut?' disabled':'')+'" data-size="'+esc(s)+'">'+esc(s)+'</button>';
  }).join('')+'</div>'+
+ '<a class="pd-sizehelp" href="/blog/tesettur-takim-beden-ve-boy-secimi/">Beden seçerken emin değil misin? Beden rehberi</a>'+
  '<div class="opt-label">Adet</div>'+
  '<div class="qty-row"><button class="qty-btn" data-qty="-1">−</button><span class="qty-val">'+state.pdQty+'</span><button class="qty-btn" data-qty="1">+</button></div>'+
  '<div class="pd-cta-desk"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
-  '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>'+
+  '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum. "+productUrl(p))+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>'+pdTrust()+
  '<div class="desc-block">'+
   '<h4>Ürün Açıklaması</h4>'+esc(p.description)+
   (hasText(p.fabric)?'<h4>Kumaş</h4>'+esc(p.fabric):'')+
   (hasText(p.fit)?'<h4>Kalıp</h4>'+esc(p.fit):'')+
   (hasText(p.measurements)?'<h4>Ürün Ölçüleri</h4>'+esc(p.measurements):'')+
   (hasText(p.modelInfo)?'<h4>Model Bilgisi</h4>'+esc(p.modelInfo):'')+
- '</div></div></div>'+
+ '</div></div></div>'+pdRelated(p)+
  '<div class="sticky-cta"><button class="btn-main" data-action="addcart">SEPETE EKLE</button>'+
- '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum.")+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>';
+ '<a class="btn-wa" href="'+waLink("Merhaba, "+dispName+" ürünü hakkında bilgi almak istiyorum. "+productUrl(p))+'" target="_blank" aria-label="WhatsApp">'+WA_ICON+'</a></div>';
 }
 
 function viewFavorites(){
