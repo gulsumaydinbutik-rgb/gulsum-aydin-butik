@@ -254,7 +254,7 @@ img{max-width:100%;display:block;}
  .topbar h3{font-size:13px;font-weight:500;color:var(--ink2);}
  .back{font-size:26px;line-height:1;padding:0 6px;}
  .hero{margin:22px 32px 10px;border-radius:20px;}
- .trust-row{display:none;}
+ .trust-row{max-width:760px;margin:0 auto;padding:18px 32px 6px;}
  .section{padding:14px 32px 8px;}
  .section:has(> .cats){display:none;}
  .section-head{margin-bottom:16px;}
@@ -875,7 +875,7 @@ function renderCards(list){
 }
 
 function trustBadges(){
- var items=[["TRUCK","Hızlı Teslimat"],["SHIELD","Güvenli Alışveriş"],["HEADSET","7/24 Destek"]];
+ var items=[["TRUCK","Ücretsiz Kargo"],["SHIELD","Kapıda Ödeme"],["BAG","14 Gün Cayma Hakkı"],["HEADSET","WhatsApp Destek"]];
  return '<div class="trust-row">'+items.map(function(it){return '<div class="trust-item">'+ICONS[it[0]]+'<span>'+it[1]+'</span></div>';}).join('')+'</div>';
 }
 function skeletonGrid(){
