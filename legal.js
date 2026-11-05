@@ -2,7 +2,7 @@
    Satıcı bilgilerini aşağıdaki LEGAL_INFO içinde doldurun; boş bırakılan satırlar sayfada görünmez. */
 window.LEGAL_INFO = {
   marka: "Gülsüm Aydın Butik",
-  site: "www.gulsumaydin.com.tr",
+  site: "gulsumaydin.com.tr",
   unvan: "",          // Örn: "Gülsüm Aydın" (şahıs) veya şirket unvanı
   vergiDairesi: "",   // Örn: "Kadıköy"
   vergiNo: "",        // Vergi kimlik numarası / T.C. kimlik (şahıs ise vergi no)

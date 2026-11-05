@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const SITE = "https://www.gulsumaydin.com.tr";
+const SITE = "https://gulsumaydin.com.tr";
 const BRAND = "Gülsüm Aydın Butik";
 const SHEET_ID = "1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ";
 const BLOG_GID = "1602734708";
@@ -406,6 +406,6 @@ fs.writeFileSync(path.join(ROOT, "sitemap.xml"), `<?xml version="1.0" encoding="
 ${urls.map((u) => `<url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pri}</priority>${(u.images || []).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>`).join("\n")}
 </urlset>
 `);
-fs.writeFileSync(path.join(ROOT, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /admin.html\n\nSitemap: ${SITE}/sitemap.xml\n`);
+fs.writeFileSync(path.join(ROOT, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 
 console.log(`${posts.length} yazı, ${Object.keys(products).length} ürün → blog, ürün sayfaları ve sitemap üretildi.`);

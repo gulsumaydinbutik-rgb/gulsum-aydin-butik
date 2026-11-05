@@ -11,23 +11,42 @@ var ORDERS_SPREADSHEET_ID = "11DQF5rjHUNcRi9_uAIySmmjXmzrB1Kd_w42irh2h3Gc";
 var ORDERS_SHEET_NAME = "Siparişler";
 var ADMIN_PASSWORD_PROPERTY = "ADMIN_PASSWORD"; // Proje Ayarları > Script Properties'te tanımlanır
 
+// Kaba kuvvet koruması: 10 dakika içinde 15 hatalı denemeden sonra (doğru şifre dahil) giriş geçici olarak kapanır.
+var PW_MAX_FAILS_ = 15;
+var PW_WINDOW_SEC_ = 600;
+
+function safeEq_(a, b) {
+  a = String(a == null ? "" : a);
+  b = String(b == null ? "" : b);
+  var diff = a.length ^ b.length;
+  var n = Math.max(a.length, b.length);
+  for (var i = 0; i < n; i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return diff === 0;
+}
+
+function pwLocked_() {
+  return Number(CacheService.getScriptCache().get("pw_fails") || 0) >= PW_MAX_FAILS_;
+}
+
+function authMsg_() {
+  return pwLocked_() ? "Çok fazla hatalı deneme. 10 dakika sonra tekrar deneyin." : "Şifre yanlış.";
+}
+
 function checkPassword(pw) {
+  var cache = CacheService.getScriptCache();
+  var fails = Number(cache.get("pw_fails") || 0);
+  if (fails >= PW_MAX_FAILS_) return false;
   var stored = PropertiesService.getScriptProperties().getProperty(ADMIN_PASSWORD_PROPERTY);
-  return stored && pw === stored;
+  var ok = !!stored && safeEq_(pw, stored);
+  if (!ok) cache.put("pw_fails", String(fails + 1), PW_WINDOW_SEC_);
+  else if (fails) cache.remove("pw_fails");
+  return ok;
 }
 
 function doGet(e) {
   var action = (e.parameter && e.parameter.action) || "listProducts";
   if (action === "listProducts") return jsonResponse({ result: "ok", data: getAllProducts() });
   if (action === "listSettings") return jsonResponse({ result: "ok", data: getAllSettings() });
-  if (action === "listCampaigns") {
-    if (!checkPassword(e.parameter.password)) return jsonResponse({ result: "error", message: "Şifre yanlış." });
-    return jsonResponse({ result: "ok", data: getAllCampaigns() });
-  }
-  if (action === "listOrders") {
-    if (!checkPassword(e.parameter.password)) return jsonResponse({ result: "error", message: "Şifre yanlış." });
-    return jsonResponse({ result: "ok", data: getAllOrders() });
-  }
   return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + action });
 }
 
@@ -37,10 +56,12 @@ function doPost(e) {
   catch (err) { return jsonResponse({ result: "error", message: "Geçersiz istek." }); }
 
   if (!checkPassword(body.password)) {
-    return jsonResponse({ result: "error", message: "Şifre yanlış." });
+    return jsonResponse({ result: "error", message: authMsg_() });
   }
 
   switch (body.action) {
+    case "listOrders": return jsonResponse({ result: "ok", data: getAllOrders() });
+    case "listCampaigns": return jsonResponse({ result: "ok", data: getAllCampaigns() });
     case "upsertProduct": return jsonResponse(withFeedRefresh_(upsertProduct(body.product)));
     case "deleteProduct": return jsonResponse(withFeedRefresh_(deleteProduct(body.id)));
     case "rebuildFeeds": return jsonResponse(rebuildFeeds());
@@ -129,7 +150,7 @@ function getAllOrders() {
 }
 
 var SHOP_NAME_ = "Gülsüm Aydın Butik";
-var SITE_BASE_ = "https://www.gulsumaydin.com.tr";
+var SITE_BASE_ = "https://gulsumaydin.com.tr";
 var PTT_TRACK_URL_ = "https://gonderitakip.ptt.gov.tr/Track/Verify?q=";
 var SHOP_REPLY_ = "gulsumaydinbutik@gmail.com";
 
@@ -424,7 +445,7 @@ function jsonResponse(obj) {
 // ve panelde "Şimdi güncelle" düğmesine basılınca.
 // ============================================================
 
-var SITE_URL = "https://www.gulsumaydin.com.tr";
+var SITE_URL = "https://gulsumaydin.com.tr";
 var FEED_BRAND = "Gülsüm Aydın Butik";
 var META_FEED_SHEET = "MetaFeed";
 var GOOGLE_FEED_SHEET = "GoogleFeed";

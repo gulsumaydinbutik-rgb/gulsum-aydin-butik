@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
 
-Sitemap: https://www.gulsumaydin.com.tr/sitemap.xml
+Sitemap: https://gulsumaydin.com.tr/sitemap.xml

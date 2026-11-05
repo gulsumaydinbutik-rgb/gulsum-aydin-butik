@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gülsüm Aydın Butik — Yönetim Paneli</title>
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -682,7 +683,7 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
     <div class="field"><label>Google Açıklaması (meta description) <span class="counter" id="c_metaDescription"></span></label><textarea id="b_metaDescription" rows="2" oninput="seoCheck()"></textarea></div>
     <div class="gprev"><div class="u">gulsumaydin.com.tr › blog › <span id="gp_slug"></span></div><div class="t" id="gp_title"></div><div class="d" id="gp_desc"></div></div>
     <div class="field"><label>Kısa Özet (blog listesinde görünür)</label><textarea id="b_excerpt" rows="2"></textarea></div>
-    <div class="field"><label>Kapak Görseli (link)</label><div class="cover-row"><img id="b_coverPrev" alt=""><input id="b_coverImage" oninput="blogCoverPrev();seoCheck()" placeholder="https://www.gulsumaydin.com.tr/assets/urunler/p16-1.jpg"></div>
+    <div class="field"><label>Kapak Görseli (link)</label><div class="cover-row"><img id="b_coverPrev" alt=""><input id="b_coverImage" oninput="blogCoverPrev();seoCheck()" placeholder="https://gulsumaydin.com.tr/assets/urunler/p16-1.jpg"></div>
     <div class="upl"><label class="btn-ghost upl-btn">📷 Görsel Yükle<input type="file" accept="image/*" hidden onchange="uploadPick(this,'b_coverImage',false)"></label><span class="upl-msg" id="upl_b_coverImage"></span></div></div>
     <div class="field"><label>İçerik</label>
      <div class="ed-tools">
@@ -811,9 +812,9 @@ function doLogin(){
  loadProducts();
 }
 function apiGet(action, needsAuth){
- var url = ADMIN_API_URL + "?action=" + (action||"listProducts");
- if(needsAuth){ url += "&password=" + encodeURIComponent(sessionStorage.getItem(PASSWORD_KEY)); }
- return fetch(url).then(function(r){return r.json();});
+ // Şifreli okumalar POST ile gider: şifre adres çubuğunda/geçmişte/günlüklerde görünmesin.
+ if(needsAuth){ return apiPost({action:action||"listProducts"}); }
+ return fetch(ADMIN_API_URL + "?action=" + (action||"listProducts")).then(function(r){return r.json();});
 }
 function apiPost(body){
  body.password = sessionStorage.getItem(PASSWORD_KEY);
@@ -1441,7 +1442,7 @@ function deleteBlog(i){
 
 // ---------- Yeni Reklam ----------
 var adKind = "product", adGoal = "traffic", adSel = [], adIgSel = [], adAud = "retarget", adCatalogs = null, adIgItems = [], adIgNext = "", adNewCampaignId = null, adSetupData = null;
-var SITE = "https://www.gulsumaydin.com.tr";
+var SITE = "https://gulsumaydin.com.tr";
 var AD_GOALS = {
  product: [["traffic","Ürün sayfasına ziyaretçi","Ürünü görmek isteyenleri sitedeki ürün sayfasına getirir. Başlangıç için önerilir."],
            ["sales","Sitede satış","Meta, satın alma ihtimali yüksek kişilere gösterir. Sitede Pixel ile satış verisi biriktikçe daha iyi çalışır."],
