@@ -74,6 +74,9 @@ function doPost(e) {
     case "upsertBlog": return jsonResponse(upsertBlog_(body.post));
     case "deleteBlog": return jsonResponse(deleteBlog_(body.slug));
     case "uploadImage": return jsonResponse(uploadImage_(body.name, body.data, body.productId));
+    case "gscDashboard":
+    case "gscSubmitSitemap":
+      return jsonResponse(handleGscAction_(body));
     case "metaStatus":
     case "metaSaveConfig":
     case "metaDisconnect":
@@ -90,6 +93,80 @@ function doPost(e) {
     case "igSetLabel":
       return jsonResponse(handleMetaAction_(body));
     default: return jsonResponse({ result: "error", message: "Bilinmeyen işlem: " + body.action });
+  }
+}
+
+// ---------- Google Arama (Search Console) ----------
+// Veriyi, script'i dağıtan Google hesabının Search Console yetkisiyle okur. Ek anahtar gerekmez.
+// Gerekli izin: appsscript.json içinde https://www.googleapis.com/auth/webmasters
+var GSC_SITE_ = "sc-domain:gulsumaydin.com.tr";
+var GSC_SITEMAP_ = "https://gulsumaydin.com.tr/sitemap.xml";
+var GSC_API_ = "https://www.googleapis.com/webmasters/v3/sites/";
+
+function gscCall_(method, path, payload) {
+  var opt = { method: method, muteHttpExceptions: true, headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() } };
+  if (payload) { opt.contentType = "application/json"; opt.payload = JSON.stringify(payload); }
+  var r = UrlFetchApp.fetch(GSC_API_ + encodeURIComponent(GSC_SITE_) + path, opt);
+  var code = r.getResponseCode(), txt = r.getContentText() || "";
+  if (code >= 200 && code < 300) return txt ? JSON.parse(txt) : {};
+  var msg = "";
+  try { msg = JSON.parse(txt).error.message; } catch (e) { msg = txt.slice(0, 160); }
+  if (code === 401 || code === 403) {
+    throw new Error("Search Console erişimi yok (" + code + "). Script'in Search Console iznini onaylayın ve bu hesabın " + GSC_SITE_.replace("sc-domain:", "") + " mülküne erişimi olduğundan emin olun. Ayrıntı: " + msg);
+  }
+  throw new Error("Search Console hatası (" + code + "): " + msg);
+}
+
+function gscDay_(d) { return Utilities.formatDate(d, "Europe/Istanbul", "yyyy-MM-dd"); }
+
+function gscDashboard_(days, refresh) {
+  days = Number(days); if ([7, 28, 90].indexOf(days) < 0) days = 28;
+  var cache = CacheService.getScriptCache(), key = "gsc_" + days;
+  if (!refresh) { var hit = cache.get(key); if (hit) return JSON.parse(hit); }
+  var end = new Date(Date.now() - 2 * 86400000);               // Google verisi 2-3 gün gecikmeli gelir
+  var start = new Date(end.getTime() - (days - 1) * 86400000);
+  var range = { startDate: gscDay_(start), endDate: gscDay_(end) };
+  function q(dims, limit) {
+    var body = { startDate: range.startDate, endDate: range.endDate, rowLimit: limit || 25000 };
+    if (dims) body.dimensions = dims;
+    return gscCall_("post", "/searchAnalytics/query", body).rows || [];
+  }
+  var tot = q(null, 1)[0] || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  var daily = q(["date"]).map(function (r) { return { date: r.keys[0], clicks: r.clicks, impressions: r.impressions }; })
+    .sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  function top(dim) {
+    return q([dim], 15).map(function (r) { return { k: r.keys[0], clicks: r.clicks, impressions: r.impressions, position: r.position }; });
+  }
+  var maps = [];
+  try {
+    maps = (gscCall_("get", "/sitemaps").sitemap || []).map(function (m) {
+      return { path: m.path, lastSubmitted: m.lastSubmitted || "", lastDownloaded: m.lastDownloaded || "", errors: Number(m.errors || 0), warnings: Number(m.warnings || 0), pending: !!m.isPending };
+    });
+  } catch (e) { maps = []; }
+  var out = {
+    result: "ok", range: range, days: days,
+    totals: { clicks: tot.clicks, impressions: tot.impressions, ctr: tot.ctr, position: tot.position },
+    daily: daily, queries: top("query"), pages: top("page"), sitemaps: maps,
+    sitemapUrl: GSC_SITEMAP_, updatedAt: new Date().toISOString()
+  };
+  try { cache.put(key, JSON.stringify(out), 900); } catch (e) {}
+  return out;
+}
+
+function gscSubmitSitemap_() {
+  gscCall_("put", "/sitemaps/" + encodeURIComponent(GSC_SITEMAP_));
+  var cache = CacheService.getScriptCache();
+  [7, 28, 90].forEach(function (d) { cache.remove("gsc_" + d); });
+  return { result: "ok", message: "Site haritası Google'a gönderildi." };
+}
+
+function handleGscAction_(body) {
+  try {
+    if (body.action === "gscDashboard") return gscDashboard_(body.days, body.refresh);
+    if (body.action === "gscSubmitSitemap") return gscSubmitSitemap_();
+    return { result: "error", message: "Bilinmeyen işlem." };
+  } catch (err) {
+    return { result: "error", message: String(err && err.message ? err.message : err) };
   }
 }
 
