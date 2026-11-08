@@ -341,7 +341,14 @@ var SHEET_PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1M
 var SHEET_SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/1X4qYrQXg1Msn_5HnnYadiwWJu2J7z-FmZwMzpA-SbVQ/gviz/tq?tqx=out:csv&sheet=Ayarlar";
 var ORDER_SHEET_ENDPOINT = "https://script.google.com/macros/s/AKfycbxIN5wq17o0GKbpcmpvxd1dPCrvFIj3kp0nYKXHBWhEsdl4wpLxZoY6xUVdPSybPl7S/exec";
 
-var SETTINGS = { heroMobileUrl:"hero-mobile.jpg", heroDesktopUrl:"hero-desktop.jpg", gaId:"", metaPixelId:"", metaTitle:"", metaDescription:"" };
+var SETTINGS = { heroMobileUrl:"hero-mobile.jpg", heroDesktopUrl:"hero-desktop.jpg", gaId:"", adsId:"", adsLabel:"", gtmId:"", metaPixelId:"", metaTitle:"", metaDescription:"" };
+// Ölçüm kimlikleri yalnızca beklenen biçimdeyse kullanılır (Ayarlar tablosundaki değer koda karışamaz).
+function gId(kind){
+ var re={ga:/^G-[A-Z0-9]{4,14}$/, ads:/^AW-\d{6,14}$/, label:/^[A-Za-z0-9_-]{6,48}$/, gtm:/^GTM-[A-Z0-9]{4,10}$/};
+ var key={ga:"gaId",ads:"adsId",label:"adsLabel",gtm:"gtmId"}[kind];
+ var v=String(SETTINGS[key]||"").trim();
+ return re[kind].test(v)?v:"";
+}
 
 function loadSettingsFromSheet(){
  if(!SHEET_SETTINGS_CSV_URL) return Promise.resolve(false);
@@ -702,6 +709,7 @@ function gaEv(name,params){ try{ if(window.gtag) window.gtag("event",name,params
 function gaItems(list){ return (list||[]).map(function(i){ return {item_id:i.productId||i.id, item_name:i.name, item_variant:[i.color,i.size].filter(Boolean).join(" / "), price:i.price, quantity:i.qty||1}; }); }
 function trackPurchase(order){
  gaEv("purchase",{transaction_id:order.orderId, value:order.total, currency:"TRY", shipping:order.shipping, items:gaItems(order.items)});
+ try{ var _a=gId("ads"), _l=gId("label"); if(_a && _l && window.gtag) window.gtag("event","conversion",{send_to:_a+"/"+_l, value:order.total, currency:"TRY", transaction_id:order.orderId}); }catch(e){}
  var d=cartPixelData(order.items); d.value=order.total;
  px("track","Purchase",d,{eventID:order.orderId});
 }
@@ -1312,16 +1320,27 @@ function applySettings(){
   if(m) m.setAttribute("content", SETTINGS.metaDescription);
  }
  loadMetaPixel();
- if(SETTINGS.gaId && !window._gaLoaded){
+ var ga=gId("ga"), ads=gId("ads"), gtm=gId("gtm");
+ if((ga||ads) && !window._gaLoaded){
   window._gaLoaded = true;
   var s1 = document.createElement("script");
   s1.async = true;
-  s1.src = "https://www.googletagmanager.com/gtag/js?id=" + SETTINGS.gaId;
+  s1.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(ga||ads);
   document.head.appendChild(s1);
   window.dataLayer = window.dataLayer || [];
   window.gtag = function(){ window.dataLayer.push(arguments); };
   window.gtag("js", new Date());
-  window.gtag("config", SETTINGS.gaId);
+  if(ga) window.gtag("config", ga);
+  if(ads) window.gtag("config", ads);
+ }
+ if(gtm && !window._gtmLoaded){
+  window._gtmLoaded = true;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({"gtm.start": new Date().getTime(), event:"gtm.js"});
+  var s2 = document.createElement("script");
+  s2.async = true;
+  s2.src = "https://www.googletagmanager.com/gtm.js?id=" + encodeURIComponent(gtm);
+  document.head.appendChild(s2);
  }
 }
 

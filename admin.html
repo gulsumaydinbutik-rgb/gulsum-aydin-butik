@@ -162,6 +162,12 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
 .pv-wrap iframe{border:1px solid var(--line);border-radius:10px;background:#fff;flex-shrink:0;}
 .setup-line{font-size:12.5px;color:var(--ink2);background:var(--bg2);border-radius:9px;padding:9px 12px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .setup-line select{padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;}
+/* Google */
+.g-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px;}
+.g-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;}
+.g-card h3{font-size:14px;margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.g-card p{font-size:12.5px;color:var(--ink2);line-height:1.5;margin:8px 0 10px;}
+.g-card a{font-size:12.5px;font-weight:600;color:var(--gold-d);text-decoration:underline;}
 /* Reklamlar */
 .ads-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
 .chip{padding:8px 13px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink2);}
@@ -357,6 +363,7 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
   <button class="navlink" data-tab="campaigns"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8zM7.5 7.5h.01"/></svg><span>Kampanyalar</span></button>
   <button class="navlink" data-tab="blog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span>Blog</span></button>
   <button class="navlink" data-tab="ads"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1zM17 9a4 4 0 0 1 0 6"/></svg><span>Reklamlar</span></button>
+  <button class="navlink" data-tab="google"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span>Google</span></button>
   <button class="navlink" data-tab="messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Mesajlar</span></button>
   <button class="navlink" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3L14 3h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.6l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3L10 21h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/></svg><span>Ayarlar</span></button>
   <button class="navlink" data-tab="integrations"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7V3M15 7V3M7 7h10v5a5 5 0 0 1-10 0zM12 17v4"/></svg><span>Entegrasyonlar</span></button>
@@ -494,13 +501,26 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
    </div>
   </div>
 
+  <div id="tab-google" class="hidden">
+   <div class="pagehead"><div><h1>Google</h1><p>Analytics, Ads ve Tag Manager kimliklerini girdiğinizde ölçüm kodları siteye otomatik eklenir.</p></div></div>
+   <div id="gMsg"></div>
+   <div class="g-cards" id="gCards"></div>
+   <div class="card" style="padding:24px">
+    <div class="field"><label>GA4 Ölçüm Kimliği</label><input id="g_gaId" placeholder="G-XXXXXXXXXX" autocomplete="off"><div class="help">Ziyaretçi, kaynak ve satış raporları için. Format: G-XXXXXXXXXX</div></div>
+    <div class="field"><label>Google Ads Dönüşüm Kimliği</label><input id="g_adsId" placeholder="AW-XXXXXXXXX" autocomplete="off"><div class="help">Reklamdan gelen satışları ölçmek için. Format: AW-XXXXXXXXX</div></div>
+    <div class="field"><label>Google Ads Dönüşüm Etiketi</label><input id="g_adsLabel" placeholder="Satın alma dönüşümünün etiketi" autocomplete="off"><div class="help">Etiket girilirse her sipariş Google Ads'e satış olarak bildirilir.</div></div>
+    <div class="field"><label>Google Tag Manager</label><input id="g_gtmId" placeholder="GTM-XXXXXXX" autocomplete="off"><div class="help">Kullanılıyorsa girin. Tag Manager içinde de GA4 kuruluysa yukarıdaki GA4 kimliğini boş bırakın, aksi halde ziyaretler çift sayılır.</div></div>
+    <div class="field"><label>Google İşletme Profili Bağlantısı</label><input id="g_gbpUrl" placeholder="https://g.page/... veya https://maps.app.goo.gl/..." autocomplete="off"><div class="help">Profil bağlantınız (isteğe bağlı). Harita aramalarında görünmek için.</div></div>
+    <button class="btn btn-gold" id="gSaveBtn" onclick="saveGoogle()">Değişiklikleri kaydet</button>
+   </div>
+  </div>
+
   <div id="tab-settings" class="hidden">
-   <div class="pagehead"><div><h1>Ayarlar</h1><p>Banner, Google Analytics ve arama motoru (SEO) ayarları</p></div></div>
+   <div class="pagehead"><div><h1>Ayarlar</h1><p>Banner ve arama motoru (SEO) ayarları</p></div></div>
    <div id="settingsMsg"></div>
    <div class="card" style="padding:24px">
     <div class="field"><label>Banner Görseli — Mobil (dosya adı veya tam link)</label><input id="s_heroMobileUrl" placeholder="hero-mobile.jpg"></div>
     <div class="field"><label>Banner Görseli — Masaüstü</label><input id="s_heroDesktopUrl" placeholder="hero-desktop.jpg"></div>
-    <div class="field"><label>Google Analytics Ölçüm ID (G-XXXXXXX)</label><input id="s_gaId" placeholder="G-XXXXXXX"></div>
     <div class="field"><label>Meta Pixel ID (sadece rakamlar, 15-16 haneli) — boş bırakırsanız Pixel çalışmaz</label><input id="s_metaPixelId" placeholder="123456789012345" inputmode="numeric"></div>
     <div class="field"><label>Sayfa Başlığı (tarayıcı sekmesi / Google)</label><input id="s_metaTitle" placeholder="Gülsüm Aydın Butik — Tesettür Giyim"></div>
     <div class="field"><label>Sayfa Açıklaması (Google'da görünen)</label><textarea id="s_metaDescription" rows="2"></textarea></div>
@@ -822,7 +842,7 @@ function apiPost(body){
 }
 
 function switchTab(tab){
- ["summary","products","orders","campaigns","blog","ads","messages","settings","integrations"].forEach(function(t){
+ ["summary","products","orders","campaigns","blog","ads","google","messages","settings","integrations"].forEach(function(t){
   document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
  });
  document.querySelectorAll(".navlink").forEach(function(el){
@@ -838,6 +858,7 @@ document.querySelectorAll(".navlink").forEach(function(el){
   if(tab==="orders") loadOrders();
   if(tab==="campaigns") loadCampaigns();
   if(tab==="ads") loadAds(false);
+  if(tab==="google") loadGoogle();
   if(tab==="messages") loadInbox(false);
   if(tab==="blog") loadBlog();
  });
@@ -849,7 +870,6 @@ function loadSettings(){
   var s = res.data || {};
   document.getElementById("s_heroMobileUrl").value = s.heroMobileUrl || "";
   document.getElementById("s_heroDesktopUrl").value = s.heroDesktopUrl || "";
-  document.getElementById("s_gaId").value = s.gaId || "";
   document.getElementById("s_metaPixelId").value = s.metaPixelId || "";
   document.getElementById("s_metaTitle").value = s.metaTitle || "";
   document.getElementById("s_metaDescription").value = s.metaDescription || "";
@@ -861,7 +881,6 @@ function saveSettings(){
  var settings = {
   heroMobileUrl: document.getElementById("s_heroMobileUrl").value.trim(),
   heroDesktopUrl: document.getElementById("s_heroDesktopUrl").value.trim(),
-  gaId: document.getElementById("s_gaId").value.trim(),
   metaPixelId: (function(){ var d=document.getElementById("s_metaPixelId").value.replace(/\D/g,""); return d? "'"+d : ""; })(),
   metaTitle: document.getElementById("s_metaTitle").value.trim(),
   metaDescription: document.getElementById("s_metaDescription").value.trim()
@@ -1644,6 +1663,54 @@ function publishNewAd(){
   if(res.result==="ok"){ adNewCampaignId=null; aEl("adModalBg").classList.add("hidden"); adsMsg("ok","Reklam yayına alındı. Meta incelemesinden sonra gösterilmeye başlar."); loadAds(true); }
   else alert(res.message||"Yayınlanamadı");
  }).catch(function(){ alert("Bağlantı hatası."); }).then(function(){ btn.disabled=false; btn.textContent="▶ Yayınla"; });
+}
+
+
+// ---------- Google entegrasyonları ----------
+var G_RULES = {
+ gaId:{re:/^G-[A-Z0-9]{4,14}$/, msg:"GA4 kimliği G-XXXXXXXXXX biçiminde olmalı."},
+ adsId:{re:/^AW-\d{6,14}$/, msg:"Ads kimliği AW-123456789 biçiminde olmalı."},
+ adsLabel:{re:/^[A-Za-z0-9_-]{6,48}$/, msg:"Ads etiketi yalnızca harf, rakam, - ve _ içermeli (en az 6 karakter)."},
+ gtmId:{re:/^GTM-[A-Z0-9]{4,10}$/, msg:"Tag Manager kimliği GTM-XXXXXXX biçiminde olmalı."},
+ gbpUrl:{re:/^https:\/\/(g\.page|maps\.app\.goo\.gl|goo\.gl\/maps|www\.google\.com\/maps|maps\.google\.com|share\.google|business\.google\.com)\/[^\s"'<>]{2,300}$/, msg:"İşletme Profili bağlantısı Google'ın verdiği https bağlantısı olmalı (g.page, maps.app.goo.gl…)."}
+};
+var gSaved = {};
+function gv(k){ return (document.getElementById("g_"+k).value||"").trim(); }
+function gShowMsg(type,t){ document.getElementById("gMsg").innerHTML = t? '<div class="msg '+type+'">'+esc(t)+'</div>':""; }
+function renderGoogleCards(){
+ var s=gSaved;
+ function badge(on,txt){ return '<span class="st '+(on?'on':'off')+'">'+(on?(txt||"Bağlı"):"Bağlı değil")+'</span>'; }
+ var cards=[
+  ["Google Analytics 4", !!s.gaId, "Ziyaretçi, kaynak ve satış raporları. Sepete ekleme ve satın alma olayları gönderilir.", "Analytics'i aç","https://analytics.google.com/"],
+  ["Google Ads", !!s.adsId, s.adsId&&!s.adsLabel ? "Kimlik girildi; satışları saymak için dönüşüm etiketi de gerekli." : "Reklamdan gelen satışları dönüşüm olarak sayar. Etiket girilirse siparişler Ads'e bildirilir.", "Ads'i aç","https://ads.google.com/"],
+  ["Search Console", true, "Alan adı mülkü (gulsumaydin.com.tr) doğrulanmış. Site haritası Google'a gönderilmiş durumda.", "Search Console'u aç","https://search.google.com/search-console?resource_id=sc-domain%3Agulsumaydin.com.tr"],
+  ["Google İşletme Profili", !!s.gbpUrl, "Haritalarda ve yakınımdaki mağaza aramalarında görünmek için.", s.gbpUrl?"Profili aç":"İşletme Profili'ni aç", s.gbpUrl||"https://business.google.com/"]
+ ];
+ document.getElementById("gCards").innerHTML = cards.map(function(c){
+  return '<div class="g-card"><h3>'+esc(c[0])+badge(c[1], c[0]==="Search Console"?"Doğrulandı":"Bağlı")+'</h3><p>'+esc(c[2])+'</p><a href="'+esc(c[4])+'" target="_blank" rel="noopener noreferrer">'+esc(c[3])+'</a></div>';
+ }).join("");
+}
+function loadGoogle(){
+ gShowMsg("","");
+ apiGet("listSettings").then(function(res){
+  var s=res.data||{}; gSaved={};
+  Object.keys(G_RULES).forEach(function(k){ var v=String(s[k]==null?"":s[k]).trim(); gSaved[k]=G_RULES[k].re.test(v)?v:""; document.getElementById("g_"+k).value=v; });
+  renderGoogleCards();
+ }).catch(function(){ gShowMsg("err","Ayarlar yüklenemedi."); });
+}
+function saveGoogle(){
+ var out={}, keys=Object.keys(G_RULES);
+ for(var i=0;i<keys.length;i++){
+  var k=keys[i], v=gv(k);
+  if(k==="gaId"||k==="adsId"||k==="gtmId") v=v.toUpperCase();
+  if(v && !G_RULES[k].re.test(v)){ gShowMsg("err", G_RULES[k].msg); return; }
+  out[k]=v;
+ }
+ var btn=document.getElementById("gSaveBtn"); btn.disabled=true; btn.textContent="Kaydediliyor…";
+ apiPost({action:"updateSettings", settings:out}).then(function(res){
+  if(res.result==="ok"){ gSaved=out; Object.keys(out).forEach(function(k){ document.getElementById("g_"+k).value=out[k]; }); renderGoogleCards(); gShowMsg("ok","Kaydedildi. Değişiklik sitede birkaç dakika içinde etkinleşir."); }
+  else gShowMsg("err", res.message||"Hata oluştu");
+ }).catch(function(){ gShowMsg("err","Bağlantı hatası."); }).then(function(){ btn.disabled=false; btn.textContent="Değişiklikleri kaydet"; });
 }
 
 // ---------- Meta Reklamları ----------
