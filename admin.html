@@ -162,6 +162,12 @@ textarea.ed-html{width:100%;min-height:320px;font-family:ui-monospace,monospace;
 .pv-wrap iframe{border:1px solid var(--line);border-radius:10px;background:#fff;flex-shrink:0;}
 .setup-line{font-size:12.5px;color:var(--ink2);background:var(--bg2);border-radius:9px;padding:9px 12px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .setup-line select{padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;}
+/* Google Arama */
+.g-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:900px){.g-grid{grid-template-columns:1fr;}}
+.g-tbl table{font-size:12.5px;} .g-tbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);text-align:right;padding:6px 6px;} .g-tbl th:first-child,.g-tbl td:first-child{text-align:left;}
+.g-tbl td{padding:8px 6px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;} .g-tbl td:first-child{word-break:break-word;max-width:260px;}
+.g-leg{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);margin-bottom:6px;} .g-leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
 /* Google */
 .g-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px;}
 .g-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;}
@@ -363,6 +369,7 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
   <button class="navlink" data-tab="campaigns"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12l-8 8-9-9V3h8zM7.5 7.5h.01"/></svg><span>Kampanyalar</span></button>
   <button class="navlink" data-tab="blog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"/></svg><span>Blog</span></button>
   <button class="navlink" data-tab="ads"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1zM17 9a4 4 0 0 1 0 6"/></svg><span>Reklamlar</span></button>
+  <button class="navlink" data-tab="gsearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span>Google Arama</span></button>
   <button class="navlink" data-tab="google"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span>Google</span></button>
   <button class="navlink" data-tab="messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Mesajlar</span></button>
   <button class="navlink" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3L14 3h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.6l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3L10 21h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/></svg><span>Ayarlar</span></button>
@@ -498,6 +505,23 @@ select.ost{appearance:none;-webkit-appearance:none;border:none!important;font-we
     <div id="adsCampaigns"></div>
     <p class="help" style="margin-top:18px">Yeni reklam oluşturma, görsel/metin ve hedef kitle ayarları için <a href="https://adsmanager.facebook.com/" target="_blank">Reklam Yöneticisi</a>'ni kullanın. Panelden yapılan her değişiklik tablodaki <b>ReklamGecmisi</b> sekmesine kaydedilir.
      <button class="btn-ghost" style="margin-left:6px;padding:5px 10px;border-radius:7px;font-size:11.5px" onclick="metaDisconnect()">Bağlantıyı kaldır</button></p>
+   </div>
+  </div>
+
+  <div id="tab-gsearch" class="hidden">
+   <div class="pagehead"><div><h1>Google Arama</h1><p id="gsRange">Google aramalarındaki görünürlük. Veriler Google'dan 2-3 gün gecikmeli gelir.</p></div>
+    <div class="ads-bar" id="gsPresets" style="margin:0"></div></div>
+   <div id="gsMsg"></div>
+   <div id="gsDash" class="hidden">
+    <div class="kpis" id="gsKpis"></div>
+    <div class="g-grid">
+     <div class="card chart-card" id="gsChart"></div>
+     <div class="card chart-card" id="gsSitemap"></div>
+    </div>
+    <div class="g-grid">
+     <div class="card chart-card"><h3>Sizi Bulduran Aramalar</h3><div class="sub">İnsanların Google'da yazdığı kelimeler</div><div class="g-tbl" id="gsQueries"></div></div>
+     <div class="card chart-card"><h3>En Çok Görünen Sayfalar</h3><div class="sub">Aramalarda en çok gösterilen sayfalarınız</div><div class="g-tbl" id="gsPages"></div></div>
+    </div>
    </div>
   </div>
 
@@ -842,7 +866,7 @@ function apiPost(body){
 }
 
 function switchTab(tab){
- ["summary","products","orders","campaigns","blog","ads","google","messages","settings","integrations"].forEach(function(t){
+ ["summary","products","orders","campaigns","blog","ads","google","gsearch","messages","settings","integrations"].forEach(function(t){
   document.getElementById("tab-"+t).classList.toggle("hidden", t!==tab);
  });
  document.querySelectorAll(".navlink").forEach(function(el){
@@ -859,6 +883,7 @@ document.querySelectorAll(".navlink").forEach(function(el){
   if(tab==="campaigns") loadCampaigns();
   if(tab==="ads") loadAds(false);
   if(tab==="google") loadGoogle();
+  if(tab==="gsearch") loadGsc(false);
   if(tab==="messages") loadInbox(false);
   if(tab==="blog") loadBlog();
  });
@@ -1665,6 +1690,77 @@ function publishNewAd(){
  }).catch(function(){ alert("Bağlantı hatası."); }).then(function(){ btn.disabled=false; btn.textContent="▶ Yayınla"; });
 }
 
+
+
+// ---------- Google Arama (Search Console) ----------
+var gsDays = 28, gsData = null;
+function gsEl(id){ return document.getElementById(id); }
+function gsMsg(type, text){ gsEl("gsMsg").innerHTML = text ? '<div class="msg '+type+'">'+esc(text)+'</div>' : ""; }
+function gsDate(iso){ return new Date(iso+"T00:00:00").toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function gsShort(iso){ return new Date(iso+"T00:00:00").toLocaleDateString("tr-TR",{day:"2-digit",month:"2-digit"}); }
+function setGscDays(d){ gsDays = d; loadGsc(false); }
+function loadGsc(refresh, keepMsg){
+ if(!keepMsg) gsMsg("","");
+ apiPost({action:"gscDashboard", days:gsDays, refresh:!!refresh}).then(function(res){
+  if(backendOld(res)){ gsMsg("err","Bu özellik için Apps Script'te yeni sürümün yayınlanması gerekiyor."); return; }
+  if(res.result==="error"){ gsMsg("err", res.message); return; }
+  gsData = res; renderGsc();
+ }).catch(function(){ gsMsg("err","Bağlantı hatası."); });
+}
+function renderGsc(){
+ var d = gsData, t = d.totals;
+ gsEl("gsDash").classList.remove("hidden");
+ gsEl("gsRange").textContent = gsDate(d.range.startDate)+" – "+gsDate(d.range.endDate)+" arası Google aramalarındaki görünürlük. Veriler Google'dan 2-3 gün gecikmeli gelir.";
+ gsEl("gsPresets").innerHTML = [[7,"7 gün"],[28,"28 gün"],[90,"90 gün"]].map(function(p){
+  return '<button class="chip'+(p[0]===gsDays?' on':'')+'" onclick="setGscDays('+p[0]+')">'+p[1]+'</button>';
+ }).join("")+'<button class="btn-ghost" style="padding:7px 11px;border-radius:7px;font-size:12px" onclick="loadGsc(true)">↻ Yenile</button>';
+ var k = [
+  ["Google'dan gelen tıklama", fmtN(t.clicks), "", true],
+  ["Aramalarda görünme", fmtN(t.impressions), "", false],
+  ["Tıklama oranı", fmtPct((t.ctr||0)*100), "", false],
+  ["Ortalama sıra", Number(t.position||0).toLocaleString("tr-TR",{maximumFractionDigits:1}), "1 = ilk sıra", false]
+ ];
+ gsEl("gsKpis").innerHTML = k.map(function(x){
+  return '<div class="kpi'+(x[3]?' hero':'')+'"><div class="k">'+x[0]+'</div><div class="v">'+x[1]+'</div>'+(x[2]?'<div class="s">'+esc(x[2])+'</div>':'')+'</div>';
+ }).join("");
+
+ var days = d.daily || [];
+ if(days.length){
+  var mi = Math.max.apply(null, days.map(function(x){return x.impressions;})) || 1;
+  var mc = Math.max.apply(null, days.map(function(x){return x.clicks;})) || 1;
+  var bars = days.map(function(x){
+   var hi = Math.max(1, x.impressions/mi*100), hc = x.clicks/mc*100;
+   return '<div class="bar" style="position:relative"><i style="height:'+hi+'%;background:var(--line)"></i>'+
+    (x.clicks?'<i style="position:absolute;bottom:0;left:25%;width:50%;height:'+Math.max(4,hc*0.9)+'%;background:var(--gold-d);border-radius:2px 2px 0 0"></i>':'')+
+    '<span class="tip">'+gsShort(x.date)+' · '+fmtN(x.impressions)+' görünme · '+fmtN(x.clicks)+' tıklama</span></div>';
+  }).join("");
+  gsEl("gsChart").innerHTML = '<h3>Günlük Görünme ve Tıklama</h3><div class="g-leg"><span><i style="background:var(--line)"></i>Görünme</span><span><i style="background:var(--gold-d)"></i>Tıklama</span></div>'+
+   '<div class="bars">'+bars+'</div><div class="bar-axis"><span>'+gsShort(days[0].date)+'</span><span>'+gsShort(days[days.length-1].date)+'</span></div>';
+ } else gsEl("gsChart").innerHTML = '<div class="empty">Bu aralıkta veri yok.</div>';
+
+ var sm = (d.sitemaps||[]).filter(function(m){ return m.path===d.sitemapUrl; })[0];
+ var badge = sm ? (sm.errors? '<span class="st warn">Hata var</span>' : '<span class="st on">Gönderildi</span>') : '<span class="st off">Gönderilmedi</span>';
+ gsEl("gsSitemap").innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Site Haritası</h3>'+badge+'</div>'+
+  '<p class="help" style="margin:10px 0">Site haritası, Google\'a sitenizdeki tüm sayfaları (ürün sayfaları ve blog yazıları dahil) bildirir.'+
+  (sm && sm.lastSubmitted ? '<br>Son gönderim: '+esc(new Date(sm.lastSubmitted).toLocaleDateString("tr-TR"))+(sm.lastDownloaded?' · Google son okuma: '+esc(new Date(sm.lastDownloaded).toLocaleDateString("tr-TR")):'') : '')+'</p>'+
+  '<button class="btn btn-gold" id="gsSmBtn" onclick="gsSubmitSitemap()">'+(sm?'Yeniden gönder':'Gönder')+'</button>';
+
+ function table(rows, linkify){
+  if(!rows.length) return '<div class="empty">Henüz veri yok.</div>';
+  return '<table><thead><tr><th>'+(linkify?'Sayfa':'Arama')+'</th><th>Tıklama</th><th>Gösterim</th><th>Sıra</th></tr></thead><tbody>'+rows.map(function(r){
+   var label = linkify ? r.k.replace(/^https?:\/\/[^\/]+/,"") || "/" : r.k;
+   return '<tr><td>'+esc(label)+'</td><td>'+fmtN(r.clicks)+'</td><td>'+fmtN(r.impressions)+'</td><td>'+Number(r.position||0).toLocaleString("tr-TR",{maximumFractionDigits:1})+'</td></tr>';
+  }).join("")+'</tbody></table>';
+ }
+ gsEl("gsQueries").innerHTML = table(d.queries||[], false);
+ gsEl("gsPages").innerHTML = table(d.pages||[], true);
+}
+function gsSubmitSitemap(){
+ var b = gsEl("gsSmBtn"); b.disabled = true; b.textContent = "Gönderiliyor…";
+ apiPost({action:"gscSubmitSitemap"}).then(function(res){
+  if(res.result==="ok"){ gsMsg("ok", res.message); loadGsc(true, true); } else { gsMsg("err", res.message||"Gönderilemedi"); b.disabled=false; b.textContent="Yeniden gönder"; }
+ }).catch(function(){ gsMsg("err","Bağlantı hatası."); b.disabled=false; b.textContent="Yeniden gönder"; });
+}
 
 // ---------- Google entegrasyonları ----------
 var G_RULES = {
